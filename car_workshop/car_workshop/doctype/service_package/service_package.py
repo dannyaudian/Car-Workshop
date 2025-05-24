@@ -3,32 +3,71 @@ from frappe.model.document import Document
 
 class ServicePackage(Document):
     def validate(self):
-        self.validate_price()
         self.validate_details()
-    
-    def validate_price(self):
-        """Validate that price is greater than zero"""
-        if self.price <= 0:
-            frappe.throw("Package price must be greater than zero.")
+        self.calculate_totals()
     
     def validate_details(self):
         """Validate that service package has at least one service detail"""
         if not self.details or len(self.details) == 0:
             frappe.throw("Service Package must have at least one service detail.")
-        
-        # Calculate total estimated time
+    
+    def calculate_totals(self):
+        """Calculate totals for the service package"""
+        total_amount = 0
         total_time = 0
-        for detail in self.details:
-            if detail.time_minutes:
-                total_time += detail.time_minutes
         
-        # Store the total time in a custom field
+        for detail in self.details:
+            # Ensure each detail has an amount
+            if not detail.amount:
+                if detail.item_type == "Job":
+                    # Get rate from JobType - based on the structure in job_type.py
+                    # Since JobType uses a child table for items, we need to get the total rate differently
+                    rate = self.get_job_type_rate(detail.job_type)
+                elif detail.item_type == "Part":
+                    rate = frappe.db.get_value("Part", detail.part, "current_price") or 0
+                else:
+                    rate = 0
+                
+                detail.rate = rate
+                detail.amount = (detail.quantity or 1) * rate
+            
+            total_amount += detail.amount
+            
+            # Add time if job type has duration
+            if detail.item_type == "Job" and detail.job_type:
+                time_minutes = frappe.db.get_value("Job Type", detail.job_type, "time_minutes") or 0
+                total_time += time_minutes * (detail.quantity or 1)
+        
+        # Update package totals
+        self.price = total_amount
         self.total_time_minutes = total_time
         
-        # Convert to hours and minutes for display
+        # Convert time to hours and minutes for display
         hours = total_time // 60
         minutes = total_time % 60
-        self.estimated_time = f"{hours} hrs {minutes} mins"
+        self.estimated_time = f"{hours} hr{'' if hours == 1 else 's'} {minutes} min{'' if minutes == 1 else 's'}"
+    
+    def get_job_type_rate(self, job_type_name):
+        """Get the rate from JobType based on its items structure"""
+        # First check if the JobType has a field called 'rate' or 'standard_rate'
+        rate = frappe.db.get_value("Job Type", job_type_name, "standard_rate")
+        
+        if rate:
+            return rate
+        
+        # If no direct rate field, calculate from items
+        items = frappe.get_all(
+            "Job Type Item",  # Assuming this is the name of the child table
+            filters={"parent": job_type_name},
+            fields=["qty", "rate", "amount"]
+        )
+        
+        total_rate = 0
+        if items:
+            for item in items:
+                total_rate += (item.amount or (item.qty * item.rate) or 0)
+        
+        return total_rate
     
     def before_save(self):
         """Set modified package flag"""
@@ -70,11 +109,3 @@ class ServicePackage(Document):
             })
             item_price.insert()
             frappe.msgprint(f"New Price List item created for {self.package_name}")
-    
-    def get_total_cost(self):
-        """Calculate the total cost of all services in the package"""
-        total_cost = 0
-        for detail in self.details:
-            if detail.cost:
-                total_cost += detail.cost
-        return total_cost
