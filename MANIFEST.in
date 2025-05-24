@@ -16,3 +16,4 @@ recursive-include car_workshop *.py
 recursive-include car_workshop *.svg
 recursive-include car_workshop *.txt
 recursive-exclude car_workshop *.pyc
+recursive-exclude car_workshop/public/dist *
