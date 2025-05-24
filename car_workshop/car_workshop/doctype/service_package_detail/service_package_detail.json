@@ -1,0 +1,86 @@
+{
+  "actions": [],
+  "allow_import": 0,
+  "allow_rename": 0,
+  "autoname": "hash",
+  "creation": "2023-09-25 12:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_type",
+    "job_type",
+    "part",
+    "quantity",
+    "rate",
+    "amount",
+    "remarks"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_type",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Type",
+      "options": "\nJob\nPart",
+      "reqd": 1
+    },
+    {
+      "fieldname": "job_type",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Job Type",
+      "options": "Job Type",
+      "depends_on": "eval:doc.item_type=='Job'"
+    },
+    {
+      "fieldname": "part",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Part",
+      "options": "Part",
+      "depends_on": "eval:doc.item_type=='Part'"
+    },
+    {
+      "default": "1",
+      "fieldname": "quantity",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Quantity",
+      "precision": "2"
+    },
+    {
+      "fieldname": "rate",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Rate",
+      "options": "currency",
+      "read_only": 1
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Amount",
+      "options": "currency",
+      "read_only": 1
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Data",
+      "label": "Remarks"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 1,
+  "links": [],
+  "modified": "2023-09-25 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Car Workshop",
+  "name": "Service Package Detail",
+  "naming_rule": "",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

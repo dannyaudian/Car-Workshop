@@ -35,27 +35,64 @@ frappe.ui.form.on('Part', {
         
         // Check if on mobile device
         if (frappe.is_mobile()) {
-            // Add "Scan Part Number" button
+            // Add "Scan Part Number" button that opens the camera
             frm.add_custom_button(__('Scan Part Number'), function() {
-                // Use barcode scanner
-                frappe.barcode.scan().then(barcode_data => {
-                    if (barcode_data) {
-                        // Set the part_number field with the scanned value
-                        frm.set_value('part_number', barcode_data);
-                        
-                        // Show success message
+                // Create a hidden file input element for camera access
+                let fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.capture = 'environment'; // Use the back camera
+                
+                // When a file is selected (after taking a photo)
+                fileInput.onchange = function() {
+                    if (fileInput.files && fileInput.files[0]) {
+                        // Show loading indicator
                         frappe.show_alert({
-                            message: __('Part Number scanned successfully'),
-                            indicator: 'green'
+                            message: __('Processing barcode...'),
+                            indicator: 'blue'
                         }, 3);
+                        
+                        // Create a FormData object to send the image for processing
+                        let formData = new FormData();
+                        formData.append('file', fileInput.files[0]);
+                        
+                        // Upload and process the image to extract barcode
+                        frappe.call({
+                            method: 'car_workshop.api.scan_barcode',
+                            args: {
+                                file: formData
+                            },
+                            callback: function(response) {
+                                if (response.message) {
+                                    // Set the part_number field with the scanned value
+                                    frm.set_value('part_number', response.message);
+                                    
+                                    // Show success message
+                                    frappe.show_alert({
+                                        message: __('Part Number scanned successfully'),
+                                        indicator: 'green'
+                                    }, 3);
+                                } else {
+                                    // No barcode detected
+                                    frappe.show_alert({
+                                        message: __('No barcode detected. Try again.'),
+                                        indicator: 'orange'
+                                    }, 5);
+                                }
+                            },
+                            error: function(error) {
+                                // Handle scanning errors
+                                frappe.show_alert({
+                                    message: __('Error processing barcode: {0}', [error.message || 'Unknown error']),
+                                    indicator: 'red'
+                                }, 5);
+                            }
+                        });
                     }
-                }).catch(error => {
-                    // Handle scanning errors
-                    frappe.show_alert({
-                        message: __('Error scanning barcode: {0}', [error.message]),
-                        indicator: 'red'
-                    }, 5);
-                });
+                };
+                
+                // Trigger the file input click to open the camera
+                fileInput.click();
             });
         }
         
