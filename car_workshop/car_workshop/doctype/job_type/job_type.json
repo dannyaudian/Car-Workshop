@@ -1,0 +1,94 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "field:job_name",
+  "creation": "2025-05-15 10:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "job_name",
+    "description",
+    "default_price",
+    "is_active",
+    "items_section",
+    "items"
+  ],
+  "fields": [
+    {
+      "fieldname": "job_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Job Name",
+      "reqd": 1,
+      "unique": 1,
+      "bold": 1
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "fieldname": "default_price",
+      "fieldtype": "Currency",
+      "label": "Default Price",
+      "in_list_view": 1
+    },
+    {
+      "default": "1",
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "items_section",
+      "fieldtype": "Section Break",
+      "label": "Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Job Type Items",
+      "options": "Job Type Item"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2025-05-15 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Car Workshop",
+  "name": "Job Type",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Car Workshop Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

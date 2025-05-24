@@ -1,0 +1,142 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "format:{part_number} - {part_name}",
+  "creation": "2025-05-15 10:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "part_number",
+    "part_name",
+    "item_code",
+    "column_break_1",
+    "scan_part_input",
+    "brand",
+    "category",
+    "section_break_1",
+    "current_price",
+    "description",
+    "is_active",
+    "compatibility_section",
+    "compatibility"
+  ],
+  "fields": [
+    {
+      "fieldname": "part_number",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Part Number",
+      "reqd": 1
+    },
+    {
+      "fieldname": "part_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Part Name",
+      "reqd": 1,
+      "bold": 1
+    },
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Item Code",
+      "options": "Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "scan_part_input",
+      "fieldtype": "Data",
+      "label": "Scan Part Input"
+    },
+    {
+      "fieldname": "brand",
+      "fieldtype": "Data",
+      "label": "Brand"
+    },
+    {
+      "fieldname": "category",
+      "fieldtype": "Select",
+      "label": "Category",
+      "options": "Filter\nRem\nAC\nListrik\nBan\nOli\nLainnya"
+    },
+    {
+      "fieldname": "section_break_1",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fetch_from": "item_code.standard_rate",
+      "fieldname": "current_price",
+      "fieldtype": "Currency",
+      "label": "Current Price",
+      "read_only": 1
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "default": "1",
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active"
+    },
+    {
+      "fieldname": "compatibility_section",
+      "fieldtype": "Section Break",
+      "label": "Compatibility"
+    },
+    {
+      "fieldname": "compatibility",
+      "fieldtype": "Table",
+      "label": "Part Compatibility",
+      "options": "Part Compatibility"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2025-05-15 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Car Workshop",
+  "name": "Part",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Car Workshop Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "search_fields": "part_number, part_name, brand",
+  "show_name_in_global_search": 1,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "title_field": "part_name",
+  "track_changes": 1
+}

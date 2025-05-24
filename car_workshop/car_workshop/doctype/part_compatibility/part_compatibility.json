@@ -1,0 +1,65 @@
+{
+  "actions": [],
+  "creation": "2025-05-15 10:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "vehicle_brand",
+    "vehicle_model",
+    "year_start",
+    "year_end",
+    "notes"
+  ],
+  "fields": [
+    {
+      "fieldname": "vehicle_brand",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Vehicle Brand",
+      "options": "Vehicle Brand",
+      "reqd": 1
+    },
+    {
+      "fieldname": "vehicle_model",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Vehicle Model",
+      "options": "Vehicle Model",
+      "reqd": 1,
+      "get_query": {
+        "filters": [
+          ["brand", "=", "eval:doc.vehicle_brand"]
+        ]
+      }
+    },
+    {
+      "fieldname": "year_start",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "label": "Year Start"
+    },
+    {
+      "fieldname": "year_end",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "label": "Year End"
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Small Text",
+      "label": "Notes"
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2025-05-15 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Car Workshop",
+  "name": "Part Compatibility",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
