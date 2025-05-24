@@ -20,7 +20,9 @@ class ServicePackage(Document):
             # Ensure each detail has an amount
             if not detail.amount:
                 if detail.item_type == "Job":
-                    rate = frappe.db.get_value("Job Type", detail.job_type, "standard_rate") or 0
+                    # Get rate from JobType - based on the structure in job_type.py
+                    # Since JobType uses a child table for items, we need to get the total rate differently
+                    rate = self.get_job_type_rate(detail.job_type)
                 elif detail.item_type == "Part":
                     rate = frappe.db.get_value("Part", detail.part, "current_price") or 0
                 else:
@@ -44,6 +46,28 @@ class ServicePackage(Document):
         hours = total_time // 60
         minutes = total_time % 60
         self.estimated_time = f"{hours} hr{'' if hours == 1 else 's'} {minutes} min{'' if minutes == 1 else 's'}"
+    
+    def get_job_type_rate(self, job_type_name):
+        """Get the rate from JobType based on its items structure"""
+        # First check if the JobType has a field called 'rate' or 'standard_rate'
+        rate = frappe.db.get_value("Job Type", job_type_name, "standard_rate")
+        
+        if rate:
+            return rate
+        
+        # If no direct rate field, calculate from items
+        items = frappe.get_all(
+            "Job Type Item",  # Assuming this is the name of the child table
+            filters={"parent": job_type_name},
+            fields=["qty", "rate", "amount"]
+        )
+        
+        total_rate = 0
+        if items:
+            for item in items:
+                total_rate += (item.amount or (item.qty * item.rate) or 0)
+        
+        return total_rate
     
     def before_save(self):
         """Set modified package flag"""
