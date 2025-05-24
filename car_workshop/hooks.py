@@ -214,6 +214,7 @@ doc_events = {
 #	"car_workshop.auth.validate"
 # ]
 
+
 # Fixtures
 # --------
 fixtures = [
@@ -239,6 +240,12 @@ fixtures = [
         "doctype": "Role",
         "filters": [
             ["name", "in", ["Workshop Manager", "Technician"]]
+        ]
+    },
+    {
+        "doctype": "Workspace",
+        "filters": [
+            ["name", "=", "Car Workshop"]
         ]
     }
 ]
