@@ -6,7 +6,7 @@
   "doctype": "DocType",
   "engine": "InnoDB",
   "field_order": [
-    "vehicle",
+    "customer_vehicle",
     "change_date",
     "fieldname",
     "column_break_4",
@@ -22,11 +22,11 @@
   ],
   "fields": [
     {
-      "fieldname": "vehicle",
+      "fieldname": "customer_vehicle",
       "fieldtype": "Link",
       "in_list_view": 1,
-      "label": "Vehicle",
-      "options": "Vehicle",
+      "label": "Customer Vehicle",
+      "options": "Customer Vehicle",
       "reqd": 1
     },
     {

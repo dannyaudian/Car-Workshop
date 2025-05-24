@@ -4,7 +4,7 @@ from frappe import _
 from frappe.model.document import Document
 
 
-class Vehicle(Document):
+class CustomerVehicle(Document):
     def validate(self):
         self.validate_plate_number()
         self.update_fuel_type()
@@ -79,15 +79,15 @@ def create_vehicle_log(doc, method=None):
     """
     frappe.get_doc({
         "doctype": "Vehicle Change Log",
-        "vehicle": doc.name,
+        "customer_vehicle": doc.name,
         "change_date": frappe.utils.now(),
         "fieldname": "creation",
         "new_value": doc.name,
         "change_type": "Created",
-        "doctype_reference": "Vehicle",
+        "doctype_reference": "Customer Vehicle",
         "reference": doc.name,
         "updated_by": frappe.session.user,
-        "remarks": "Vehicle created"
+        "remarks": "Customer Vehicle created"
     }).insert(ignore_permissions=True)
 
 def log_vehicle_updates(doc, method=None):
@@ -109,13 +109,13 @@ def log_vehicle_updates(doc, method=None):
         if old_value != new_value:
             frappe.get_doc({
                 "doctype": "Vehicle Change Log",
-                "vehicle": doc.name,
+                "customer_vehicle": doc.name,
                 "change_date": frappe.utils.now(),
                 "fieldname": field,
                 "old_value": old_value,
                 "new_value": new_value,
                 "change_type": "Updated",
-                "doctype_reference": "Vehicle",
+                "doctype_reference": "Customer Vehicle",
                 "reference": doc.name,
                 "updated_by": frappe.session.user,
                 "remarks": f"Field '{field}' updated"

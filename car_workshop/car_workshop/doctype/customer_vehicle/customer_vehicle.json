@@ -130,13 +130,13 @@
     {
       "group": "Work Orders",
       "link_doctype": "Work Order",
-      "link_fieldname": "vehicle"
+      "link_fieldname": "customer_vehicle"
     }
   ],
   "modified": "2025-05-15 10:00:00.000000",
   "modified_by": "Administrator",
   "module": "Car Workshop",
-  "name": "Vehicle",
+  "name": "Customer Vehicle",
   "naming_rule": "By fieldname",
   "owner": "Administrator",
   "permissions": [
