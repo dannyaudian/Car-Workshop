@@ -1,0 +1,84 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "field:brand_name",
+  "creation": "2025-05-15 10:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "brand_name",
+    "country",
+    "active"
+  ],
+  "fields": [
+    {
+      "fieldname": "brand_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Brand Name",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "country",
+      "fieldtype": "Data",
+      "label": "Country of Origin"
+    },
+    {
+      "default": "1",
+      "fieldname": "active",
+      "fieldtype": "Check",
+      "label": "Active"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2025-05-15 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Car Workshop",
+  "name": "Vehicle Brand",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Workshop Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Technician",
+      "share": 0,
+      "write": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

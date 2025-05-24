@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include car_workshop *.css
+recursive-include car_workshop *.csv
+recursive-include car_workshop *.html
+recursive-include car_workshop *.ico
+recursive-include car_workshop *.js
+recursive-include car_workshop *.json
+recursive-include car_workshop *.md
+recursive-include car_workshop *.png
+recursive-include car_workshop *.py
+recursive-include car_workshop *.svg
+recursive-include car_workshop *.txt
+recursive-exclude car_workshop *.pyc

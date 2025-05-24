@@ -1,0 +1,185 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "field:plate_number",
+  "creation": "2025-05-15 10:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "basic_information_section",
+    "plate_number",
+    "vin",
+    "brand",
+    "model",
+    "fuel_type",
+    "year",
+    "column_break_7",
+    "customer",
+    "customer_name",
+    "customer_phone",
+    "last_odometer",
+    "last_service_date",
+    "service_history_section",
+    "service_history"
+  ],
+  "fields": [
+    {
+      "fieldname": "basic_information_section",
+      "fieldtype": "Section Break",
+      "label": "Basic Information"
+    },
+    {
+      "fieldname": "plate_number",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "License Plate Number",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "vin",
+      "fieldtype": "Data",
+      "label": "VIN"
+    },
+    {
+      "fieldname": "brand",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Brand",
+      "options": "Vehicle Brand",
+      "reqd": 1
+    },
+    {
+      "fieldname": "model",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Model",
+      "options": "Vehicle Model",
+      "reqd": 1,
+      "get_query": {
+        "filters": [
+          ["Vehicle Model", "brand", "=", "eval:doc.brand"]
+        ]
+      }
+    },
+    {
+      "fetch_from": "model.fuel_type",
+      "fieldname": "fuel_type",
+      "fieldtype": "Link",
+      "label": "Fuel Type",
+      "options": "Fuel Type",
+      "read_only": 1
+    },
+    {
+      "fieldname": "year",
+      "fieldtype": "Int",
+      "label": "Year"
+    },
+    {
+      "fieldname": "column_break_7",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "customer",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Customer",
+      "options": "Customer",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "customer.customer_name",
+      "fieldname": "customer_name",
+      "fieldtype": "Data",
+      "label": "Customer Name",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "customer.mobile_no",
+      "fieldname": "customer_phone",
+      "fieldtype": "Data",
+      "label": "Customer Phone",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_odometer",
+      "fieldtype": "Float",
+      "label": "Last Odometer Reading",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_service_date",
+      "fieldtype": "Date",
+      "label": "Last Service Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "service_history_section",
+      "fieldtype": "Section Break",
+      "label": "Service History"
+    },
+    {
+      "fieldname": "service_history",
+      "fieldtype": "Table",
+      "label": "Service History",
+      "options": "Vehicle Service History"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [
+    {
+      "group": "Work Orders",
+      "link_doctype": "Work Order",
+      "link_fieldname": "vehicle"
+    }
+  ],
+  "modified": "2025-05-15 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Car Workshop",
+  "name": "Vehicle",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Workshop Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Technician",
+      "share": 0,
+      "write": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1,
+  "track_seen": 1
+}

@@ -1,0 +1,65 @@
+{
+  "actions": [],
+  "creation": "2025-05-15 10:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "work_order",
+    "service_date",
+    "odometer",
+    "job_summary",
+    "status",
+    "view"
+  ],
+  "fields": [
+    {
+      "fieldname": "work_order",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Work Order",
+      "options": "Work Order"
+    },
+    {
+      "fieldname": "service_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Service Date"
+    },
+    {
+      "fieldname": "odometer",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Odometer Reading"
+    },
+    {
+      "fieldname": "job_summary",
+      "fieldtype": "Text",
+      "label": "Job Summary"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Status",
+      "options": "Draft\nCompleted\nBilled"
+    },
+    {
+      "fieldname": "view",
+      "fieldtype": "Button",
+      "in_list_view": 1,
+      "label": "View"
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2025-05-15 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Car Workshop",
+  "name": "Vehicle Service History",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
