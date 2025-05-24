@@ -29,18 +29,38 @@ frappe.ui.form.on('Service Package Detail', {
     job_type: function(frm, cdt, cdn) {
         var row = locals[cdt][cdn];
         if (row.job_type) {
+            // Use the price_list from the parent document, or default to 'Retail Price List'
+            var price_list = frm.doc.price_list || 'Retail Price List';
+            
+            // Call the get_active_service_price method
             frappe.call({
-                method: 'frappe.client.get_value',
+                method: 'car_workshop.car_workshop.doctype.service_price_list.get_active_service_price.get_active_service_price',
                 args: {
-                    doctype: 'Job Type',
-                    filters: { name: row.job_type },
-                    fieldname: ['standard_rate']
+                    reference_type: 'Job Type',
+                    reference_name: row.job_type,
+                    price_list: price_list
                 },
                 callback: function(r) {
-                    if (r.message && r.message.standard_rate) {
-                        frappe.model.set_value(cdt, cdn, 'rate', r.message.standard_rate);
+                    if (r.message && r.message.rate) {
+                        // Set the rate from the service price list
+                        frappe.model.set_value(cdt, cdn, 'rate', r.message.rate);
                     } else {
-                        frappe.model.set_value(cdt, cdn, 'rate', 0);
+                        // Fallback: try to get standard_rate from Job Type
+                        frappe.call({
+                            method: 'frappe.client.get_value',
+                            args: {
+                                doctype: 'Job Type',
+                                filters: { name: row.job_type },
+                                fieldname: ['standard_rate']
+                            },
+                            callback: function(r) {
+                                if (r.message && r.message.standard_rate) {
+                                    frappe.model.set_value(cdt, cdn, 'rate', r.message.standard_rate);
+                                } else {
+                                    frappe.model.set_value(cdt, cdn, 'rate', 0);
+                                }
+                            }
+                        });
                     }
                 }
             });
@@ -51,18 +71,38 @@ frappe.ui.form.on('Service Package Detail', {
     part: function(frm, cdt, cdn) {
         var row = locals[cdt][cdn];
         if (row.part) {
+            // Use the price_list from the parent document, or default to 'Retail Price List'
+            var price_list = frm.doc.price_list || 'Retail Price List';
+            
+            // Call the get_active_service_price method
             frappe.call({
-                method: 'frappe.client.get_value',
+                method: 'car_workshop.car_workshop.doctype.service_price_list.get_active_service_price.get_active_service_price',
                 args: {
-                    doctype: 'Part',
-                    filters: { name: row.part },
-                    fieldname: ['current_price']
+                    reference_type: 'Part',
+                    reference_name: row.part,
+                    price_list: price_list
                 },
                 callback: function(r) {
-                    if (r.message && r.message.current_price) {
-                        frappe.model.set_value(cdt, cdn, 'rate', r.message.current_price);
+                    if (r.message && r.message.rate) {
+                        // Set the rate from the service price list
+                        frappe.model.set_value(cdt, cdn, 'rate', r.message.rate);
                     } else {
-                        frappe.model.set_value(cdt, cdn, 'rate', 0);
+                        // Fallback: try to get current_price from Part
+                        frappe.call({
+                            method: 'frappe.client.get_value',
+                            args: {
+                                doctype: 'Part',
+                                filters: { name: row.part },
+                                fieldname: ['current_price']
+                            },
+                            callback: function(r) {
+                                if (r.message && r.message.current_price) {
+                                    frappe.model.set_value(cdt, cdn, 'rate', r.message.current_price);
+                                } else {
+                                    frappe.model.set_value(cdt, cdn, 'rate', 0);
+                                }
+                            }
+                        });
                     }
                 }
             });
