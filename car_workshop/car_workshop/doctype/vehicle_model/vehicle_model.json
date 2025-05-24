@@ -1,12 +1,12 @@
 {
   "actions": [],
   "allow_rename": 1,
-  "autoname": "format:{model_name}-{brand}",
+  "autoname": "field:model",
   "creation": "2025-05-15 10:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
   "field_order": [
-    "model_name",
+    "model",
     "brand",
     "fuel_type",
     "column_break_4",
@@ -15,11 +15,12 @@
   ],
   "fields": [
     {
-      "fieldname": "model_name",
+      "fieldname": "model",
       "fieldtype": "Data",
       "in_list_view": 1,
-      "label": "Model Name",
-      "reqd": 1
+      "label": "Model",
+      "reqd": 1,
+      "unique": 1
     },
     {
       "fieldname": "brand",
@@ -54,11 +55,11 @@
   ],
   "index_web_pages_for_search": 1,
   "links": [],
-  "modified": "2025-05-15 10:00:00.000000",
-  "modified_by": "Administrator",
+  "modified": "2025-05-24 11:59:48.000000",
+  "modified_by": "dannyaudian",
   "module": "Car Workshop",
   "name": "Vehicle Model",
-  "naming_rule": "Expression",
+  "naming_rule": "By fieldname",
   "owner": "Administrator",
   "permissions": [
     {

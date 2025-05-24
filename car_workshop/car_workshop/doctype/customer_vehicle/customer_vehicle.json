@@ -55,12 +55,7 @@
       "in_list_view": 1,
       "label": "Model",
       "options": "Vehicle Model",
-      "reqd": 1,
-      "get_query": {
-        "filters": [
-          ["Vehicle Model", "brand", "=", "eval:doc.brand"]
-        ]
-      }
+      "reqd": 1
     },
     {
       "fetch_from": "model.fuel_type",
@@ -133,8 +128,8 @@
       "link_fieldname": "customer_vehicle"
     }
   ],
-  "modified": "2025-05-15 10:00:00.000000",
-  "modified_by": "Administrator",
+  "modified": "2025-05-24 12:02:01.000000",
+  "modified_by": "dannyaudian",
   "module": "Car Workshop",
   "name": "Customer Vehicle",
   "naming_rule": "By fieldname",
