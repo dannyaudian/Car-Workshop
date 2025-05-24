@@ -1,8 +1,8 @@
 app_name = "car_workshop"
 app_title = "Car Workshop"
-app_publisher = "Your Name"
+app_publisher = "Your Company"
 app_description = "ERPNext module app for managing automotive workshop operations"
-app_email = "your.email@example.com"
+app_email = "info@yourcompany.com"
 app_license = "MIT"
 
 # Includes in <head>
@@ -28,22 +28,12 @@ app_license = "MIT"
 
 # include js in doctype views
 doctype_js = {
-    # "doctype": "public/js/doctype.js"
+    "Vehicle": "public/js/vehicle.js",
 }
 
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
-
-# Fixtures
-# --------
-fixtures = [
-    # Example:
-    # {
-    #     "doctype": "Custom Field",
-    #     "filters": [["name", "like", "car_workshop_%"]]
-    # }
-]
 
 # Home Pages
 # ----------
@@ -66,7 +56,7 @@ fixtures = [
 # ------------
 
 # before_install = "car_workshop.setup.before_install"
-after_install = "car_workshop.setup.after_install"
+# after_install = "car_workshop.setup.after_install"
 
 # Uninstallation
 # ------------
@@ -120,13 +110,17 @@ after_install = "car_workshop.setup.after_install"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-#	"*": {
-#		"on_update": "method",
-#		"on_cancel": "method",
-#		"on_trash": "method"
-#	}
-# }
+doc_events = {
+    "Vehicle": {
+        "on_update": "car_workshop.car_workshop.doctype.vehicle.vehicle.on_update",
+        "after_insert": "car_workshop.car_workshop.doctype.vehicle.vehicle.create_vehicle_log",
+        "validate": "car_workshop.car_workshop.doctype.vehicle.vehicle.validate",
+    },
+    "Vehicle Change Log": {
+        "before_save": "car_workshop.car_workshop.doctype.vehicle_change_log.vehicle_change_log.before_save",
+        "on_trash": "car_workshop.car_workshop.doctype.vehicle_change_log.vehicle_change_log.on_trash",
+    }
+}
 
 # Scheduled Tasks
 # ---------------
@@ -156,7 +150,7 @@ after_install = "car_workshop.setup.after_install"
 
 # Overriding Methods
 # ------------------------------
-#
+
 # override_whitelisted_methods = {
 #	"frappe.desk.doctype.event.event.get_events": "car_workshop.event.get_events"
 # }
@@ -217,3 +211,38 @@ after_install = "car_workshop.setup.after_install"
 # auth_hooks = [
 #	"car_workshop.auth.validate"
 # ]
+
+# Fixtures
+# --------
+fixtures = [
+    {
+        "doctype": "Custom Field",
+        "filters": [
+            ["module", "=", "Car Workshop"]
+        ]
+    },
+    {
+        "doctype": "Client Script",
+        "filters": [
+            ["module", "=", "Car Workshop"]
+        ]
+    },
+    {
+        "doctype": "Property Setter",
+        "filters": [
+            ["module", "=", "Car Workshop"]
+        ]
+    },
+    {
+        "doctype": "Role",
+        "filters": [
+            ["name", "in", ["Workshop Manager", "Technician"]]
+        ]
+    },
+    {
+        "doctype": "Vehicle Brand"
+    },
+    {
+        "doctype": "Fuel Type"
+    }
+]
