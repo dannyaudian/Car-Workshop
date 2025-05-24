@@ -56,7 +56,7 @@ doctype_js = {
 # ------------
 
 # before_install = "car_workshop.setup.before_install"
-# after_install = "car_workshop.setup.after_install"
+after_install = "car_workshop.setup.after_install"
 
 # Uninstallation
 # ------------
@@ -238,11 +238,9 @@ fixtures = [
         "filters": [
             ["name", "in", ["Workshop Manager", "Technician"]]
         ]
-    },
-    {
-        "doctype": "Vehicle Brand"
-    },
-    {
-        "doctype": "Fuel Type"
     }
 ]
+
+# Vehicle Master Data Setup Command
+# --------------------------------
+vehicle_master_data_setup = "car_workshop.config.load_vehicle_master_data.execute"
