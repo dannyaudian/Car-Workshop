@@ -35,10 +35,9 @@ frappe.ui.form.on('Part', {
             });
         }
         
-        // Check if on mobile device
+        // Always show scan barcode button on mobile devices
         if (frappe.is_mobile()) {
-            // Add "Scan Part Number" button
-            frm.add_custom_button(__('Scan Part Number'), function() {
+            frm.add_custom_button(__('Scan Barcode (Kamera)'), function() {
                 // Use barcode scanner
                 frappe.barcode.scan().then(barcode_data => {
                     if (barcode_data) {
@@ -50,6 +49,9 @@ frappe.ui.form.on('Part', {
                             message: __('Part Number scanned successfully'),
                             indicator: 'green'
                         }, 3);
+                        
+                        // Trigger price fetch after setting part_number
+                        fetch_current_price(frm);
                     }
                 }).catch(error => {
                     // Handle scanning errors
@@ -58,12 +60,17 @@ frappe.ui.form.on('Part', {
                         indicator: 'red'
                     }, 5);
                 });
-            });
+            }, __('Actions'));
         }
     },
     
     // When item_code changes, fetch price
     item_code: function(frm) {
+        fetch_current_price(frm);
+    },
+    
+    // When part_number changes, fetch price
+    part_number: function(frm) {
         fetch_current_price(frm);
     }
 });
@@ -72,13 +79,16 @@ frappe.ui.form.on('Part', {
 function fetch_current_price(frm) {
     if (!frm.doc.name) return;
     
+    // Get default or standard price list
+    let price_list = frappe.defaults.get_default('selling_price_list') || 'Retail Price List';
+    
     // First try to get price from Service Price List
     frappe.call({
         method: 'car_workshop.car_workshop.doctype.service_price_list.get_active_service_price.get_active_service_price',
         args: {
             reference_type: 'Part',
             reference_name: frm.doc.name,
-            price_list: 'Retail Price List'
+            price_list: price_list
         },
         callback: function(r) {
             if (r.message && r.message.rate) {
@@ -88,7 +98,7 @@ function fetch_current_price(frm) {
                 
                 // Show indicator of where the price came from
                 frm.set_df_property('current_price', 'description', 
-                    'Price from Service Price List (Retail Price List)');
+                    `Price from Service Price List (${price_list})`);
                 
                 // Show success message
                 frappe.show_alert({
@@ -99,14 +109,14 @@ function fetch_current_price(frm) {
                 }, 3);
             } else {
                 // If no price in Service Price List, try Item Price
-                get_price_from_item_price(frm);
+                get_price_from_item_price(frm, price_list);
             }
         }
     });
 }
 
 // Fallback function to get price from Item Price
-function get_price_from_item_price(frm) {
+function get_price_from_item_price(frm, price_list) {
     if (!frm.doc.item_code) {
         // No item code, can't get price from Item Price
         frm.set_value('current_price', 0);
@@ -122,7 +132,7 @@ function get_price_from_item_price(frm) {
             doctype: 'Item Price',
             filters: {
                 'item_code': frm.doc.item_code,
-                'price_list': 'Retail Price List',
+                'price_list': price_list,
                 'selling': 1
             },
             fields: ['price_list_rate'],
@@ -137,7 +147,7 @@ function get_price_from_item_price(frm) {
                 
                 // Show indicator of where the price came from
                 frm.set_df_property('current_price', 'description', 
-                    'Price from Item Price (Retail Price List)');
+                    `Price from Item Price (${price_list})`);
                 
                 // Show info message
                 frappe.show_alert({
