@@ -44,131 +44,10 @@ frappe.ui.form.on('Part', {
             });
         }
         
-        // Mobile barcode scanning button
-        if (frappe.utils.is_mobile()) {
-            frm.add_custom_button(__('Scan Barcode (Kamera)'), function() {
-                // Check if the native barcode API is available
-                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    // Create a simple camera interface
-                    const d = new frappe.ui.Dialog({
-                        title: __('Scan Barcode'),
-                        fields: [{
-                            fieldtype: 'HTML',
-                            fieldname: 'camera_view',
-                            label: '',
-                            options: `
-                                <div style="text-align: center;">
-                                    <video id="scan_camera" style="width: 100%; max-height: 80vh;" autoplay playsinline></video>
-                                    <div id="scan_status" style="margin-top: 10px;">Positioning barcode in view...</div>
-                                </div>
-                            `
-                        }],
-                        primary_action_label: __('Cancel'),
-                        primary_action: () => {
-                            // Stop camera stream
-                            if (stream) {
-                                stream.getTracks().forEach(track => {
-                                    track.stop();
-                                });
-                            }
-                            d.hide();
-                        }
-                    });
-
-                    let stream;
-                    let scanning = true;
-                    
-                    d.show();
-                    
-                    // Access the camera
-                    navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            facingMode: 'environment',  // Use back camera
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
-                        } 
-                    })
-                    .then(function(mediaStream) {
-                        stream = mediaStream;
-                        const video = document.getElementById('scan_camera');
-                        video.srcObject = stream;
-                        
-                        // Create a canvas to capture frames for processing
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        
-                        // Start capturing frames
-                        const interval = setInterval(() => {
-                            if (!scanning) {
-                                clearInterval(interval);
-                                return;
-                            }
-                            
-                            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                                canvas.width = video.videoWidth;
-                                canvas.height = video.videoHeight;
-                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                                
-                                // Send frame to server for processing
-                                canvas.toBlob(function(blob) {
-                                    const formData = new FormData();
-                                    formData.append('file', blob, 'barcode.png');
-                                    
-                                    fetch('/api/method/frappe.utils.image_processing.read_barcode', {
-                                        method: 'POST',
-                                        body: formData,
-                                        headers: {
-                                            'X-Frappe-CSRF-Token': frappe.csrf_token
-                                        }
-                                    })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.message && data.message.barcode) {
-                                            // Stop scanning
-                                            scanning = false;
-                                            clearInterval(interval);
-                                            
-                                            // Stop camera stream
-                                            stream.getTracks().forEach(track => {
-                                                track.stop();
-                                            });
-                                            
-                                            // Close dialog
-                                            d.hide();
-                                            
-                                            // Set the barcode value
-                                            frm.set_value('part_number', data.message.barcode);
-                                            
-                                            // Show success message
-                                            frappe.show_alert({
-                                                message: __('Berhasil scan'),
-                                                indicator: 'green'
-                                            }, 3);
-                                            
-                                            // Trigger price fetch
-                                            fetch_current_price(frm);
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.error('Error processing barcode:', error);
-                                    });
-                                }, 'image/png');
-                            }
-                        }, 500);
-                    })
-                    .catch(function(err) {
-                        console.error('Error accessing camera:', err);
-                        d.hide();
-                        
-                        // Fall back to file input method
-                        fallback_to_file_input(frm);
-                    });
-                } else {
-                    // Browser doesn't support camera access, use file input
-                    fallback_to_file_input(frm);
-                }
-            }, __('Actions'));
-        }
+        // Add Scan Barcode button for all devices (mobile and desktop)
+        frm.add_custom_button(__('Scan Barcode (Kamera)'), function() {
+            scan_barcode_multi_platform(frm);
+        }, __('Actions'));
     },
     
     // When item_code changes, fetch price
@@ -181,118 +60,199 @@ frappe.ui.form.on('Part', {
     // When part_number changes, fetch price
     part_number: function(frm) {
         if (!frm.is_new()) {
-            fetch_current_price(frm);
-            
-            // Reset current_price to 0 if part_number is empty
             if (!frm.doc.part_number) {
+                // Reset current_price to 0 if part_number is empty
                 frm.set_value('current_price', 0);
                 frm.refresh_field('current_price');
                 frm.set_df_property('current_price', 'description', '');
+            } else {
+                // Fetch price if part_number is set
+                fetch_current_price(frm);
             }
         }
     }
 });
 
-// Fallback to file input when camera API isn't available
-function fallback_to_file_input(frm) {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.capture = 'environment'; // Use back camera when possible
-    
-    fileInput.onchange = function(e) {
-        if (!e.target.files.length) return;
-        
-        const file = e.target.files[0];
-        
-        // Show processing indicator
-        frappe.show_alert({
-            message: __('Processing image...'),
-            indicator: 'blue'
-        }, 0);
-        
-        // Create form data
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        // Send to server for processing
-        fetch('/api/method/frappe.utils.image_processing.read_barcode', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Frappe-CSRF-Token': frappe.csrf_token
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Hide processing indicator
-            $(".indicator-pill").remove();
-            
-            if (data.message && data.message.barcode) {
-                // Set the barcode value
-                frm.set_value('part_number', data.message.barcode);
+// Multi-platform barcode scanning function
+async function scan_barcode_multi_platform(frm) {
+    try {
+        // Try native Frappe barcode scanner first (for mobile devices)
+        if (typeof frappe.barcode !== 'undefined' && typeof frappe.barcode.scan === 'function') {
+            try {
+                console.log("Trying Frappe native barcode scanner...");
+                const barcode = await frappe.barcode.scan();
                 
-                // Show success message
-                frappe.show_alert({
-                    message: __('Berhasil scan'),
-                    indicator: 'green'
-                }, 3);
-                
-                // Trigger price fetch
-                fetch_current_price(frm);
-            } else {
-                // If barcode detection failed, prompt user to enter manually
-                frappe.prompt({
-                    label: __('Enter Barcode'),
-                    fieldname: 'barcode',
-                    fieldtype: 'Data'
-                }, function(values) {
-                    if (values.barcode) {
-                        frm.set_value('part_number', values.barcode);
-                        
-                        frappe.show_alert({
-                            message: __('Barcode entered manually'),
-                            indicator: 'blue'
-                        }, 3);
-                        
-                        fetch_current_price(frm);
-                    }
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error processing barcode:', error);
-            
-            // Hide processing indicator
-            $(".indicator-pill").remove();
-            
-            // Show error and prompt for manual entry
-            frappe.show_alert({
-                message: __('Error processing barcode image'),
-                indicator: 'red'
-            }, 5);
-            
-            frappe.prompt({
-                label: __('Enter Barcode'),
-                fieldname: 'barcode',
-                fieldtype: 'Data'
-            }, function(values) {
-                if (values.barcode) {
-                    frm.set_value('part_number', values.barcode);
+                if (barcode) {
+                    // Success! Set the part_number
+                    frm.set_value('part_number', barcode);
                     
+                    // Show success message
                     frappe.show_alert({
-                        message: __('Barcode entered manually'),
-                        indicator: 'blue'
+                        message: __('Berhasil scan'),
+                        indicator: 'green'
                     }, 3);
                     
+                    // Trigger price fetch
                     fetch_current_price(frm);
+                    return; // Exit function on success
                 }
-            });
+            } catch (err) {
+                console.warn("Frappe barcode scanner failed:", err);
+                // Continue to next method if this fails
+            }
+        }
+        
+        // If we reach here, try the BarcodeDetector API (for modern desktop browsers)
+        if (window.BarcodeDetector && window.isSecureContext) {
+            try {
+                console.log("Trying BarcodeDetector API...");
+                await desktop_camera_scan(frm);
+                return; // Exit function on success
+            } catch (err) {
+                console.warn("BarcodeDetector scanning failed:", err);
+                // Continue to next method if this fails
+            }
+        }
+        
+        // If we reach here, all automatic methods failed, use manual entry
+        console.log("Falling back to manual entry...");
+        fallback_prompt(frm);
+        
+    } catch (error) {
+        console.error("Error in barcode scanning:", error);
+        fallback_prompt(frm);
+    }
+}
+
+// Desktop camera scanning with BarcodeDetector API
+async function desktop_camera_scan(frm) {
+    return new Promise((resolve, reject) => {
+        // Check if we're on HTTPS (required for camera access)
+        if (!window.isSecureContext) {
+            reject(new Error("Camera access requires HTTPS"));
+            return;
+        }
+        
+        // Create dialog with video element
+        const d = new frappe.ui.Dialog({
+            title: __('Scan Barcode'),
+            fields: [{
+                fieldtype: 'HTML',
+                fieldname: 'camera_view',
+                options: `
+                    <div style="text-align: center;">
+                        <video id="barcode_video" style="width: 100%; max-height: 80vh; border: 1px solid #ccc;" autoplay playsinline></video>
+                        <div style="margin-top: 10px; font-size: 14px; color: #8D99A6;">
+                            ${__('Position barcode in view to scan automatically')}
+                        </div>
+                    </div>
+                `
+            }],
+            primary_action_label: __('Cancel'),
+            primary_action: () => {
+                // Stop camera when dialog is closed
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                clearInterval(scanInterval);
+                d.hide();
+                reject(new Error("Scanning cancelled"));
+            }
         });
-    };
-    
-    // Trigger the file input
-    fileInput.click();
+        
+        d.show();
+        
+        let stream;
+        let scanInterval;
+        
+        // Access camera
+        navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: 'environment', // Use back camera when available
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        })
+        .then(mediaStream => {
+            stream = mediaStream;
+            const video = document.getElementById('barcode_video');
+            video.srcObject = stream;
+            
+            // Some browsers need explicit play() call
+            video.play().catch(e => console.warn("Video play error:", e));
+            
+            // Initialize BarcodeDetector
+            const barcodeDetector = new BarcodeDetector({
+                // Common barcode formats
+                formats: ['qr_code', 'code_39', 'code_128', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf', 'data_matrix']
+            });
+            
+            // Start scanning
+            scanInterval = setInterval(() => {
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    barcodeDetector.detect(video)
+                        .then(barcodes => {
+                            if (barcodes.length > 0) {
+                                // Barcode detected!
+                                const barcode = barcodes[0].rawValue;
+                                
+                                // Stop scanning
+                                clearInterval(scanInterval);
+                                
+                                // Stop camera
+                                stream.getTracks().forEach(track => track.stop());
+                                
+                                // Close dialog
+                                d.hide();
+                                
+                                // Set part number
+                                frm.set_value('part_number', barcode);
+                                
+                                // Show success message
+                                frappe.show_alert({
+                                    message: __('Berhasil scan'),
+                                    indicator: 'green'
+                                }, 3);
+                                
+                                // Trigger price fetch
+                                fetch_current_price(frm);
+                                
+                                // Resolve promise
+                                resolve(barcode);
+                            }
+                        })
+                        .catch(err => {
+                            console.warn("Barcode detection error:", err);
+                        });
+                }
+            }, 700); // Check every 700ms
+        })
+        .catch(err => {
+            console.error("Camera access error:", err);
+            d.hide();
+            reject(err);
+        });
+    });
+}
+
+// Fallback to manual entry
+function fallback_prompt(frm) {
+    frappe.prompt({
+        label: __('Enter Part Number'),
+        fieldname: 'part_number',
+        fieldtype: 'Data'
+    }, function(values) {
+        if (values.part_number) {
+            frm.set_value('part_number', values.part_number);
+            
+            frappe.show_alert({
+                message: __('Part number entered manually'),
+                indicator: 'blue'
+            }, 3);
+            
+            fetch_current_price(frm);
+        }
+    });
 }
 
 // Function to fetch and update current price

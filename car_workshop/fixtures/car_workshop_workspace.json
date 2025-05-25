@@ -1,6 +1,6 @@
 {
   "charts": [],
-  "content": "[{\"id\":\"p1vsl7dYkx\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Car Workshop Management</b></span>\",\"col\":12}},{\"id\":\"BjBjUGMx60\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Shortcuts</span>\",\"col\":12}},{\"id\":\"67uSojvgXv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicles List\",\"col\":3}},{\"id\":\"H97keoWKqc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Parts Catalog\",\"col\":3}},{\"id\":\"mL2hbQLWyE\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Packages\",\"col\":3}},{\"id\":\"d4o7wDid_n\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Job Types\",\"col\":3}},{\"id\":\"fRgTOVK3pK\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Master Data</span>\",\"col\":12}},{\"id\":\"-F-zHlFhPs\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Add Vehicle\",\"col\":3}},{\"id\":\"nKaK5QWldY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Add Part\",\"col\":3}},{\"id\":\"rrYcd4PNXS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Brands\",\"col\":3}},{\"id\":\"t_hNmoEQtm\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Models\",\"col\":3}},{\"id\":\"HoZOYwrMT0\",\"type\":\"card\",\"data\":{\"card_name\":\"Vehicles\",\"col\":4}},{\"id\":\"uPQtjzLgH1\",\"type\":\"card\",\"data\":{\"card_name\":\"Master Data\",\"col\":4}},{\"id\":\"r52jK9Llz3\",\"type\":\"card\",\"data\":{\"card_name\":\"Parts & Services\",\"col\":4}},{\"id\":\"vM3sK0pLj7\",\"type\":\"card\",\"data\":{\"card_name\":\"Service Packages\",\"col\":4}}]",
+  "content": "[{\"id\":\"p1vsl7dYkx\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Car Workshop Management</b></span>\",\"col\":12}},{\"id\":\"BjBjUGMx60\",\"type\":\"paragraph\",\"data\":{\"text\":\"Application for automotive workshop management\",\"col\":12}}]",
   "creation": "2023-09-25 12:00:00.000000",
   "custom_blocks": [],
   "docstatus": 0,
@@ -14,7 +14,7 @@
   "label": "Car Workshop",
   "links": [
     {
-      "description": "Customer vehicles and related information",
+      "description": "Customer vehicle management and related information",
       "hidden": 0,
       "is_query_report": 0,
       "label": "Vehicles",
@@ -58,40 +58,10 @@
       "hidden": 0,
       "is_query_report": 0,
       "label": "Master Data",
-      "link_count": 5,
+      "link_count": 2,
       "link_type": "DocType",
       "onboard": 0,
       "type": "Card Break"
-    },
-    {
-      "hidden": 0,
-      "is_query_report": 0,
-      "label": "Customer",
-      "link_count": 0,
-      "link_to": "Customer",
-      "link_type": "DocType",
-      "onboard": 1,
-      "type": "Link"
-    },
-    {
-      "hidden": 0,
-      "is_query_report": 0,
-      "label": "Supplier",
-      "link_count": 0,
-      "link_to": "Supplier",
-      "link_type": "DocType",
-      "onboard": 0,
-      "type": "Link"
-    },
-    {
-      "hidden": 0,
-      "is_query_report": 0,
-      "label": "Item",
-      "link_count": 0,
-      "link_to": "Item",
-      "link_type": "DocType",
-      "onboard": 1,
-      "type": "Link"
     },
     {
       "hidden": 0,
@@ -118,7 +88,7 @@
       "hidden": 0,
       "is_query_report": 0,
       "label": "Parts & Services",
-      "link_count": 4,
+      "link_count": 3,
       "link_type": "DocType",
       "onboard": 0,
       "type": "Card Break"
@@ -154,16 +124,6 @@
       "type": "Link"
     },
     {
-      "hidden": 0,
-      "is_query_report": 0,
-      "label": "Service Price List",
-      "link_count": 0,
-      "link_to": "Service Price List",
-      "link_type": "DocType",
-      "onboard": 0,
-      "type": "Link"
-    },
-    {
       "description": "Service packages and details",
       "hidden": 0,
       "is_query_report": 0,
@@ -184,8 +144,8 @@
       "type": "Link"
     }
   ],
-  "modified": "2023-09-25 12:00:00.000000",
-  "modified_by": "Administrator",
+  "modified": "2025-05-25 04:16:00.000000",
+  "modified_by": "dannyaudian",
   "module": "Car Workshop",
   "name": "Car Workshop",
   "number_cards": [],
