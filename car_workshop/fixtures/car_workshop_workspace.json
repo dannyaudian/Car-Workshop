@@ -1,6 +1,6 @@
 {
   "charts": [],
-  "content": "[{\"id\":\"p1vsl7dYkx\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Manajemen Bengkel Mobil</b></span>\",\"col\":12}},{\"id\":\"BjBjUGMx60\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Pintasan&nbsp;</span>\",\"col\":12}},{\"id\":\"67uSojvgXv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Daftar Kendaraan\",\"col\":3}},{\"id\":\"H97keoWKqc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Katalog Suku Cadang\",\"col\":3}},{\"id\":\"mL2hbQLWyE\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Paket Layanan\",\"col\":3}},{\"id\":\"d4o7wDid_n\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Jenis Pekerjaan\",\"col\":3}},{\"id\":\"fRgTOVK3pK\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Data Master</span>\",\"col\":12}},{\"id\":\"-F-zHlFhPs\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Tambah Kendaraan\",\"col\":3}},{\"id\":\"nKaK5QWldY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Tambah Suku Cadang\",\"col\":3}},{\"id\":\"rrYcd4PNXS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Merk Kendaraan\",\"col\":3}},{\"id\":\"t_hNmoEQtm\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Model Kendaraan\",\"col\":3}},{\"id\":\"HoZOYwrMT0\",\"type\":\"card\",\"data\":{\"card_name\":\"Kendaraan\",\"col\":4}}]",
+  "content": "[{\"id\":\"p1vsl7dYkx\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Car Workshop Management</b></span>\",\"col\":12}},{\"id\":\"BjBjUGMx60\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Shortcuts</span>\",\"col\":12}},{\"id\":\"67uSojvgXv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicles List\",\"col\":3}},{\"id\":\"H97keoWKqc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Parts Catalog\",\"col\":3}},{\"id\":\"mL2hbQLWyE\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Packages\",\"col\":3}},{\"id\":\"d4o7wDid_n\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Job Types\",\"col\":3}},{\"id\":\"fRgTOVK3pK\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Master Data</span>\",\"col\":12}},{\"id\":\"-F-zHlFhPs\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Add Vehicle\",\"col\":3}},{\"id\":\"nKaK5QWldY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Add Part\",\"col\":3}},{\"id\":\"rrYcd4PNXS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Brands\",\"col\":3}},{\"id\":\"t_hNmoEQtm\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Models\",\"col\":3}},{\"id\":\"HoZOYwrMT0\",\"type\":\"card\",\"data\":{\"card_name\":\"Vehicles\",\"col\":4}}]",
   "creation": "2023-09-25 12:00:00.000000",
   "custom_blocks": [],
   "docstatus": 0,
@@ -14,10 +14,10 @@
   "label": "Car Workshop",
   "links": [
     {
-      "description": "Manajemen kendaraan pelanggan dan informasi terkait",
+      "description": "Customer vehicles and related information",
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Kendaraan",
+      "label": "Vehicles",
       "link_count": 3,
       "link_type": "DocType",
       "onboard": 0,
@@ -26,7 +26,7 @@
     {
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Kendaraan Pelanggan",
+      "label": "Customer Vehicle",
       "link_count": 0,
       "link_to": "Customer Vehicle",
       "link_type": "DocType",
@@ -36,7 +36,7 @@
     {
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Kendaraan",
+      "label": "Vehicle",
       "link_count": 0,
       "link_to": "Vehicle",
       "link_type": "DocType",
@@ -46,7 +46,7 @@
     {
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Log Perubahan Kendaraan",
+      "label": "Vehicle Change Log",
       "link_count": 0,
       "link_to": "Vehicle Change Log",
       "link_type": "DocType",
@@ -54,11 +54,11 @@
       "type": "Link"
     },
     {
-      "description": "Data master untuk referensi bengkel",
+      "description": "Master data for workshop reference",
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Data Master",
-      "link_count": 2,
+      "label": "Master Data",
+      "link_count": 5,
       "link_type": "DocType",
       "onboard": 0,
       "type": "Card Break"
@@ -66,7 +66,37 @@
     {
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Merk Kendaraan",
+      "label": "Customer",
+      "link_count": 0,
+      "link_to": "Customer",
+      "link_type": "DocType",
+      "onboard": 1,
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Supplier",
+      "link_count": 0,
+      "link_to": "Supplier",
+      "link_type": "DocType",
+      "onboard": 0,
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Item",
+      "link_count": 0,
+      "link_to": "Item",
+      "link_type": "DocType",
+      "onboard": 1,
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Vehicle Brand",
       "link_count": 0,
       "link_to": "Vehicle Brand",
       "link_type": "DocType",
@@ -76,7 +106,7 @@
     {
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Model Kendaraan",
+      "label": "Vehicle Model",
       "link_count": 0,
       "link_to": "Vehicle Model",
       "link_type": "DocType",
@@ -84,11 +114,11 @@
       "type": "Link"
     },
     {
-      "description": "Manajemen suku cadang dan layanan",
+      "description": "Parts and services management",
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Suku Cadang & Layanan",
-      "link_count": 3,
+      "label": "Parts & Services",
+      "link_count": 4,
       "link_type": "DocType",
       "onboard": 0,
       "type": "Card Break"
@@ -96,7 +126,7 @@
     {
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Suku Cadang",
+      "label": "Part",
       "link_count": 0,
       "link_to": "Part",
       "link_type": "DocType",
@@ -106,7 +136,7 @@
     {
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Kompatibilitas Suku Cadang",
+      "label": "Part Compatibility",
       "link_count": 0,
       "link_to": "Part Compatibility",
       "link_type": "DocType",
@@ -116,7 +146,7 @@
     {
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Jenis Pekerjaan",
+      "label": "Job Type",
       "link_count": 0,
       "link_to": "Job Type",
       "link_type": "DocType",
@@ -124,10 +154,20 @@
       "type": "Link"
     },
     {
-      "description": "Paket layanan dan rinciannya",
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Paket Layanan",
+      "label": "Service Price List",
+      "link_count": 0,
+      "link_to": "Service Price List",
+      "link_type": "DocType",
+      "onboard": 0,
+      "type": "Link"
+    },
+    {
+      "description": "Service packages and details",
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Service Packages",
       "link_count": 1,
       "link_type": "DocType",
       "onboard": 0,
@@ -136,7 +176,7 @@
     {
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Paket Layanan",
+      "label": "Service Package",
       "link_count": 0,
       "link_to": "Service Package",
       "link_type": "DocType",
@@ -167,8 +207,8 @@
     {
       "color": "Blue",
       "doc_view": "List",
-      "format": "{} aktif",
-      "label": "Daftar Kendaraan",
+      "format": "{} active",
+      "label": "Vehicles List",
       "link_to": "Customer Vehicle",
       "stats_filter": "[]",
       "type": "DocType"
@@ -176,8 +216,8 @@
     {
       "color": "Green",
       "doc_view": "List",
-      "format": "{} tersedia",
-      "label": "Katalog Suku Cadang",
+      "format": "{} available",
+      "label": "Parts Catalog",
       "link_to": "Part",
       "stats_filter": "[]",
       "type": "DocType"
@@ -185,8 +225,8 @@
     {
       "color": "Orange",
       "doc_view": "List",
-      "format": "{} aktif",
-      "label": "Paket Layanan",
+      "format": "{} active",
+      "label": "Service Packages",
       "link_to": "Service Package",
       "stats_filter": "[[\"Service Package\",\"is_active\",\"=\",\"1\",false]]",
       "type": "DocType"
@@ -194,8 +234,8 @@
     {
       "color": "Grey",
       "doc_view": "List",
-      "format": "{} jenis",
-      "label": "Jenis Pekerjaan",
+      "format": "{} types",
+      "label": "Job Types",
       "link_to": "Job Type",
       "stats_filter": "[]",
       "type": "DocType"
@@ -203,8 +243,8 @@
     {
       "color": "Blue",
       "doc_view": "New",
-      "format": "baru",
-      "label": "Tambah Kendaraan",
+      "format": "new",
+      "label": "Add Vehicle",
       "link_to": "Customer Vehicle",
       "stats_filter": "[]",
       "type": "DocType"
@@ -212,8 +252,8 @@
     {
       "color": "Green",
       "doc_view": "New",
-      "format": "baru",
-      "label": "Tambah Suku Cadang",
+      "format": "new",
+      "label": "Add Part",
       "link_to": "Part",
       "stats_filter": "[]",
       "type": "DocType"
@@ -221,8 +261,8 @@
     {
       "color": "Grey",
       "doc_view": "List",
-      "format": "{} merk",
-      "label": "Merk Kendaraan",
+      "format": "{} brands",
+      "label": "Vehicle Brands",
       "link_to": "Vehicle Brand",
       "stats_filter": "[]",
       "type": "DocType"
@@ -230,8 +270,8 @@
     {
       "color": "Grey",
       "doc_view": "List",
-      "format": "{} model",
-      "label": "Model Kendaraan",
+      "format": "{} models",
+      "label": "Vehicle Models",
       "link_to": "Vehicle Model",
       "stats_filter": "[]",
       "type": "DocType"
