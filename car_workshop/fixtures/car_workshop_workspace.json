@@ -1,6 +1,6 @@
 {
   "charts": [],
-  "content": "[{\"id\":\"p1vsl7dYkx\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Car Workshop Management</b></span>\",\"col\":12}},{\"id\":\"BjBjUGMx60\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Shortcuts</span>\",\"col\":12}},{\"id\":\"67uSojvgXv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicles List\",\"col\":3}},{\"id\":\"H97keoWKqc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Parts Catalog\",\"col\":3}},{\"id\":\"mL2hbQLWyE\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Packages\",\"col\":3}},{\"id\":\"d4o7wDid_n\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Job Types\",\"col\":3}},{\"id\":\"fRgTOVK3pK\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Master Data</span>\",\"col\":12}},{\"id\":\"-F-zHlFhPs\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Add Vehicle\",\"col\":3}},{\"id\":\"nKaK5QWldY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Add Part\",\"col\":3}},{\"id\":\"rrYcd4PNXS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Brands\",\"col\":3}},{\"id\":\"t_hNmoEQtm\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Models\",\"col\":3}},{\"id\":\"HoZOYwrMT0\",\"type\":\"card\",\"data\":{\"card_name\":\"Vehicles\",\"col\":4}}]",
+  "content": "[{\"id\":\"p1vsl7dYkx\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Car Workshop Management</b></span>\",\"col\":12}},{\"id\":\"BjBjUGMx60\",\"type\":\"paragraph\",\"data\":{\"text\":\"Application for automotive workshop management\",\"col\":12}},{\"id\":\"fRgTOVK3pK\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Quick Access</span>\",\"col\":12}},{\"id\":\"67uSojvgXv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicles List\",\"col\":3}},{\"id\":\"H97keoWKqc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Parts Catalog\",\"col\":3}},{\"id\":\"mL2hbQLWyE\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Packages\",\"col\":3}},{\"id\":\"d4o7wDid_n\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Job Types\",\"col\":3}},{\"id\":\"-F-zHlFhPs\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Add Vehicle\",\"col\":3}},{\"id\":\"nKaK5QWldY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Add Part\",\"col\":3}},{\"id\":\"rrYcd4PNXS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Brands\",\"col\":3}},{\"id\":\"t_hNmoEQtm\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Models\",\"col\":3}}]",
   "creation": "2023-09-25 12:00:00.000000",
   "custom_blocks": [],
   "docstatus": 0,
@@ -184,7 +184,7 @@
       "type": "Link"
     }
   ],
-  "modified": "2025-05-25 05:19:24.000000",
+  "modified": "2025-05-25 05:30:45.000000",
   "modified_by": "dannyaudian",
   "module": "Car Workshop",
   "name": "Car Workshop",
