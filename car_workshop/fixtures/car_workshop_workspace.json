@@ -1,247 +1,60 @@
 {
   "doctype": "Workspace",
-  "extends": null,
-  "extends_another_page": 0,
-  "hide_custom": 0,
-  "icon": "car",
-  "is_default": 0,
-  "is_standard": 0,
+  "name": "Car Workshop",
   "label": "Car Workshop",
-  "module": "Car Workshop",
-  "onboarding": null,
-  "pin_to_bottom": 0,
-  "pin_to_top": 0,
-  "shortcuts_label": null,
   "title": "Car Workshop",
-  "workspace_name": "Car Workshop",
-  "for_user": "",
-  "parent_page": "",
-  "developer_mode_only": 0,
-  "disable_user_customization": 0,
-  "content": "{\"type\":\"page\",\"data\":{\"blocks\":[{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Car Workshop Management</b></span>\",\"level\":3}},{\"type\":\"paragraph\",\"data\":{\"text\":\"Application for automotive workshop management\"}}],\"version\":\"2.27.0\"}}",
+  "module": "Car Workshop",
+  "public": 1,
+  "icon": "car",
   "is_hidden": 0,
+  "content": "{\"type\":\"page\",\"data\":{\"blocks\":[{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\"><b>Car Workshop Management</b></span>\",\"level\":3}},{\"type\":\"paragraph\",\"data\":{\"text\":\"Application for automotive workshop management\"}}],\"version\":\"2.27.0\"}}",
   "cards": [
     {
-      "hidden": 0,
       "label": "Vehicles",
       "links": [
-        {
-          "dependencies": null,
-          "hidden": 0,
-          "is_query_report": 0,
-          "label": "Customer Vehicle",
-          "link_to": "Customer Vehicle",
-          "link_type": "DocType",
-          "onboard": 1,
-          "type": "Link",
-          "only_for": null
-        },
-        {
-          "dependencies": null,
-          "hidden": 0,
-          "is_query_report": 0,
-          "label": "Vehicle",
-          "link_to": "Vehicle",
-          "link_type": "DocType",
-          "onboard": 0,
-          "type": "Link",
-          "only_for": null
-        },
-        {
-          "dependencies": null,
-          "hidden": 0,
-          "is_query_report": 0,
-          "label": "Vehicle Change Log",
-          "link_to": "Vehicle Change Log",
-          "link_type": "DocType",
-          "onboard": 0,
-          "type": "Link",
-          "only_for": null
-        }
+        { "label": "Customer Vehicle", "link_to": "Customer Vehicle", "type": "Link", "link_type": "DocType" },
+        { "label": "Vehicle", "link_to": "Vehicle", "type": "Link", "link_type": "DocType" },
+        { "label": "Vehicle Change Log", "link_to": "Vehicle Change Log", "type": "Link", "link_type": "DocType" }
       ],
-      "restrict_to_domain": null,
-      "only_for": null,
       "card_description": "Customer vehicle management and related information"
     },
     {
-      "hidden": 0,
       "label": "Master Data",
       "links": [
-        {
-          "dependencies": null,
-          "hidden": 0,
-          "is_query_report": 0,
-          "label": "Vehicle Brand",
-          "link_to": "Vehicle Brand",
-          "link_type": "DocType",
-          "onboard": 0,
-          "type": "Link",
-          "only_for": null
-        },
-        {
-          "dependencies": null,
-          "hidden": 0,
-          "is_query_report": 0,
-          "label": "Vehicle Model",
-          "link_to": "Vehicle Model",
-          "link_type": "DocType",
-          "onboard": 0,
-          "type": "Link",
-          "only_for": null
-        }
+        { "label": "Vehicle Brand", "link_to": "Vehicle Brand", "type": "Link", "link_type": "DocType" },
+        { "label": "Vehicle Model", "link_to": "Vehicle Model", "type": "Link", "link_type": "DocType" }
       ],
-      "restrict_to_domain": null,
-      "only_for": null,
       "card_description": "Master data for workshop reference"
     },
     {
-      "hidden": 0,
       "label": "Parts & Services",
       "links": [
-        {
-          "dependencies": null,
-          "hidden": 0,
-          "is_query_report": 0,
-          "label": "Part",
-          "link_to": "Part",
-          "link_type": "DocType",
-          "onboard": 1,
-          "type": "Link",
-          "only_for": null
-        },
-        {
-          "dependencies": null,
-          "hidden": 0,
-          "is_query_report": 0,
-          "label": "Part Compatibility",
-          "link_to": "Part Compatibility",
-          "link_type": "DocType",
-          "onboard": 0,
-          "type": "Link",
-          "only_for": null
-        },
-        {
-          "dependencies": null,
-          "hidden": 0,
-          "is_query_report": 0,
-          "label": "Job Type",
-          "link_to": "Job Type",
-          "link_type": "DocType",
-          "onboard": 1,
-          "type": "Link",
-          "only_for": null
-        }
+        { "label": "Part", "link_to": "Part", "type": "Link", "link_type": "DocType" },
+        { "label": "Part Compatibility", "link_to": "Part Compatibility", "type": "Link", "link_type": "DocType" },
+        { "label": "Job Type", "link_to": "Job Type", "type": "Link", "link_type": "DocType" }
       ],
-      "restrict_to_domain": null,
-      "only_for": null,
       "card_description": "Parts and services management"
     },
     {
-      "hidden": 0,
       "label": "Service Packages",
       "links": [
-        {
-          "dependencies": null,
-          "hidden": 0,
-          "is_query_report": 0,
-          "label": "Service Package",
-          "link_to": "Service Package",
-          "link_type": "DocType",
-          "onboard": 1,
-          "type": "Link",
-          "only_for": null
-        }
+        { "label": "Service Package", "link_to": "Service Package", "type": "Link", "link_type": "DocType" }
       ],
-      "restrict_to_domain": null,
-      "only_for": null,
       "card_description": "Service packages and details"
     }
   ],
   "shortcuts": [
-    {
-      "color": "Blue",
-      "doc_view": "List",
-      "format": "{} active",
-      "label": "Vehicles List",
-      "link_to": "Customer Vehicle",
-      "restrict_to_domain": null,
-      "stats_filter": "[]",
-      "type": "DocType"
-    },
-    {
-      "color": "Green",
-      "doc_view": "List",
-      "format": "{} available",
-      "label": "Parts Catalog",
-      "link_to": "Part",
-      "restrict_to_domain": null,
-      "stats_filter": "[]",
-      "type": "DocType"
-    },
-    {
-      "color": "Orange",
-      "doc_view": "List",
-      "format": "{} active",
-      "label": "Service Packages",
-      "link_to": "Service Package",
-      "restrict_to_domain": null,
-      "stats_filter": "[[\"Service Package\",\"is_active\",\"=\",\"1\",false]]",
-      "type": "DocType"
-    },
-    {
-      "color": "Grey",
-      "doc_view": "List",
-      "format": "{} types",
-      "label": "Job Types",
-      "link_to": "Job Type",
-      "restrict_to_domain": null,
-      "stats_filter": "[]",
-      "type": "DocType"
-    },
-    {
-      "color": "Blue",
-      "doc_view": "New",
-      "format": "new",
-      "label": "Add Vehicle",
-      "link_to": "Customer Vehicle",
-      "restrict_to_domain": null,
-      "stats_filter": "[]",
-      "type": "DocType"
-    },
-    {
-      "color": "Green",
-      "doc_view": "New",
-      "format": "new",
-      "label": "Add Part",
-      "link_to": "Part",
-      "restrict_to_domain": null,
-      "stats_filter": "[]",
-      "type": "DocType"
-    },
-    {
-      "color": "Grey",
-      "doc_view": "List",
-      "format": "{} brands",
-      "label": "Vehicle Brands",
-      "link_to": "Vehicle Brand",
-      "restrict_to_domain": null,
-      "stats_filter": "[]",
-      "type": "DocType"
-    },
-    {
-      "color": "Grey",
-      "doc_view": "List",
-      "format": "{} models",
-      "label": "Vehicle Models",
-      "link_to": "Vehicle Model",
-      "restrict_to_domain": null,
-      "stats_filter": "[]",
-      "type": "DocType"
-    }
+    { "label": "Vehicles List", "link_to": "Customer Vehicle", "type": "DocType", "doc_view": "List", "color": "Blue", "format": "{} active" },
+    { "label": "Parts Catalog", "link_to": "Part", "type": "DocType", "doc_view": "List", "color": "Green", "format": "{} available" },
+    { "label": "Service Packages", "link_to": "Service Package", "type": "DocType", "doc_view": "List", "color": "Orange", "format": "{} active" },
+    { "label": "Job Types", "link_to": "Job Type", "type": "DocType", "doc_view": "List", "color": "Grey", "format": "{} types" },
+    { "label": "Add Vehicle", "link_to": "Customer Vehicle", "type": "DocType", "doc_view": "New", "color": "Blue", "format": "new" },
+    { "label": "Add Part", "link_to": "Part", "type": "DocType", "doc_view": "New", "color": "Green", "format": "new" },
+    { "label": "Vehicle Brands", "link_to": "Vehicle Brand", "type": "DocType", "doc_view": "List", "color": "Grey", "format": "{} brands" },
+    { "label": "Vehicle Models", "link_to": "Vehicle Model", "type": "DocType", "doc_view": "List", "color": "Grey", "format": "{} models" }
   ],
-  "public": 1,
   "roles": [
-    {"role": "Workshop Manager"},
-    {"role": "Technician"}
+    { "role": "Workshop Manager" },
+    { "role": "Technician" }
   ]
 }
