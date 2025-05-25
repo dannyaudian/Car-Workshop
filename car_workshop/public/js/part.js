@@ -44,9 +44,9 @@ frappe.ui.form.on('Part', {
             });
         }
         
-        // Add Scan Barcode button for all devices (mobile and desktop)
+        // Add Scan Barcode button for all devices
         frm.add_custom_button(__('Scan Barcode (Kamera)'), function() {
-            scan_barcode_multi_platform(frm);
+            scan_barcode_with_camera(frm);
         }, __('Actions'));
     },
     
@@ -73,59 +73,25 @@ frappe.ui.form.on('Part', {
     }
 });
 
-// Multi-platform barcode scanning function
-async function scan_barcode_multi_platform(frm) {
-    try {
-        // Try native Frappe barcode scanner first (for mobile devices)
-        if (typeof frappe.barcode !== 'undefined' && typeof frappe.barcode.scan === 'function') {
-            try {
-                console.log("Trying Frappe native barcode scanner...");
-                const barcode = await frappe.barcode.scan();
-                
-                if (barcode) {
-                    // Success! Set the part_number
-                    frm.set_value('part_number', barcode);
-                    
-                    // Show success message
-                    frappe.show_alert({
-                        message: __('Berhasil scan'),
-                        indicator: 'green'
-                    }, 3);
-                    
-                    // Trigger price fetch
-                    fetch_current_price(frm);
-                    return; // Exit function on success
-                }
-            } catch (err) {
-                console.warn("Frappe barcode scanner failed:", err);
-                // Continue to next method if this fails
-            }
-        }
-        
-        // If we reach here, try the BarcodeDetector API (for modern desktop browsers)
-        if (window.BarcodeDetector && window.isSecureContext) {
-            try {
-                console.log("Trying BarcodeDetector API...");
-                await desktop_camera_scan(frm);
-                return; // Exit function on success
-            } catch (err) {
-                console.warn("BarcodeDetector scanning failed:", err);
-                // Continue to next method if this fails
-            }
-        }
-        
-        // If we reach here, all automatic methods failed, use manual entry
-        console.log("Falling back to manual entry...");
-        fallback_prompt(frm);
-        
-    } catch (error) {
-        console.error("Error in barcode scanning:", error);
+// Main barcode scanning function using camera
+function scan_barcode_with_camera(frm) {
+    // Check if BarcodeDetector is available (Chrome 83+, Edge Chromium, Firefox 88+)
+    if (window.BarcodeDetector && window.isSecureContext) {
+        // BarcodeDetector is available, use the camera for scanning
+        desktop_camera_scan(frm).catch(error => {
+            console.warn("Camera scanning failed:", error);
+            // Fall back to manual entry if camera scanning fails
+            fallback_prompt(frm);
+        });
+    } else {
+        // BarcodeDetector is not available, fall back to manual entry
+        console.warn("BarcodeDetector API not available in this browser");
         fallback_prompt(frm);
     }
 }
 
 // Desktop camera scanning with BarcodeDetector API
-async function desktop_camera_scan(frm) {
+function desktop_camera_scan(frm) {
     return new Promise((resolve, reject) => {
         // Check if we're on HTTPS (required for camera access)
         if (!window.isSecureContext) {
@@ -142,8 +108,8 @@ async function desktop_camera_scan(frm) {
                 options: `
                     <div style="text-align: center;">
                         <video id="barcode_video" style="width: 100%; max-height: 80vh; border: 1px solid #ccc;" autoplay playsinline></video>
-                        <div style="margin-top: 10px; font-size: 14px; color: #8D99A6;">
-                            ${__('Position barcode in view to scan automatically')}
+                        <div id="scan_status" style="margin-top: 10px; font-size: 14px; color: #8D99A6;">
+                            ${__('Mendeteksi... Arahkan kamera ke barcode')}
                         </div>
                     </div>
                 `
@@ -156,7 +122,7 @@ async function desktop_camera_scan(frm) {
                 }
                 clearInterval(scanInterval);
                 d.hide();
-                reject(new Error("Scanning cancelled"));
+                reject(new Error("Scanning cancelled by user"));
             }
         });
         
@@ -165,73 +131,105 @@ async function desktop_camera_scan(frm) {
         let stream;
         let scanInterval;
         
-        // Access camera
-        navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: 'environment', // Use back camera when available
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            }
-        })
-        .then(mediaStream => {
-            stream = mediaStream;
-            const video = document.getElementById('barcode_video');
-            video.srcObject = stream;
-            
-            // Some browsers need explicit play() call
-            video.play().catch(e => console.warn("Video play error:", e));
-            
-            // Initialize BarcodeDetector
-            const barcodeDetector = new BarcodeDetector({
-                // Common barcode formats
-                formats: ['qr_code', 'code_39', 'code_128', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf', 'data_matrix']
-            });
-            
-            // Start scanning
-            scanInterval = setInterval(() => {
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    barcodeDetector.detect(video)
-                        .then(barcodes => {
-                            if (barcodes.length > 0) {
-                                // Barcode detected!
-                                const barcode = barcodes[0].rawValue;
-                                
-                                // Stop scanning
-                                clearInterval(scanInterval);
-                                
-                                // Stop camera
-                                stream.getTracks().forEach(track => track.stop());
-                                
-                                // Close dialog
-                                d.hide();
-                                
-                                // Set part number
-                                frm.set_value('part_number', barcode);
-                                
-                                // Show success message
-                                frappe.show_alert({
-                                    message: __('Berhasil scan'),
-                                    indicator: 'green'
-                                }, 3);
-                                
-                                // Trigger price fetch
-                                fetch_current_price(frm);
-                                
-                                // Resolve promise
-                                resolve(barcode);
-                            }
-                        })
-                        .catch(err => {
-                            console.warn("Barcode detection error:", err);
-                        });
+        // First check if BarcodeDetector supports the formats we need
+        BarcodeDetector.getSupportedFormats()
+            .then(supportedFormats => {
+                console.log("Supported barcode formats:", supportedFormats);
+                
+                // Access camera
+                return navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment', // Use back camera when available
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+            })
+            .then(mediaStream => {
+                stream = mediaStream;
+                const video = document.getElementById('barcode_video');
+                video.srcObject = stream;
+                
+                // Update status
+                document.getElementById('scan_status').textContent = __('Kamera aktif, mendeteksi barcode...');
+                
+                // Some browsers need explicit play() call
+                video.play().catch(e => console.warn("Video play error:", e));
+                
+                // Initialize BarcodeDetector with all supported formats
+                const barcodeDetector = new BarcodeDetector({
+                    // Common barcode formats
+                    formats: ['qr_code', 'code_39', 'code_128', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf', 'data_matrix']
+                });
+                
+                // Start scanning
+                scanInterval = setInterval(() => {
+                    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                        barcodeDetector.detect(video)
+                            .then(barcodes => {
+                                if (barcodes.length > 0) {
+                                    // Barcode detected!
+                                    const barcode = barcodes[0].rawValue;
+                                    document.getElementById('scan_status').textContent = __('Barcode terdeteksi!');
+                                    
+                                    // Stop scanning
+                                    clearInterval(scanInterval);
+                                    
+                                    // Stop camera
+                                    stream.getTracks().forEach(track => track.stop());
+                                    
+                                    // Close dialog
+                                    setTimeout(() => {
+                                        d.hide();
+                                        
+                                        // Set part number
+                                        frm.set_value('part_number', barcode);
+                                        
+                                        // Show success message
+                                        frappe.show_alert({
+                                            message: __('Berhasil scan'),
+                                            indicator: 'green'
+                                        }, 3);
+                                        
+                                        // Trigger price fetch
+                                        fetch_current_price(frm);
+                                        
+                                        // Resolve promise
+                                        resolve(barcode);
+                                    }, 500); // Small delay to show success message
+                                }
+                            })
+                            .catch(err => {
+                                console.warn("Barcode detection error:", err);
+                                document.getElementById('scan_status').textContent = __('Error mendeteksi barcode, coba lagi...');
+                            });
+                    }
+                }, 700); // Check every 700ms
+            })
+            .catch(err => {
+                console.error("Camera access error:", err);
+                d.hide();
+                
+                // Show specific error message based on the error
+                if (err.name === 'NotAllowedError') {
+                    frappe.show_alert({
+                        message: __('Camera access denied. Please allow camera access.'),
+                        indicator: 'red'
+                    }, 5);
+                } else if (err.name === 'NotFoundError') {
+                    frappe.show_alert({
+                        message: __('No camera found on this device.'),
+                        indicator: 'red'
+                    }, 5);
+                } else {
+                    frappe.show_alert({
+                        message: __('Camera error: {0}', [err.message || 'Unknown error']),
+                        indicator: 'red'
+                    }, 5);
                 }
-            }, 700); // Check every 700ms
-        })
-        .catch(err => {
-            console.error("Camera access error:", err);
-            d.hide();
-            reject(err);
-        });
+                
+                reject(err);
+            });
     });
 }
 
@@ -240,7 +238,8 @@ function fallback_prompt(frm) {
     frappe.prompt({
         label: __('Enter Part Number'),
         fieldname: 'part_number',
-        fieldtype: 'Data'
+        fieldtype: 'Data',
+        reqd: true
     }, function(values) {
         if (values.part_number) {
             frm.set_value('part_number', values.part_number);
@@ -252,7 +251,7 @@ function fallback_prompt(frm) {
             
             fetch_current_price(frm);
         }
-    });
+    }, __('Manual Entry'));
 }
 
 // Function to fetch and update current price
