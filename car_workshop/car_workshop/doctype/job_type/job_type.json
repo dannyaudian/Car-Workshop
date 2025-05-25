@@ -9,6 +9,10 @@
     "job_name",
     "description",
     "default_price",
+    "is_opl",
+    "opl_vendor",
+    "opl_item_code",
+    "opl_notes",
     "is_active",
     "items_section",
     "items"
@@ -33,6 +37,33 @@
       "fieldtype": "Currency",
       "label": "Default Price",
       "in_list_view": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "is_opl",
+      "fieldtype": "Check",
+      "label": "Dikerjakan oleh Vendor Luar",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "opl_vendor",
+      "fieldtype": "Link",
+      "label": "Vendor OPL",
+      "options": "Supplier",
+      "depends_on": "eval:doc.is_opl"
+    },
+    {
+      "fieldname": "opl_item_code",
+      "fieldtype": "Link",
+      "label": "Item OPL",
+      "options": "Item",
+      "depends_on": "eval:doc.is_opl"
+    },
+    {
+      "fieldname": "opl_notes",
+      "fieldtype": "Small Text",
+      "label": "Catatan untuk Vendor",
+      "depends_on": "eval:doc.is_opl"
     },
     {
       "default": "1",
