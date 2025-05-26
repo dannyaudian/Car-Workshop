@@ -16,10 +16,10 @@ after_install = "car_workshop.setup.after_install"
 
 doc_events = {
     "Customer Vehicle": {
-        "on_update": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.on_update",
+        #"on_update": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.on_update",
         "after_insert": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.create_vehicle_log",
     }
-    # Tidak perlu mendeklarasikan event Vehicle Change Log jika hanya memakai method pada class!
+    # VEHICLE CHANGE LOG doc_events DIHAPUS!
 }
 
 fixtures = [
