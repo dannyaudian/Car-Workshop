@@ -16,42 +16,34 @@ after_install = "car_workshop.setup.after_install"
 
 doc_events = {
     "Customer Vehicle": {
-        #"on_update": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.on_update",
+        # Jangan tulis .on_update atau .validate, biarkan Frappe panggil method class sendiri.
         "after_insert": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.create_vehicle_log",
+        # Jika ingin audit log update, gunakan fungsi global, misal:
+        # "on_update": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.log_vehicle_updates",
     }
-    # VEHICLE CHANGE LOG doc_events DIHAPUS!
+    # Hapus entry untuk "Vehicle Change Log" jika tidak ada fungsi global before_save/on_trash!
 }
 
 fixtures = [
     {
         "doctype": "Custom Field",
-        "filters": [
-            ["module", "=", "Car Workshop"]
-        ]
+        "filters": [["module", "=", "Car Workshop"]]
     },
     {
         "doctype": "Client Script",
-        "filters": [
-            ["module", "=", "Car Workshop"]
-        ]
+        "filters": [["module", "=", "Car Workshop"]]
     },
     {
         "doctype": "Property Setter",
-        "filters": [
-            ["module", "=", "Car Workshop"]
-        ]
+        "filters": [["module", "=", "Car Workshop"]]
     },
     {
         "doctype": "Role",
-        "filters": [
-            ["name", "in", ["Workshop Manager", "Technician"]]
-        ]
+        "filters": [["name", "in", ["Workshop Manager", "Technician"]]]
     },
     {
         "doctype": "Workspace",
-        "filters": [
-            ["name", "=", "Car Workshop"]
-        ]
+        "filters": [["name", "=", "Car Workshop"]]
     }
 ]
 
