@@ -1,4 +1,4 @@
-# Car Workshop Modules – BY Innovasi Terbaik Bangsa
+# Car Workshop Modules – By Innovasi Terbaik Bangsa
 
 This repository contains a set of integrated Frappe/ERPNext modules to manage modern automotive workshop operations. It includes detailed management of customer vehicles, job types, parts inventory, service packages, and flexible pricing via a dedicated service price list mechanism.
 
