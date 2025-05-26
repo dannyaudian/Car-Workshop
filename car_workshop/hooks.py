@@ -1,8 +1,8 @@
 app_name = "car_workshop"
 app_title = "Car Workshop"
-app_publisher = "Your Company"
+app_publisher = "PT. Innovasi Terbaik Bangsa"
 app_description = "ERPNext module app for managing automotive workshop operations"
-app_email = "info@yourcompany.com"
+app_email = "danny.a.pratama@cao-group.co.id"
 app_license = "MIT"
 
 # Includes in <head>
