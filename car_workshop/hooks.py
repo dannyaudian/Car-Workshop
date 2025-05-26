@@ -5,7 +5,6 @@ app_description = "ERPNext module app for managing automotive workshop operation
 app_email = "danny.a.pratama@cao-group.co.id"
 app_license = "MIT"
 
-# Doctype JS (Client Scripts)
 doctype_js = {
     "Customer Vehicle": "public/js/customer_vehicle.js",
     "Part": "public/js/part.js",
@@ -13,23 +12,16 @@ doctype_js = {
     "Job Type": "public/js/job_type.js"
 }
 
-# After install
 after_install = "car_workshop.setup.after_install"
 
-# Document Events
 doc_events = {
     "Customer Vehicle": {
-        # validate method cukup di dalam class CustomerVehicle (Document)
         "on_update": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.on_update",
         "after_insert": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.create_vehicle_log",
-    },
-    "Vehicle Change Log": {
-        "before_save": "car_workshop.car_workshop.doctype.vehicle_change_log.vehicle_change_log.before_save",
-        "on_trash": "car_workshop.car_workshop.doctype.vehicle_change_log.vehicle_change_log.on_trash",
     }
+    # Tidak perlu mendeklarasikan event Vehicle Change Log jika hanya memakai method pada class!
 }
 
-# Fixtures
 fixtures = [
     {
         "doctype": "Custom Field",
@@ -63,5 +55,4 @@ fixtures = [
     }
 ]
 
-# Vehicle Master Data Setup Command
 vehicle_master_data_setup = "car_workshop.config.load_vehicle_master_data.execute"
