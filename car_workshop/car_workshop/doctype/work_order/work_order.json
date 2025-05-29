@@ -13,8 +13,6 @@
     "service_advisor",
     "column_break_5",
     "status",
-    "source",
-    "purchase_order",
     "details_section",
     "job_type_detail",
     "service_package_detail",
@@ -70,21 +68,6 @@
       "options": "Draft\nIn Progress\nCompleted\nCancelled",
       "default": "Draft",
       "reqd": 1
-    },
-    {
-      "fieldname": "source",
-      "fieldtype": "Select",
-      "label": "Source",
-      "options": "Dari Stok\nTitipan\nBeli Baru",
-      "default": "Dari Stok",
-      "reqd": 1
-    },
-    {
-      "fieldname": "purchase_order",
-      "fieldtype": "Link",
-      "label": "Purchase Order",
-      "options": "Purchase Order",
-      "depends_on": "eval:doc.source=='Beli Baru'"
     },
     {
       "fieldname": "details_section",

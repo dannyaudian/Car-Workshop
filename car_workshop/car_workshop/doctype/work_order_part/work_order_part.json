@@ -12,6 +12,10 @@
     "item_code",
     "brand",
     "category",
+    "source_section",
+    "source",
+    "purchase_order",
+    "quantity_section",
     "quantity",
     "rate",
     "amount",
@@ -61,6 +65,32 @@
       "fieldtype": "Data",
       "label": "Category",
       "read_only": 1
+    },
+    {
+      "fieldname": "source_section",
+      "fieldtype": "Column Break",
+      "label": "Source"
+    },
+    {
+      "fieldname": "source",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Source",
+      "options": "Dari Stok\nTitipan\nBeli Baru",
+      "default": "Dari Stok",
+      "reqd": 1
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "label": "Purchase Order",
+      "options": "Purchase Order",
+      "depends_on": "eval:doc.source=='Beli Baru'"
+    },
+    {
+      "fieldname": "quantity_section",
+      "fieldtype": "Column Break",
+      "label": "Quantity & Price"
     },
     {
       "fieldname": "quantity",
