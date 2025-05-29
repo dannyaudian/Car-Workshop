@@ -1,0 +1,190 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "format:WO-{YYYY}-{####}",
+  "creation": "2025-05-29 02:01:09.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "customer_section",
+    "customer",
+    "customer_vehicle",
+    "service_date",
+    "service_advisor",
+    "column_break_5",
+    "status",
+    "source",
+    "purchase_order",
+    "details_section",
+    "job_type_detail",
+    "service_package_detail",
+    "part_detail",
+    "external_expense",
+    "totals_section",
+    "total_amount",
+    "notes_section",
+    "notes"
+  ],
+  "fields": [
+    {
+      "fieldname": "customer_section",
+      "fieldtype": "Section Break",
+      "label": "Customer Information"
+    },
+    {
+      "fieldname": "customer",
+      "fieldtype": "Link",
+      "label": "Customer",
+      "options": "Customer",
+      "reqd": 1
+    },
+    {
+      "fieldname": "customer_vehicle",
+      "fieldtype": "Link",
+      "label": "Customer Vehicle",
+      "options": "Customer Vehicle",
+      "reqd": 1
+    },
+    {
+      "fieldname": "service_date",
+      "fieldtype": "Date",
+      "label": "Service Date",
+      "reqd": 1,
+      "default": "Today"
+    },
+    {
+      "fieldname": "service_advisor",
+      "fieldtype": "Link",
+      "label": "Service Advisor",
+      "options": "Employee",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_5",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nIn Progress\nCompleted\nCancelled",
+      "default": "Draft",
+      "reqd": 1
+    },
+    {
+      "fieldname": "source",
+      "fieldtype": "Select",
+      "label": "Source",
+      "options": "Dari Stok\nTitipan\nBeli Baru",
+      "default": "Dari Stok",
+      "reqd": 1
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "label": "Purchase Order",
+      "options": "Purchase Order",
+      "depends_on": "eval:doc.source=='Beli Baru'"
+    },
+    {
+      "fieldname": "details_section",
+      "fieldtype": "Section Break",
+      "label": "Work Details"
+    },
+    {
+      "fieldname": "job_type_detail",
+      "fieldtype": "Table",
+      "label": "Job Type Details",
+      "options": "Work Order Job Type"
+    },
+    {
+      "fieldname": "service_package_detail",
+      "fieldtype": "Table",
+      "label": "Service Package Details",
+      "options": "Work Order Service Package"
+    },
+    {
+      "fieldname": "part_detail",
+      "fieldtype": "Table",
+      "label": "Part Details",
+      "options": "Work Order Part"
+    },
+    {
+      "fieldname": "external_expense",
+      "fieldtype": "Table",
+      "label": "External Expenses",
+      "options": "Work Order Expense"
+    },
+    {
+      "fieldname": "totals_section",
+      "fieldtype": "Section Break",
+      "label": "Totals"
+    },
+    {
+      "fieldname": "total_amount",
+      "fieldtype": "Currency",
+      "label": "Total Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "notes_section",
+      "fieldtype": "Section Break",
+      "label": "Additional Notes"
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Small Text",
+      "label": "Notes"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2025-05-29 02:01:09.000000",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Work Order",
+  "naming_rule": "Expression",
+  "owner": "dannyaudian",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Workshop Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 0,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Technician",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
