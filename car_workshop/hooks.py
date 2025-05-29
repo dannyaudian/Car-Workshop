@@ -23,10 +23,11 @@ doc_events = {
         "after_insert": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.create_vehicle_log"
         # Note: on_update is handled directly in CustomerVehicle.on_update()
     },
-    "Work Order": {
-        "validate": "car_workshop.car_workshop.doctype.work_order.work_order.validate",
-        "before_submit": "car_workshop.car_workshop.doctype.work_order.work_order.before_submit"
-    },
+    # Remove this problematic entry - the methods are already in the WorkOrder class
+    # "Work Order": {
+    #     "validate": "car_workshop.car_workshop.doctype.work_order.work_order.validate",
+    #     "before_submit": "car_workshop.car_workshop.doctype.work_order.work_order.before_submit"
+    # },
     "Work Order Part": {
         "validate": "car_workshop.car_workshop.doctype.work_order_part.work_order_part.validate"
     },
