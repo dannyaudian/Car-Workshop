@@ -1,0 +1,171 @@
+{
+  "actions": [],
+  "autoname": "naming_series:",
+  "creation": "2025-05-29 15:43:08",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "purchase_order",
+    "supplier",
+    "receipt_date",
+    "column_break_4",
+    "status",
+    "warehouse",
+    "section_break_7",
+    "items",
+    "section_break_9",
+    "total_received_amount",
+    "section_break_11",
+    "remarks",
+    "amended_from"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Series",
+      "options": "WKPR-.YYYY.-.####",
+      "reqd": 1
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "in_standard_filter": 1,
+      "label": "Workshop Purchase Order",
+      "options": "Workshop Purchase Order",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "purchase_order.supplier",
+      "fieldname": "supplier",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Supplier",
+      "options": "Supplier",
+      "read_only": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "receipt_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Receipt Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_4",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nSubmitted\nCancelled",
+      "read_only": 1
+    },
+    {
+      "description": "The warehouse where the received items will be stored",
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "label": "Warehouse",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "section_break_7",
+      "fieldtype": "Section Break",
+      "label": "Received Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Received Items",
+      "options": "Workshop Purchase Receipt Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_9",
+      "fieldtype": "Section Break",
+      "label": "Totals"
+    },
+    {
+      "fieldname": "total_received_amount",
+      "fieldtype": "Currency",
+      "label": "Total Received Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_11",
+      "fieldtype": "Section Break",
+      "label": "Additional Information"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "Workshop Purchase Receipt",
+      "print_hide": 1,
+      "read_only": 1
+    }
+  ],
+  "is_submittable": 1,
+  "links": [
+    {
+      "group": "Purchase Order",
+      "link_doctype": "Workshop Purchase Order",
+      "link_fieldname": "purchase_order"
+    }
+  ],
+  "modified": "2025-05-29 15:43:08",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Workshop Purchase Receipt",
+  "naming_rule": "By \"Naming Series\" field",
+  "owner": "dannyaudian",
+  "permissions": [
+    {
+      "amend": 1,
+      "cancel": 1,
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "amend": 1,
+      "cancel": 1,
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Purchase User",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

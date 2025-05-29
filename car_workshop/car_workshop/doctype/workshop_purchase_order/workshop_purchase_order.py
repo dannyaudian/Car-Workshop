@@ -837,3 +837,18 @@ def fetch_work_order_items(work_order, fetch_parts=0, fetch_opl=0, fetch_expense
         result["expenses"] = expenses
     
     return result
+
+@frappe.whitelist()
+def get_dashboard_data(data):
+    """
+    Get dashboard data for the Workshop Purchase Order
+    """
+    data = frappe._dict(data)
+    data.transactions = [
+        {
+            'label': _('Related Documents'),
+            'items': ['Workshop Purchase Receipt', 'Purchase Invoice', 'Stock Entry']
+        }
+    ]
+    
+    return data

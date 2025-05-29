@@ -789,3 +789,12 @@ function mark_as_received(frm) {
         }
     );
 }
+
+if (frm.doc.docstatus === 1 && frm.doc.status !== "Cancelled") {
+    frm.add_custom_button(__('Create Receipt'), function() {
+        frappe.model.open_mapped_doc({
+            method: "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.make_purchase_receipt",
+            frm: frm
+        });
+    }).addClass('btn-primary');
+}
