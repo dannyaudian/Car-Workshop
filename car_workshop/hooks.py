@@ -12,8 +12,14 @@ doctype_js = {
     "Service Package": "public/js/service_package.js",
     "Job Type": "public/js/job_type.js",
     "Work Order": "public/js/work_order.js",
-    "Workshop Purchase Order": "public/js/workshop_purchase_order.js"  # Added Workshop Purchase Order JS
+    "Workshop Purchase Order": "public/js/workshop_purchase_order.js",  # Added Workshop Purchase Order JS
+    "Workshop Purchase Receipt": "public/js/workshop_purchase_receipt.js"  # Adding Workshop Purchase Receipt JS
 }
+
+# Include JS utility files
+app_include_js = [
+    "/assets/car_workshop/js/item_utils.js"  # Include item_utils.js as a common utility
+]
 
 # Setup function
 after_install = "car_workshop.setup.after_install"
@@ -38,6 +44,17 @@ doc_events = {
     "Workshop Purchase Order": {
         "validate": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.validate",
         "before_submit": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.before_submit"
+    },
+    # Add Workshop Purchase Receipt events
+    "Workshop Purchase Receipt": {
+        "validate": "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.validate",
+        "before_submit": "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.before_submit",
+        "on_submit": "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.on_submit",
+        "on_cancel": "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.on_cancel"
+    },
+    # Add Workshop Purchase Receipt Item events
+    "Workshop Purchase Receipt Item": {
+        "validate": "car_workshop.car_workshop.doctype.workshop_purchase_receipt_item.workshop_purchase_receipt_item.validate"
     }
 }
 
@@ -75,11 +92,12 @@ vehicle_master_data_setup = "car_workshop.config.load_vehicle_master_data.execut
 # Dashboard links for Work Order
 get_dashboard_data = {
     "Work Order": "car_workshop.car_workshop.doctype.work_order.work_order.get_dashboard_data",
-    "Workshop Purchase Order": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.get_dashboard_data"  # Added dashboard data for Workshop Purchase Order
+    "Workshop Purchase Order": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.get_dashboard_data",  # Added dashboard data for Workshop Purchase Order
+    "Workshop Purchase Receipt": "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.get_dashboard_data"  # Added dashboard data for Workshop Purchase Receipt
 }
 
 # Override calendar views
-calendars = ["Work Order", "Workshop Purchase Order"]  # Added Workshop Purchase Order to calendars
+calendars = ["Work Order", "Workshop Purchase Order", "Workshop Purchase Receipt"]  # Added Workshop Purchase Receipt to calendars
 
 # Add DocTypes to global search
 global_search_doctypes = {
@@ -89,7 +107,8 @@ global_search_doctypes = {
         {"doctype": "Part"},
         {"doctype": "Job Type"},
         {"doctype": "Service Package"},
-        {"doctype": "Workshop Purchase Order"}  # Added Workshop Purchase Order to global search
+        {"doctype": "Workshop Purchase Order"},  # Added Workshop Purchase Order to global search
+        {"doctype": "Workshop Purchase Receipt"}  # Added Workshop Purchase Receipt to global search
     ]
 }
 
