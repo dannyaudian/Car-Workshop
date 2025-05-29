@@ -5,6 +5,7 @@ app_description = "ERPNext module app for managing automotive workshop operation
 app_email = "danny.a.pratama@cao-group.co.id"
 app_license = "MIT"
 
+# JavaScript customizations
 doctype_js = {
     "Customer Vehicle": "public/js/customer_vehicle.js",
     "Part": "public/js/part.js",
@@ -12,18 +13,18 @@ doctype_js = {
     "Job Type": "public/js/job_type.js"
 }
 
+# Setup function
 after_install = "car_workshop.setup.after_install"
 
+# Document events
 doc_events = {
     "Customer Vehicle": {
-        # Jangan tulis .on_update atau .validate, biarkan Frappe panggil method class sendiri.
-        "after_insert": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.create_vehicle_log",
-        # Jika ingin audit log update, gunakan fungsi global, misal:
-        # "on_update": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.log_vehicle_updates",
+        "after_insert": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.create_vehicle_log"
+        # Note: on_update is handled directly in CustomerVehicle.on_update()
     }
-    # Hapus entry untuk "Vehicle Change Log" jika tidak ada fungsi global before_save/on_trash!
 }
 
+# Data fixtures
 fixtures = [
     {
         "doctype": "Custom Field",
@@ -47,4 +48,5 @@ fixtures = [
     }
 ]
 
+# Master data setup
 vehicle_master_data_setup = "car_workshop.config.load_vehicle_master_data.execute"
