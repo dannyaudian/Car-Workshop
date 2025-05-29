@@ -11,6 +11,7 @@ class WorkshopPurchaseOrder(Document):
         """
         self.validate_dates()
         self.validate_items()
+        self.validate_tax_settings()
         self.calculate_totals()
         
     def validate_dates(self):
@@ -52,6 +53,26 @@ class WorkshopPurchaseOrder(Document):
             # Validate work_order is set if item is billable
             if cint(item.billable) == 1 and not self.work_order:
                 frappe.throw(_("Row {0}: Work Order is required for billable items").format(item.idx))
+                
+    def validate_tax_settings(self):
+        """
+        Validate tax settings and propagate default tax template if needed
+        """
+        # Apply default tax template to items if configured
+        if hasattr(self, 'apply_default_tax_to_all_items') and cint(self.apply_default_tax_to_all_items) == 1:
+            if not self.default_tax_template:
+                frappe.throw(_("Default Tax Template must be specified when 'Apply Default Tax to All Items' is checked"))
+                
+            # Apply default tax to all items that use default tax
+            for item in self.items:
+                if hasattr(item, 'use_default_tax') and cint(item.use_default_tax) == 1:
+                    item.tax_template = self.default_tax_template
+        
+        # Validate item-level tax settings
+        for item in self.items:
+            if hasattr(item, 'use_default_tax') and cint(item.use_default_tax) == 0:
+                if not item.tax_template:
+                    frappe.throw(_("Row {0}: Tax Template is required when 'Use Default Tax' is unchecked").format(item.idx))
     
     def calculate_totals(self):
         """
@@ -64,6 +85,98 @@ class WorkshopPurchaseOrder(Document):
         
         # Calculate non-billable amount
         self.non_billable_amount = self.total_amount - self.billable_amount
+        
+        # Calculate tax totals
+        tax_summary = self.get_tax_templates_summary()
+        if hasattr(self, 'tax_summary'):
+            self.tax_summary = json.dumps(tax_summary)
+        
+    def get_tax_templates_summary(self):
+        """
+        Calculate tax summary based on items and their tax templates
+        
+        Returns:
+            dict: Summary of tax amounts by tax template
+        """
+        tax_summary = {}
+        
+        # Process each item
+        for item in self.items:
+            # Determine which tax template to use
+            tax_template = None
+            if hasattr(item, 'use_default_tax') and cint(item.use_default_tax) == 1:
+                tax_template = self.default_tax_template
+            elif hasattr(item, 'tax_template'):
+                tax_template = item.tax_template
+            
+            if not tax_template:
+                continue
+                
+            # Get tax template details if not already cached
+            if tax_template not in tax_summary:
+                tax_summary[tax_template] = {
+                    "template_name": tax_template,
+                    "tax_details": self._get_tax_template_details(tax_template),
+                    "taxable_amount": 0,
+                    "tax_amount": 0
+                }
+            
+            # Add to taxable amount
+            tax_summary[tax_template]["taxable_amount"] += flt(item.amount)
+            
+            # Calculate tax amount
+            item_tax_amount = self._calculate_item_tax_amount(item.amount, tax_summary[tax_template]["tax_details"])
+            tax_summary[tax_template]["tax_amount"] += item_tax_amount
+        
+        return tax_summary
+    
+    def _get_tax_template_details(self, tax_template):
+        """
+        Get tax rates and details from a tax template
+        
+        Args:
+            tax_template (str): Name of the tax template
+            
+        Returns:
+            list: List of tax details with rates and calculation methods
+        """
+        tax_details = []
+        
+        # Get tax template details from Purchase Taxes and Charges Template
+        if tax_template:
+            taxes = frappe.get_all(
+                "Purchase Taxes and Charges",
+                filters={"parent": tax_template},
+                fields=["charge_type", "rate", "account_head", "description"],
+                order_by="idx"
+            )
+            
+            tax_details = taxes
+        
+        return tax_details
+    
+    def _calculate_item_tax_amount(self, amount, tax_details):
+        """
+        Calculate tax amount for an item based on tax details
+        
+        Args:
+            amount (float): Item amount
+            tax_details (list): List of tax details
+            
+        Returns:
+            float: Total tax amount
+        """
+        total_tax = 0
+        
+        # Simple tax calculation based on rate - can be extended for more complex scenarios
+        for tax in tax_details:
+            if tax.get("charge_type") == "On Net Total":
+                tax_amount = flt(amount) * flt(tax.get("rate", 0)) / 100
+                total_tax += tax_amount
+            
+            # Add other charge types as needed
+        
+        return total_tax
         
     def before_submit(self):
         """
@@ -86,6 +199,9 @@ class WorkshopPurchaseOrder(Document):
         
         # Validate items match purchase type
         self.validate_items_match_purchase_type()
+        
+        # Validate tax settings before submission
+        self.validate_tax_settings()
         
     def validate_items_match_purchase_type(self):
         """
@@ -252,6 +368,10 @@ class WorkshopPurchaseOrder(Document):
             # Add Work Order reference if available
             if self.work_order:
                 invoice.work_order_reference = self.work_order
+                
+            # Set default tax template if available
+            if hasattr(self, 'default_tax_template') and self.default_tax_template:
+                invoice.taxes_and_charges = self.default_tax_template
             
             # Add items to the invoice
             for item in self.items:
@@ -274,6 +394,26 @@ class WorkshopPurchaseOrder(Document):
                     "workshop_purchase_order": self.name,
                     "workshop_purchase_order_item": item.name
                 })
+                
+                # Set item-specific tax template if different from default
+                if hasattr(item, 'use_default_tax') and cint(item.use_default_tax) == 0 and hasattr(item, 'tax_template') and item.tax_template:
+                    # Handle item-specific tax templates if Purchase Invoice supports this
+                    # This might require custom fields on Purchase Invoice Item
+                    if hasattr(invoice_item, 'item_tax_template'):
+                        invoice_item.item_tax_template = item.tax_template
+            
+            # Add taxes if available
+            if hasattr(self, 'default_tax_template') and self.default_tax_template:
+                # This is a simplified approach. For complex scenarios with per-item tax templates,
+                # you might need custom logic to merge tax templates or apply them differently
+                tax_template_doc = frappe.get_doc("Purchase Taxes and Charges Template", self.default_tax_template)
+                for tax in tax_template_doc.taxes:
+                    invoice.append("taxes", {
+                        "charge_type": tax.charge_type,
+                        "account_head": tax.account_head,
+                        "description": tax.description,
+                        "rate": tax.rate
+                    })
             
             # Save the invoice as draft
             invoice.flags.ignore_permissions = True
@@ -464,6 +604,20 @@ def make_purchase_invoice(source_name, target_doc=None):
         # Only include billable items
         target.items = [item for item in target.items if item.billable]
         
+        # Set default tax template if available
+        if hasattr(source, 'default_tax_template') and source.default_tax_template:
+            target.taxes_and_charges = source.default_tax_template
+            
+            # Copy taxes from template
+            tax_template_doc = frappe.get_doc("Purchase Taxes and Charges Template", source.default_tax_template)
+            for tax in tax_template_doc.taxes:
+                target.append("taxes", {
+                    "charge_type": tax.charge_type,
+                    "account_head": tax.account_head,
+                    "description": tax.description,
+                    "rate": tax.rate
+                })
+        
         # Calculate totals
         for item in target.items:
             item.amount = item.qty * item.rate
@@ -480,6 +634,13 @@ def make_purchase_invoice(source_name, target_doc=None):
         target_doc.workshop_purchase_order = source_parent.name
         target_doc.workshop_purchase_order_item = source_doc.name
         target_doc.description = source_doc.description or f"{source_doc.item_type}: {source_doc.reference_doctype}"
+        
+        # Handle item-specific tax template if available
+        if hasattr(source_doc, 'use_default_tax') and hasattr(source_doc, 'tax_template'):
+            if cint(source_doc.use_default_tax) == 0 and source_doc.tax_template:
+                # Set item-specific tax template if Purchase Invoice Item supports it
+                if hasattr(target_doc, 'item_tax_template'):
+                    target_doc.item_tax_template = source_doc.tax_template
         
     def get_item_code_for_reference(item):
         """Get the Item Code from the reference document"""
@@ -510,7 +671,8 @@ def make_purchase_invoice(source_name, target_doc=None):
             "field_map": {
                 "name": "workshop_purchase_order",
                 "work_order": "work_order_reference",
-                "transaction_date": "posting_date"
+                "transaction_date": "posting_date",
+                "default_tax_template": "taxes_and_charges"
             },
             "validation": {
                 "docstatus": ["=", 1]  # Only submitted POs
@@ -521,7 +683,8 @@ def make_purchase_invoice(source_name, target_doc=None):
             "field_map": {
                 "name": "workshop_purchase_order_item",
                 "reference_doctype": "workshop_reference_doctype",
-                "item_type": "workshop_item_type"
+                "item_type": "workshop_item_type",
+                "tax_template": "item_tax_template"
             },
             "postprocess": update_item,
             "condition": lambda doc: doc.billable
@@ -529,8 +692,6 @@ def make_purchase_invoice(source_name, target_doc=None):
     }, target_doc, postprocess)
     
     return doclist
-
-# Add these functions to your existing workshop_purchase_order.py file
 
 @frappe.whitelist()
 def check_duplicate_po(work_order, item_type, reference_doctype, current_po=None):

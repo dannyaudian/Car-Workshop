@@ -19,6 +19,9 @@
     "column_break_9",
     "rate",
     "amount",
+    "section_break_tax",
+    "use_default_tax",
+    "tax_template",
     "section_break_12",
     "billable"
   ],
@@ -99,6 +102,24 @@
       "in_list_view": 1,
       "label": "Amount",
       "read_only": 1
+    },
+    {
+      "fieldname": "section_break_tax",
+      "fieldtype": "Section Break",
+      "label": "Tax Settings"
+    },
+    {
+      "default": "1",
+      "fieldname": "use_default_tax",
+      "fieldtype": "Check",
+      "label": "Use Default Tax"
+    },
+    {
+      "fieldname": "tax_template",
+      "fieldtype": "Link",
+      "label": "Tax Template",
+      "options": "Purchase Taxes and Charges Template",
+      "depends_on": "eval:!doc.use_default_tax"
     },
     {
       "fieldname": "section_break_12",

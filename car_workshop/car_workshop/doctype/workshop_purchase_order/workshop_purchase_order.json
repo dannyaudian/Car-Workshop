@@ -17,6 +17,9 @@
     "expected_delivery",
     "order_source",
     "marketplace_url",
+    "section_break_tax",
+    "default_tax_template",
+    "apply_default_tax_to_all_items",
     "section_break_9",
     "items",
     "section_break_11",
@@ -85,6 +88,23 @@
       "fieldname": "marketplace_url",
       "fieldtype": "Data",
       "label": "Link Marketplace"
+    },
+    {
+      "fieldname": "section_break_tax",
+      "fieldtype": "Section Break",
+      "label": "Tax Settings"
+    },
+    {
+      "fieldname": "default_tax_template",
+      "fieldtype": "Link",
+      "label": "Default Tax Template",
+      "options": "Purchase Taxes and Charges Template"
+    },
+    {
+      "default": "0",
+      "fieldname": "apply_default_tax_to_all_items",
+      "fieldtype": "Check",
+      "label": "Apply Default Tax to All Items"
     },
     {
       "fieldname": "section_break_9",

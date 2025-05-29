@@ -133,6 +133,36 @@ frappe.ui.form.on('Workshop Purchase Order', {
             }, 5);
         }
     }
+    // New handler for default_tax_template
+    default_tax_template: function(frm) {
+        // If apply_default_tax_to_all_items is checked, update all items
+        if (frm.doc.apply_default_tax_to_all_items) {
+            (frm.doc.items || []).forEach(item => {
+                if (item.use_default_tax) {
+                    frappe.model.set_value('Workshop Purchase Order Item', item.name, 'tax_template', frm.doc.default_tax_template);
+                }
+            });
+            frm.refresh_field('items');
+            
+            // Show notification to user
+            frappe.show_alert({
+                message: __('Tax template updated for all items using default tax'),
+                indicator: 'green'
+            }, 3);
+        }
+    },
+    
+    // New handler for apply_default_tax_to_all_items
+    apply_default_tax_to_all_items: function(frm) {
+        if (frm.doc.apply_default_tax_to_all_items && frm.doc.default_tax_template) {
+            (frm.doc.items || []).forEach(item => {
+                if (item.use_default_tax) {
+                    frappe.model.set_value('Workshop Purchase Order Item', item.name, 'tax_template', frm.doc.default_tax_template);
+                }
+            });
+            frm.refresh_field('items');
+        }
+    }
 });
 
 // Child table (Workshop Purchase Order Item) events
@@ -206,7 +236,40 @@ frappe.ui.form.on('Workshop Purchase Order Item', {
     items_remove: function(frm, cdt, cdn) {
         calculate_totals(frm);
     }
+    // New handler for use_default_tax
+    use_default_tax: function(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+        if (row.use_default_tax) {
+            frappe.model.set_value(cdt, cdn, 'tax_template', frm.doc.default_tax_template);
+        } else if (!row.tax_template) {
+            // Show warning if tax_template is empty and use_default_tax is unchecked
+            frappe.show_alert({
+                message: __('Warning: No tax template specified for this item'),
+                indicator: 'orange'
+            }, 5);
+        }
+    },
+    
+    // New handler for tax_template
+    tax_template: function(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+        if (!row.use_default_tax && !row.tax_template) {
+            // Show warning if tax_template is empty and use_default_tax is unchecked
+            frappe.show_alert({
+                message: __('Warning: No tax template specified for this item'),
+                indicator: 'orange'
+            }, 5);
+        }
+    },
+    
+    form_render: function(frm, cdt, cdn) {
+        // Add description to tax_template field when form is rendered
+        frm.fields_dict.items.grid.update_docfield_property(
+            'tax_template', 'description', 'Override default tax if needed'
+        );
+    }
 });
+
 
 // Helper Functions
 
