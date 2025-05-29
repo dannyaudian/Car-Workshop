@@ -1,0 +1,678 @@
+import frappe
+from frappe import _
+from frappe.model.document import Document
+from frappe.utils import flt, cint, getdate, now_datetime
+import json
+
+class WorkshopPurchaseOrder(Document):
+    def validate(self):
+        """
+        Validate the Workshop Purchase Order before saving
+        """
+        self.validate_dates()
+        self.validate_items()
+        self.calculate_totals()
+        
+    def validate_dates(self):
+        """
+        Validate transaction date and expected delivery date
+        """
+        if self.expected_delivery and getdate(self.expected_delivery) < getdate(self.transaction_date):
+            frappe.throw(_("Expected Delivery Date cannot be before Transaction Date"))
+            
+    def validate_items(self):
+        """
+        Validate that items table is not empty and all items have required fields
+        """
+        if not self.items:
+            frappe.throw(_("Items cannot be empty"))
+            
+        for item in self.items:
+            # Validate item has quantity and rate
+            if flt(item.quantity) <= 0:
+                frappe.throw(_("Row {0}: Quantity must be greater than zero").format(item.idx))
+                
+            if flt(item.rate) < 0:
+                frappe.throw(_("Row {0}: Rate cannot be negative").format(item.idx))
+                
+            # Calculate amount if not set
+            if not item.amount:
+                item.amount = flt(item.quantity) * flt(item.rate)
+                
+            # Check reference based on item type
+            if item.item_type == "Part" and not item.reference_doctype:
+                frappe.throw(_("Row {0}: Part reference is required for Part items").format(item.idx))
+                
+            elif item.item_type == "OPL" and not item.reference_doctype:
+                frappe.throw(_("Row {0}: Job Type reference is required for OPL items").format(item.idx))
+                
+            elif item.item_type == "Expense" and not item.reference_doctype:
+                frappe.throw(_("Row {0}: Expense Type reference is required for Expense items").format(item.idx))
+                
+            # Validate work_order is set if item is billable
+            if cint(item.billable) == 1 and not self.work_order:
+                frappe.throw(_("Row {0}: Work Order is required for billable items").format(item.idx))
+    
+    def calculate_totals(self):
+        """
+        Calculate total amount for the purchase order
+        """
+        self.total_amount = sum(flt(item.amount) for item in self.items)
+        
+        # Calculate billable amount
+        self.billable_amount = sum(flt(item.amount) for item in self.items if cint(item.billable) == 1)
+        
+        # Calculate non-billable amount
+        self.non_billable_amount = self.total_amount - self.billable_amount
+        
+    def before_submit(self):
+        """
+        Perform validations before submitting the document
+        """
+        # Validate source type and supplier
+        if self.order_source == "Beli Baru" and not self.supplier:
+            frappe.throw(_("Supplier is mandatory when Order Source is 'Beli Baru'"))
+            
+        # Validate work order exists if specified
+        if self.work_order:
+            if not frappe.db.exists("Work Order", self.work_order):
+                frappe.throw(_("Work Order {0} does not exist").format(self.work_order))
+                
+        # Validate no duplicate items for the same work order
+        self.validate_duplicate_items()
+        
+        # Set status to Submitted
+        self.status = "Submitted"
+        
+        # Validate items match purchase type
+        self.validate_items_match_purchase_type()
+        
+    def validate_items_match_purchase_type(self):
+        """
+        Validate that all items match the purchase type
+        """
+        if self.purchase_type == "Part":
+            for item in self.items:
+                if item.item_type != "Part":
+                    frappe.throw(_("Row {0}: Item type must be 'Part' for Purchase Type 'Part'").format(item.idx))
+                    
+        elif self.purchase_type == "OPL":
+            for item in self.items:
+                if item.item_type != "OPL":
+                    frappe.throw(_("Row {0}: Item type must be 'OPL' for Purchase Type 'OPL'").format(item.idx))
+                    
+        elif self.purchase_type == "Expense":
+            for item in self.items:
+                if item.item_type != "Expense":
+                    frappe.throw(_("Row {0}: Item type must be 'Expense' for Purchase Type 'Expense'").format(item.idx))
+    
+    def validate_duplicate_items(self):
+        """
+        Ensure no active PO exists with same Work Order + reference_doctype + item_type + billable flag
+        """
+        if not self.work_order:
+            return
+            
+        for item in self.items:
+            # Check for duplicates only if reference is specified
+            if not item.reference_doctype:
+                continue
+                
+            # Construct filter conditions
+            filters = {
+                "docstatus": 1,  # Submitted
+                "work_order": self.work_order,
+                "status": ["!=", "Cancelled"]
+            }
+            
+            # Check if there's another PO with the same work order and matching items
+            duplicate_pos = frappe.get_all(
+                "Workshop Purchase Order",
+                filters=filters,
+                fields=["name"]
+            )
+            
+            if not duplicate_pos:
+                continue
+                
+            # For each potential duplicate PO, check the items
+            for po in duplicate_pos:
+                if po.name == self.name:
+                    continue  # Skip current document
+                    
+                # Get items from the potential duplicate PO
+                duplicate_items = frappe.get_all(
+                    "Workshop Purchase Order Item",
+                    filters={
+                        "parent": po.name,
+                        "item_type": item.item_type,
+                        "reference_doctype": item.reference_doctype,
+                        "billable": item.billable
+                    },
+                    fields=["name", "parent"]
+                )
+                
+                if duplicate_items:
+                    frappe.throw(_(
+                        "Duplicate item found in Purchase Order {0}. "
+                        "Item Type: {1}, Reference: {2}, Billable: {3}"
+                    ).format(
+                        po.name,
+                        item.item_type,
+                        item.reference_doctype,
+                        "Yes" if cint(item.billable) == 1 else "No"
+                    ))
+    
+    def on_submit(self):
+        """
+        Actions to perform when the document is submitted
+        """
+        # Update the Work Order with PO information
+        if self.work_order:
+            self.update_work_order()
+            
+        # Auto-create Purchase Invoice if auto_invoice is enabled
+        if hasattr(self, 'auto_invoice') and cint(self.auto_invoice) == 1:
+            self.create_purchase_invoice()
+            
+        # Log submission for audit trail
+        self.log_document_event("Submitted")
+            
+    def update_work_order(self):
+        """
+        Update the linked Work Order with PO information
+        """
+        if not self.work_order:
+            return
+            
+        work_order = frappe.get_doc("Work Order", self.work_order)
+        
+        # Track if any updates were made
+        updated = False
+        
+        if self.purchase_type == "Part":
+            for po_item in self.items:
+                if po_item.item_type == "Part" and po_item.reference_doctype:
+                    for wo_part in work_order.part_detail:
+                        if wo_part.part == po_item.reference_doctype and not wo_part.purchase_order:
+                            wo_part.purchase_order = self.name
+                            wo_part.po_rate = po_item.rate
+                            updated = True
+        
+        elif self.purchase_type == "OPL":
+            for po_item in self.items:
+                if po_item.item_type == "OPL" and po_item.reference_doctype:
+                    for wo_job in work_order.job_type_detail:
+                        if wo_job.job_type == po_item.reference_doctype and wo_job.is_opl and not wo_job.purchase_order:
+                            wo_job.purchase_order = self.name
+                            wo_job.vendor_rate = po_item.rate
+                            updated = True
+        
+        # Only save if updates were made
+        if updated:
+            work_order.save(ignore_permissions=True)
+            frappe.msgprint(_("Work Order {0} has been updated with Purchase Order details").format(self.work_order))
+    
+    def create_purchase_invoice(self):
+        """
+        Queue creation of a draft Purchase Invoice for billable items
+        """
+        # Only proceed if we have billable items
+        billable_items = [item for item in self.items if cint(item.billable) == 1]
+        if not billable_items:
+            return
+            
+        # Check if supplier is set
+        if not self.supplier:
+            frappe.msgprint(_("Cannot create Purchase Invoice without Supplier"))
+            return
+            
+        # Create a background job to generate the invoice
+        frappe.enqueue(
+            method=self._create_purchase_invoice,
+            queue="long",
+            timeout=600,
+            now=frappe.flags.in_test
+        )
+        
+        frappe.msgprint(_("Purchase Invoice creation has been queued"))
+    
+    def _create_purchase_invoice(self):
+        """
+        Actual creation of Purchase Invoice (called via background job)
+        """
+        try:
+            # Create a new Purchase Invoice
+            invoice = frappe.new_doc("Purchase Invoice")
+            invoice.supplier = self.supplier
+            invoice.posting_date = getdate()
+            invoice.due_date = self.expected_delivery or getdate()
+            invoice.workshop_purchase_order = self.name
+            
+            # Add Work Order reference if available
+            if self.work_order:
+                invoice.work_order_reference = self.work_order
+            
+            # Add items to the invoice
+            for item in self.items:
+                if cint(item.billable) != 1:
+                    continue
+                    
+                # Get the Item Code based on the reference
+                item_code = self._get_item_code_for_reference(item)
+                if not item_code:
+                    continue
+                    
+                # Add item to the invoice
+                invoice_item = invoice.append("items", {
+                    "item_code": item_code,
+                    "qty": item.quantity,
+                    "rate": item.rate,
+                    "description": item.description or f"{item.item_type}: {item.reference_doctype}",
+                    "uom": item.uom or "Nos",
+                    "conversion_factor": 1.0,
+                    "workshop_purchase_order": self.name,
+                    "workshop_purchase_order_item": item.name
+                })
+            
+            # Save the invoice as draft
+            invoice.flags.ignore_permissions = True
+            invoice.save()
+            
+            frappe.msgprint(_("Purchase Invoice {0} has been created").format(invoice.name))
+            
+        except Exception as e:
+            frappe.log_error(
+                message=f"Error creating Purchase Invoice from Workshop Purchase Order {self.name}: {str(e)}",
+                title="Purchase Invoice Creation Error"
+            )
+            
+    def _get_item_code_for_reference(self, item):
+        """
+        Get the Item Code from the reference document
+        """
+        try:
+            if item.item_type == "Part":
+                # Get the item_code from Part
+                return frappe.db.get_value("Part", item.reference_doctype, "item_code")
+                
+            elif item.item_type == "OPL":
+                # For OPL, we might need a service item
+                return frappe.db.get_value("Job Type", item.reference_doctype, "item_code") or "Service-OPL"
+                
+            elif item.item_type == "Expense":
+                # For expense, use a default expense item
+                return "Workshop-Expense"
+                
+        except Exception as e:
+            frappe.log_error(
+                message=f"Error getting item code for {item.item_type} reference {item.reference_doctype}: {str(e)}",
+                title="Item Code Lookup Error"
+            )
+            
+        return None
+    
+    def before_cancel(self):
+        """
+        Perform validations before canceling the document
+        """
+        # Check if the PO is already linked to a submitted Purchase Invoice
+        pi_list = frappe.get_all(
+            "Purchase Invoice",
+            filters={
+                "workshop_purchase_order": self.name,
+                "docstatus": 1  # Submitted
+            },
+            fields=["name"]
+        )
+        
+        if pi_list:
+            pi_links = ", ".join([f'<a href="/app/purchase-invoice/{pi.name}">{pi.name}</a>' for pi in pi_list])
+            frappe.throw(_(
+                "Cannot cancel as this Purchase Order is linked to submitted Purchase Invoice(s): {0}"
+            ).format(pi_links))
+            
+    def on_cancel(self):
+        """
+        Actions to perform when the document is cancelled
+        """
+        # Set status to Cancelled
+        self.status = "Cancelled"
+        
+        # Remove links from Work Order
+        if self.work_order:
+            self.remove_from_work_order()
+            
+        # Unlink items from any pending invoice
+        self.unlink_from_invoices()
+        
+        # Log cancellation for audit trail
+        self.log_document_event("Cancelled")
+    
+    def remove_from_work_order(self):
+        """
+        Remove PO references from the linked Work Order
+        """
+        if not self.work_order:
+            return
+            
+        work_order = frappe.get_doc("Work Order", self.work_order)
+        
+        # Track if any updates were made
+        updated = False
+        
+        if self.purchase_type == "Part":
+            for wo_part in work_order.part_detail:
+                if wo_part.purchase_order == self.name:
+                    wo_part.purchase_order = None
+                    wo_part.po_rate = 0
+                    updated = True
+        
+        elif self.purchase_type == "OPL":
+            for wo_job in work_order.job_type_detail:
+                if wo_job.purchase_order == self.name:
+                    wo_job.purchase_order = None
+                    wo_job.vendor_rate = 0
+                    updated = True
+        
+        # Only save if updates were made
+        if updated:
+            work_order.save(ignore_permissions=True)
+            frappe.msgprint(_("Work Order {0} has been updated").format(self.work_order))
+    
+    def unlink_from_invoices(self):
+        """
+        Unlink child items from any pending invoice
+        """
+        # Find draft Purchase Invoices linked to this PO
+        draft_invoices = frappe.get_all(
+            "Purchase Invoice",
+            filters={
+                "workshop_purchase_order": self.name,
+                "docstatus": 0  # Draft
+            },
+            fields=["name"]
+        )
+        
+        for invoice in draft_invoices:
+            pi_doc = frappe.get_doc("Purchase Invoice", invoice.name)
+            
+            # Find items linked to this PO and remove them
+            items_to_remove = []
+            for i, item in enumerate(pi_doc.items):
+                if getattr(item, "workshop_purchase_order", "") == self.name:
+                    items_to_remove.append(item)
+            
+            # Remove the items
+            for item in items_to_remove:
+                pi_doc.remove(item)
+            
+            # If no items left, delete the invoice
+            if not pi_doc.items:
+                frappe.delete_doc("Purchase Invoice", pi_doc.name, ignore_permissions=True)
+                frappe.msgprint(_("Empty Purchase Invoice {0} has been deleted").format(pi_doc.name))
+            else:
+                # Otherwise save the updated invoice
+                pi_doc.save(ignore_permissions=True)
+                frappe.msgprint(_("Purchase Invoice {0} has been updated").format(pi_doc.name))
+    
+    def log_document_event(self, event_type):
+        """
+        Log document events for audit trail
+        """
+        log_data = {
+            "doctype": "Workshop Purchase Order",
+            "document": self.name,
+            "event": event_type,
+            "timestamp": now_datetime(),
+            "user": frappe.session.user,
+            "data": json.dumps({
+                "supplier": self.supplier,
+                "work_order": self.work_order,
+                "purchase_type": self.purchase_type,
+                "total_amount": self.total_amount
+            })
+        }
+        
+        # If we have a custom DocType for activity logging
+        if frappe.db.exists("DocType", "Workshop Activity Log"):
+            frappe.get_doc({
+                "doctype": "Workshop Activity Log",
+                **log_data
+            }).insert(ignore_permissions=True)
+        else:
+            # Otherwise use Frappe's built-in logging
+            frappe.log_error(
+                message=f"Workshop Purchase Order {self.name} - {event_type}",
+                title=f"Workshop PO {event_type}"
+            )
+
+@frappe.whitelist()
+def make_purchase_invoice(source_name, target_doc=None):
+    """
+    Create a Purchase Invoice from Workshop Purchase Order
+    """
+    from frappe.model.mapper import get_mapped_doc
+    
+    def postprocess(source, target):
+        target.supplier = source.supplier
+        
+        # Set supplier invoice details if available
+        target.bill_no = ""
+        target.bill_date = frappe.utils.today()
+        
+        # Only include billable items
+        target.items = [item for item in target.items if item.billable]
+        
+        # Calculate totals
+        for item in target.items:
+            item.amount = item.qty * item.rate
+            
+    def update_item(source_doc, target_doc, source_parent):
+        # Get the Item Code based on the reference
+        item_code = get_item_code_for_reference(source_doc)
+        if item_code:
+            target_doc.item_code = item_code
+            
+        target_doc.qty = source_doc.quantity
+        target_doc.rate = source_doc.rate
+        target_doc.amount = source_doc.amount
+        target_doc.workshop_purchase_order = source_parent.name
+        target_doc.workshop_purchase_order_item = source_doc.name
+        target_doc.description = source_doc.description or f"{source_doc.item_type}: {source_doc.reference_doctype}"
+        
+    def get_item_code_for_reference(item):
+        """Get the Item Code from the reference document"""
+        try:
+            if item.item_type == "Part":
+                # Get the item_code from Part
+                return frappe.db.get_value("Part", item.reference_doctype, "item_code")
+                
+            elif item.item_type == "OPL":
+                # For OPL, we might need a service item
+                return frappe.db.get_value("Job Type", item.reference_doctype, "item_code") or "Service-OPL"
+                
+            elif item.item_type == "Expense":
+                # For expense, use a default expense item
+                return "Workshop-Expense"
+                
+        except Exception as e:
+            frappe.log_error(
+                message=f"Error getting item code for {item.item_type} reference {item.reference_doctype}: {str(e)}",
+                title="Item Code Lookup Error"
+            )
+            
+        return None
+    
+    doclist = get_mapped_doc("Workshop Purchase Order", source_name, {
+        "Workshop Purchase Order": {
+            "doctype": "Purchase Invoice",
+            "field_map": {
+                "name": "workshop_purchase_order",
+                "work_order": "work_order_reference",
+                "transaction_date": "posting_date"
+            },
+            "validation": {
+                "docstatus": ["=", 1]  # Only submitted POs
+            }
+        },
+        "Workshop Purchase Order Item": {
+            "doctype": "Purchase Invoice Item",
+            "field_map": {
+                "name": "workshop_purchase_order_item",
+                "reference_doctype": "workshop_reference_doctype",
+                "item_type": "workshop_item_type"
+            },
+            "postprocess": update_item,
+            "condition": lambda doc: doc.billable
+        }
+    }, target_doc, postprocess)
+    
+    return doclist
+
+# Add these functions to your existing workshop_purchase_order.py file
+
+@frappe.whitelist()
+def check_duplicate_po(work_order, item_type, reference_doctype, current_po=None):
+    """
+    Check if an item in a work order already has an active purchase order
+    """
+    # Skip for new POs with no name yet
+    if current_po == "new":
+        current_po = None
+        
+    # Construct filter conditions
+    filters = {
+        "docstatus": 1,  # Submitted
+        "work_order": work_order,
+        "status": ["!=", "Cancelled"]
+    }
+    
+    if current_po:
+        filters["name"] = ["!=", current_po]
+    
+    # Get all active POs for this work order
+    purchase_orders = frappe.get_all(
+        "Workshop Purchase Order",
+        filters=filters,
+        fields=["name"]
+    )
+    
+    # If no POs found, no duplicates
+    if not purchase_orders:
+        return {"exists": False}
+    
+    # For each PO, check for matching items
+    for po in purchase_orders:
+        # Check for matching items
+        item_filters = {
+            "parent": po.name,
+            "item_type": item_type,
+            "reference_doctype": reference_doctype
+        }
+        
+        duplicate_items = frappe.get_all(
+            "Workshop Purchase Order Item",
+            filters=item_filters,
+            fields=["name", "parent"]
+        )
+        
+        if duplicate_items:
+            return {
+                "exists": True,
+                "po_number": po.name
+            }
+    
+    return {"exists": False}
+
+@frappe.whitelist()
+def fetch_work_order_items(work_order, fetch_parts=0, fetch_opl=0, fetch_expenses=0, 
+                          only_without_po=1, filter_text="", current_po=None):
+    """
+    Fetch items from a work order based on filter criteria
+    """
+    if not work_order:
+        return {"error": "Work Order is required"}
+    
+    # Convert string arguments to boolean/integer
+    fetch_parts = int(fetch_parts)
+    fetch_opl = int(fetch_opl)
+    fetch_expenses = int(fetch_expenses)
+    only_without_po = int(only_without_po)
+    
+    # Get the work order document
+    try:
+        work_order_doc = frappe.get_doc("Work Order", work_order)
+    except Exception as e:
+        frappe.log_error(f"Error fetching Work Order {work_order}: {str(e)}")
+        return {"error": f"Error fetching Work Order: {str(e)}"}
+    
+    result = {}
+    
+    # Fetch parts if requested
+    if fetch_parts and hasattr(work_order_doc, "part_detail"):
+        parts = []
+        for part in work_order_doc.part_detail:
+            # Skip if filtering by PO and part already has one
+            if only_without_po and part.purchase_order and part.purchase_order != current_po:
+                continue
+                
+            # Apply text filter if provided
+            if filter_text and filter_text.lower() not in (part.part or "").lower() and filter_text.lower() not in (part.part_name or "").lower():
+                continue
+                
+            parts.append({
+                "part": part.part,
+                "part_name": part.part_name,
+                "quantity": part.quantity,
+                "rate": part.rate,
+                "amount": part.amount
+            })
+        
+        result["parts"] = parts
+    
+    # Fetch OPL jobs if requested
+    if fetch_opl and hasattr(work_order_doc, "job_type_detail"):
+        opl_jobs = []
+        for job in work_order_doc.job_type_detail:
+            # Only include OPL jobs
+            if not job.is_opl:
+                continue
+                
+            # Skip if filtering by PO and job already has one
+            if only_without_po and job.purchase_order and job.purchase_order != current_po:
+                continue
+                
+            # Apply text filter if provided
+            if filter_text and filter_text.lower() not in (job.job_type or "").lower() and filter_text.lower() not in (job.description or "").lower():
+                continue
+                
+            opl_jobs.append({
+                "job_type": job.job_type,
+                "description": job.description,
+                "price": job.price
+            })
+        
+        result["opl_jobs"] = opl_jobs
+    
+    # Fetch expenses if requested
+    if fetch_expenses and hasattr(work_order_doc, "external_expense"):
+        expenses = []
+        for expense in work_order_doc.external_expense:
+            # Skip if filtering by PO and expense already has one
+            if only_without_po and expense.purchase_order and expense.purchase_order != current_po:
+                continue
+                
+            # Apply text filter if provided
+            if filter_text and filter_text.lower() not in (expense.expense_type or "").lower() and filter_text.lower() not in (expense.description or "").lower():
+                continue
+                
+            expenses.append({
+                "expense_type": expense.expense_type,
+                "description": expense.description,
+                "amount": expense.amount
+            })
+        
+        result["expenses"] = expenses
+    
+    return result

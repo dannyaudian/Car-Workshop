@@ -11,7 +11,8 @@ doctype_js = {
     "Part": "public/js/part.js",
     "Service Package": "public/js/service_package.js",
     "Job Type": "public/js/job_type.js",
-    "Work Order": "public/js/work_order.js"  # Added Work Order JS
+    "Work Order": "public/js/work_order.js",
+    "Workshop Purchase Order": "public/js/workshop_purchase_order.js"  # Added Workshop Purchase Order JS
 }
 
 # Setup function
@@ -23,11 +24,7 @@ doc_events = {
         "after_insert": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.create_vehicle_log"
         # Note: on_update is handled directly in CustomerVehicle.on_update()
     },
-    # Remove this problematic entry - the methods are already in the WorkOrder class
-    # "Work Order": {
-    #     "validate": "car_workshop.car_workshop.doctype.work_order.work_order.validate",
-    #     "before_submit": "car_workshop.car_workshop.doctype.work_order.work_order.before_submit"
-    # },
+    # Removed the problematic Work Order entries as they are already in the WorkOrder class
     "Work Order Part": {
         "validate": "car_workshop.car_workshop.doctype.work_order_part.work_order_part.validate"
     },
@@ -36,6 +33,11 @@ doc_events = {
     },
     "Work Order Service Package": {
         "validate": "car_workshop.car_workshop.doctype.work_order_service_package.work_order_service_package.validate"
+    },
+    # Added Workshop Purchase Order events if needed
+    "Workshop Purchase Order": {
+        "validate": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.validate",
+        "before_submit": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.before_submit"
     }
 }
 
@@ -72,11 +74,12 @@ vehicle_master_data_setup = "car_workshop.config.load_vehicle_master_data.execut
 
 # Dashboard links for Work Order
 get_dashboard_data = {
-    "Work Order": "car_workshop.car_workshop.doctype.work_order.work_order.get_dashboard_data"
+    "Work Order": "car_workshop.car_workshop.doctype.work_order.work_order.get_dashboard_data",
+    "Workshop Purchase Order": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.get_dashboard_data"  # Added dashboard data for Workshop Purchase Order
 }
 
 # Override calendar views
-calendars = ["Work Order"]
+calendars = ["Work Order", "Workshop Purchase Order"]  # Added Workshop Purchase Order to calendars
 
 # Add DocTypes to global search
 global_search_doctypes = {
@@ -85,7 +88,8 @@ global_search_doctypes = {
         {"doctype": "Customer Vehicle"},
         {"doctype": "Part"},
         {"doctype": "Job Type"},
-        {"doctype": "Service Package"}
+        {"doctype": "Service Package"},
+        {"doctype": "Workshop Purchase Order"}  # Added Workshop Purchase Order to global search
     ]
 }
 

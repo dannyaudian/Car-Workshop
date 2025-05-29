@@ -1,0 +1,169 @@
+{
+  "actions": [],
+  "allow_copy": 0,
+  "allow_import": 1,
+  "allow_rename": 0,
+  "autoname": "field:autoname",
+  "creation": "2025-05-29 11:06:43.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "autoname",
+    "supplier",
+    "purchase_type",
+    "work_order",
+    "column_break_4",
+    "transaction_date",
+    "expected_delivery",
+    "order_source",
+    "marketplace_url",
+    "section_break_9",
+    "items",
+    "section_break_11",
+    "status",
+    "section_break_13",
+    "remarks"
+  ],
+  "fields": [
+    {
+      "fieldname": "autoname",
+      "fieldtype": "Data",
+      "label": "Purchase Order ID",
+      "unique": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "supplier",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Supplier",
+      "options": "Supplier",
+      "reqd": 1
+    },
+    {
+      "fieldname": "purchase_type",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Purchase Type",
+      "options": "Part\nOPL\nExpense\nInventory Replenishment",
+      "reqd": 1
+    },
+    {
+      "fieldname": "work_order",
+      "fieldtype": "Link",
+      "in_standard_filter": 1,
+      "label": "Work Order",
+      "options": "Work Order"
+    },
+    {
+      "fieldname": "column_break_4",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "Today",
+      "fieldname": "transaction_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Transaction Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "expected_delivery",
+      "fieldtype": "Date",
+      "label": "Expected Delivery Date"
+    },
+    {
+      "fieldname": "order_source",
+      "fieldtype": "Select",
+      "label": "Order Source",
+      "options": "Dari Stok\nTitipan\nBeli Baru"
+    },
+    {
+      "fieldname": "marketplace_url",
+      "fieldtype": "Data",
+      "label": "Link Marketplace"
+    },
+    {
+      "fieldname": "section_break_9",
+      "fieldtype": "Section Break",
+      "label": "Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "Workshop Purchase Order Item"
+    },
+    {
+      "fieldname": "section_break_11",
+      "fieldtype": "Section Break",
+      "label": "Status"
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nSubmitted\nReceived\nCancelled",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_13",
+      "fieldtype": "Section Break",
+      "label": "Additional Information"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "is_submittable": 1,
+  "links": [],
+  "modified": "2025-05-29 11:06:43.000000",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Workshop Purchase Order",
+  "naming_rule": "By fieldname",
+  "owner": "dannyaudian",
+  "permissions": [
+    {
+      "amend": 1,
+      "cancel": 1,
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "amend": 1,
+      "cancel": 1,
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Purchase User",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
