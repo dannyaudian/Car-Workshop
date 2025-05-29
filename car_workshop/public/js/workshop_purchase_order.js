@@ -1,3 +1,12 @@
+/**
+ * Car Workshop Module - Workshop Purchase Order
+ * 
+ * Handles client-side logic for Workshop Purchase Order DocType
+ */
+
+// Load utilities
+frappe.require('/assets/car_workshop/js/item_utils.js');
+
 frappe.ui.form.on('Workshop Purchase Order', {
     refresh: function(frm) {
         // Only show custom buttons for Draft documents
@@ -13,99 +22,35 @@ frappe.ui.form.on('Workshop Purchase Order', {
             });
         }
         
-        // For submitted documents, show status-related buttons
+        // For submitted documents, show action buttons
         if (frm.doc.docstatus === 1) {
+            // Only show Mark as Received button if status is Submitted
             if (frm.doc.status === "Submitted") {
                 frm.add_custom_button(__('Mark as Received'), function() {
                     mark_as_received(frm);
                 }).addClass('btn-primary');
             }
+            
+            // Add Generate Receipt button for submitted POs
+            frm.add_custom_button(__('Generate Receipt'), function() {
+                car_workshop.utils.generate_receipt(frm);
+            }, __('Create'));
         }
         
         // Update dashboard information if available
-        if (frm.doc.total_amount) {
-            let dashboard_html = `
-                <div class="row">
-                    <div class="col-sm-4">
-                        <div class="stat-label">${__('Total Amount')}</div>
-                        <div class="stat-value">${format_currency(frm.doc.total_amount)}</div>
-                    </div>
-                    ${frm.doc.billable_amount ? `
-                    <div class="col-sm-4">
-                        <div class="stat-label">${__('Billable Amount')}</div>
-                        <div class="stat-value text-success">${format_currency(frm.doc.billable_amount)}</div>
-                    </div>
-                    ` : ''}
-                    ${frm.doc.non_billable_amount ? `
-                    <div class="col-sm-4">
-                        <div class="stat-label">${__('Non-Billable Amount')}</div>
-                        <div class="stat-value text-muted">${format_currency(frm.doc.non_billable_amount)}</div>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
-            
-            $(frm.fields_dict.dashboard_html.wrapper).html(dashboard_html);
-        }
+        update_dashboard(frm);
     },
     
     onload: function(frm) {
         // Set up queries and filters for lookup fields
-        frm.set_query("work_order", function() {
-            return {
-                filters: {
-                    "docstatus": 1,
-                    "status": ["!=", "Cancelled"]
-                }
-            };
-        });
-        
-        // Set custom queries for items table
-        frm.set_query("reference_doctype", "items", function(doc, cdt, cdn) {
-            let row = locals[cdt][cdn];
-            
-            if (row.item_type === "Part") {
-                return {
-                    filters: {
-                        "docstatus": 1
-                    }
-                };
-            } else if (row.item_type === "OPL") {
-                return {
-                    filters: {
-                        "is_opl": 1
-                    }
-                };
-            }
-            
-            return {};
-        });
+        setup_queries(frm);
         
         // Initialize calculated fields on load
-        calculate_totals(frm);
+        car_workshop.utils.calculate_totals(frm);
     },
     
     validate: function(frm) {
-        // Validate required fields based on conditional logic
-        if (frm.doc.order_source === "Beli Baru" && !frm.doc.supplier) {
-            frappe.validated = false;
-            frappe.throw(__("Supplier is mandatory when Order Source is 'Beli Baru'"));
-        }
-        
-        // Validate items exist
-        if (!frm.doc.items || frm.doc.items.length === 0) {
-            frappe.validated = false;
-            frappe.throw(__("At least one item is required"));
-        }
-        
-        // Validate all billable items have work order
-        if (has_billable_items(frm) && !frm.doc.work_order) {
-            frappe.validated = false;
-            frappe.throw(__("Work Order is mandatory when there are billable items"));
-        }
-        
-        // Calculate totals before submission
-        calculate_totals(frm);
+        validate_form(frm);
     },
     
     work_order: function(frm) {
@@ -133,52 +78,23 @@ frappe.ui.form.on('Workshop Purchase Order', {
             }, 5);
         }
     }
-    // New handler for default_tax_template
-    default_tax_template: function(frm) {
-        // If apply_default_tax_to_all_items is checked, update all items
-        if (frm.doc.apply_default_tax_to_all_items) {
-            (frm.doc.items || []).forEach(item => {
-                if (item.use_default_tax) {
-                    frappe.model.set_value('Workshop Purchase Order Item', item.name, 'tax_template', frm.doc.default_tax_template);
-                }
-            });
-            frm.refresh_field('items');
-            
-            // Show notification to user
-            frappe.show_alert({
-                message: __('Tax template updated for all items using default tax'),
-                indicator: 'green'
-            }, 3);
-        }
-    },
-    
-    // New handler for apply_default_tax_to_all_items
-    apply_default_tax_to_all_items: function(frm) {
-        if (frm.doc.apply_default_tax_to_all_items && frm.doc.default_tax_template) {
-            (frm.doc.items || []).forEach(item => {
-                if (item.use_default_tax) {
-                    frappe.model.set_value('Workshop Purchase Order Item', item.name, 'tax_template', frm.doc.default_tax_template);
-                }
-            });
-            frm.refresh_field('items');
-        }
-    }
 });
 
 // Child table (Workshop Purchase Order Item) events
 frappe.ui.form.on('Workshop Purchase Order Item', {
     item_type: function(frm, cdt, cdn) {
-        // Clear reference field when item type changes
         let row = locals[cdt][cdn];
+        
+        // Clear reference field when item type changes
         frappe.model.set_value(cdt, cdn, 'reference_doctype', '');
         
         // Update the reference field label based on item type
-        let label = row.item_type === 'Part' ? 'Part' : 
-                   (row.item_type === 'OPL' ? 'Job Type' : 'Expense Type');
+        update_reference_label(frm, row);
         
-        frm.fields_dict.items.grid.update_docfield_property(
-            'reference_doctype', 'label', label
-        );
+        // Handle tax template if use_default_tax is checked
+        if (row.use_default_tax) {
+            car_workshop.utils.set_tax_template(frm, row);
+        }
     },
     
     reference_doctype: function(frm, cdt, cdn) {
@@ -188,189 +104,189 @@ frappe.ui.form.on('Workshop Purchase Order Item', {
         
         // Check if this item already has a purchase order
         if (frm.doc.work_order) {
-            check_duplicate_po(frm, row);
+            car_workshop.utils.check_duplicate_po(frm, row);
         }
         
         // Fetch details based on reference type
-        fetch_reference_details(frm, row, cdt, cdn);
+        car_workshop.utils.fetch_reference_details(frm, row, cdt, cdn);
+    },
+    
+    use_default_tax: function(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+        car_workshop.utils.set_tax_template(frm, row);
     },
     
     quantity: function(frm, cdt, cdn) {
-        calculate_item_amount(frm, cdt, cdn);
+        car_workshop.utils.calculate_item_amount(frm, cdt, cdn);
     },
     
     rate: function(frm, cdt, cdn) {
-        calculate_item_amount(frm, cdt, cdn);
+        car_workshop.utils.calculate_item_amount(frm, cdt, cdn);
     },
     
     billable: function(frm, cdt, cdn) {
-        calculate_totals(frm);
+        car_workshop.utils.calculate_totals(frm);
         
         // If billable is checked, ensure work_order is required
-        if (has_billable_items(frm)) {
-            frm.set_df_property('work_order', 'reqd', true);
-            
-            // Alert if work_order not set
-            if (!frm.doc.work_order) {
-                frappe.show_alert({
-                    message: __('Please select a Work Order - required for billable items'),
-                    indicator: 'orange'
-                }, 5);
-            }
-        } else {
-            frm.set_df_property('work_order', 'reqd', false);
-        }
+        update_work_order_requirement(frm);
     },
     
     items_add: function(frm, cdt, cdn) {
         // Set defaults for new rows
         let row = locals[cdt][cdn];
-        frappe.model.set_value(cdt, cdn, 'quantity', 1);
-        frappe.model.set_value(cdt, cdn, 'billable', 1);
-        
-        if (frm.doc.work_order) {
-            frappe.model.set_value(cdt, cdn, 'work_order', frm.doc.work_order);
-        }
+        set_new_row_defaults(frm, row);
     },
     
     items_remove: function(frm, cdt, cdn) {
-        calculate_totals(frm);
-    }
-    // New handler for use_default_tax
-    use_default_tax: function(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-        if (row.use_default_tax) {
-            frappe.model.set_value(cdt, cdn, 'tax_template', frm.doc.default_tax_template);
-        } else if (!row.tax_template) {
-            // Show warning if tax_template is empty and use_default_tax is unchecked
-            frappe.show_alert({
-                message: __('Warning: No tax template specified for this item'),
-                indicator: 'orange'
-            }, 5);
-        }
-    },
-    
-    // New handler for tax_template
-    tax_template: function(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-        if (!row.use_default_tax && !row.tax_template) {
-            // Show warning if tax_template is empty and use_default_tax is unchecked
-            frappe.show_alert({
-                message: __('Warning: No tax template specified for this item'),
-                indicator: 'orange'
-            }, 5);
-        }
-    },
-    
-    form_render: function(frm, cdt, cdn) {
-        // Add description to tax_template field when form is rendered
-        frm.fields_dict.items.grid.update_docfield_property(
-            'tax_template', 'description', 'Override default tax if needed'
-        );
+        car_workshop.utils.calculate_totals(frm);
+        update_work_order_requirement(frm);
     }
 });
 
-
 // Helper Functions
 
-// Check if any items are marked as billable
-function has_billable_items(frm) {
-    if (!frm.doc.items || frm.doc.items.length === 0) return false;
-    
-    return frm.doc.items.some(item => item.billable);
-}
-
-// Calculate amount for a single item
-function calculate_item_amount(frm, cdt, cdn) {
-    let row = locals[cdt][cdn];
-    let amount = flt(row.quantity) * flt(row.rate);
-    frappe.model.set_value(cdt, cdn, 'amount', amount);
-    
-    // Recalculate totals
-    calculate_totals(frm);
-}
-
-// Calculate total amounts for the form
-function calculate_totals(frm) {
-    let total_amount = 0;
-    let billable_amount = 0;
-    let non_billable_amount = 0;
-    
-    (frm.doc.items || []).forEach(item => {
-        let amount = flt(item.amount);
-        total_amount += amount;
+// Update the dashboard display
+function update_dashboard(frm) {
+    if (frm.doc.total_amount) {
+        let dashboard_html = `
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="stat-label">${__('Total Amount')}</div>
+                    <div class="stat-value">${format_currency(frm.doc.total_amount)}</div>
+                </div>
+                ${frm.doc.billable_amount ? `
+                <div class="col-sm-4">
+                    <div class="stat-label">${__('Billable Amount')}</div>
+                    <div class="stat-value text-success">${format_currency(frm.doc.billable_amount)}</div>
+                </div>
+                ` : ''}
+                ${frm.doc.non_billable_amount ? `
+                <div class="col-sm-4">
+                    <div class="stat-label">${__('Non-Billable Amount')}</div>
+                    <div class="stat-value text-muted">${format_currency(frm.doc.non_billable_amount)}</div>
+                </div>
+                ` : ''}
+            </div>
+        `;
         
-        if (item.billable) {
-            billable_amount += amount;
-        } else {
-            non_billable_amount += amount;
-        }
-    });
-    
-    frm.set_value('total_amount', total_amount);
-    
-    // Set these values if they exist in the doctype
-    if (frm.meta.fields.find(field => field.fieldname === 'billable_amount')) {
-        frm.set_value('billable_amount', billable_amount);
-    }
-    
-    if (frm.meta.fields.find(field => field.fieldname === 'non_billable_amount')) {
-        frm.set_value('non_billable_amount', non_billable_amount);
+        $(frm.fields_dict.dashboard_html.wrapper).html(dashboard_html);
     }
 }
 
-// Fetch details for a reference item
-function fetch_reference_details(frm, row, cdt, cdn) {
+// Setup queries for lookup fields
+function setup_queries(frm) {
+    frm.set_query("work_order", function() {
+        return {
+            filters: {
+                "docstatus": 1,
+                "status": ["!=", "Cancelled"]
+            }
+        };
+    });
+    
+    // Set custom queries for items table
+    frm.set_query("reference_doctype", "items", function(doc, cdt, cdn) {
+        let row = locals[cdt][cdn];
+        
+        if (row.item_type === "Part") {
+            return {
+                doctype: "Part",
+                filters: {
+                    "docstatus": 1
+                }
+            };
+        } else if (row.item_type === "OPL") {
+            return {
+                doctype: "Job Type",
+                filters: {
+                    "is_opl": 1
+                }
+            };
+        } else if (row.item_type === "Expense") {
+            return {
+                doctype: "Expense Type"
+            };
+        }
+        
+        return {};
+    });
+    
+    // Setup tax template query
+    frm.set_query("tax_template", "items", function() {
+        return {
+            doctype: "Purchase Taxes and Charges Template"
+        };
+    });
+}
+
+// Validate the form before saving
+function validate_form(frm) {
+    // Validate required fields based on conditional logic
+    if (frm.doc.order_source === "Beli Baru" && !frm.doc.supplier) {
+        frappe.validated = false;
+        frappe.throw(__("Supplier is mandatory when Order Source is 'Beli Baru'"));
+    }
+    
+    // Validate items exist
+    if (!frm.doc.items || frm.doc.items.length === 0) {
+        frappe.validated = false;
+        frappe.throw(__("At least one item is required"));
+    }
+    
+    // Validate all billable items have work order
+    if (car_workshop.utils.has_billable_items(frm.doc) && !frm.doc.work_order) {
+        frappe.validated = false;
+        frappe.throw(__("Work Order is mandatory when there are billable items"));
+    }
+    
+    // Calculate totals before submission
+    car_workshop.utils.calculate_totals(frm);
+}
+
+// Update reference label based on item type
+function update_reference_label(frm, row) {
+    let label = 'Reference';
+    
     if (row.item_type === 'Part') {
-        frappe.db.get_value('Part', row.reference_doctype, 
-            ['part_name', 'current_price', 'item_code'], 
-            function(r) {
-                if (r) {
-                    frappe.model.set_value(cdt, cdn, 'description', r.part_name);
-                    frappe.model.set_value(cdt, cdn, 'rate', r.current_price);
-                    calculate_item_amount(frm, cdt, cdn);
-                }
-            }
-        );
+        label = 'Part';
     } else if (row.item_type === 'OPL') {
-        frappe.db.get_value('Job Type', row.reference_doctype, 
-            ['description', 'default_price'], 
-            function(r) {
-                if (r) {
-                    frappe.model.set_value(cdt, cdn, 'description', r.description);
-                    frappe.model.set_value(cdt, cdn, 'rate', r.default_price);
-                    calculate_item_amount(frm, cdt, cdn);
-                }
-            }
-        );
+        label = 'Job Type';
     } else if (row.item_type === 'Expense') {
-        // For expense types, we might need custom handling
-        // This could be expanded based on your specific requirements
-        frappe.model.set_value(cdt, cdn, 'description', row.reference_doctype);
+        label = 'Expense Type';
+    }
+    
+    frm.fields_dict.items.grid.update_docfield_property(
+        'reference_doctype', 'label', label
+    );
+}
+
+// Update work order requirement based on billable items
+function update_work_order_requirement(frm) {
+    // If billable is checked, ensure work_order is required
+    if (car_workshop.utils.has_billable_items(frm.doc)) {
+        frm.set_df_property('work_order', 'reqd', true);
+        
+        // Alert if work_order not set
+        if (!frm.doc.work_order) {
+            frappe.show_alert({
+                message: __('Please select a Work Order - required for billable items'),
+                indicator: 'orange'
+            }, 5);
+        }
+    } else {
+        frm.set_df_property('work_order', 'reqd', false);
     }
 }
 
-// Check for duplicate purchase orders
-function check_duplicate_po(frm, row) {
-    if (!frm.doc.work_order || !row.reference_doctype || !row.item_type) return;
+// Set defaults for new row
+function set_new_row_defaults(frm, row) {
+    frappe.model.set_value(row.doctype, row.name, 'quantity', 1);
+    frappe.model.set_value(row.doctype, row.name, 'billable', 1);
+    frappe.model.set_value(row.doctype, row.name, 'use_default_tax', 1);
     
-    frappe.call({
-        method: 'car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.check_duplicate_po',
-        args: {
-            work_order: frm.doc.work_order,
-            item_type: row.item_type,
-            reference_doctype: row.reference_doctype,
-            current_po: frm.doc.name || "new"
-        },
-        callback: function(r) {
-            if (r.message && r.message.exists) {
-                frappe.show_alert({
-                    message: __(`Warning: This item already has an active Purchase Order: ${r.message.po_number}`),
-                    indicator: 'orange'
-                }, 10);
-            }
-        }
-    });
+    if (frm.doc.work_order) {
+        frappe.model.set_value(row.doctype, row.name, 'work_order', frm.doc.work_order);
+    }
 }
 
 // Show dialog to fetch items from work order
@@ -444,12 +360,13 @@ function show_fetch_dialog(frm) {
             {
                 fieldname: 'filter_by_text',
                 fieldtype: 'Data',
-                label: __('Filter by Text')
+                label: __('Filter by Text'),
+                description: __('Filter items by name or description')
             }
         ],
         primary_action_label: __('Fetch Items'),
         primary_action: function(values) {
-            fetch_work_order_items(frm, values);
+            car_workshop.utils.fetch_work_order_items(frm, values);
             dialog.hide();
         }
     });
@@ -479,6 +396,11 @@ function show_mobile_fetch_dialog(frm) {
             fieldtype: 'Check',
             label: __('Mark as Billable'),
             default: 1
+        },
+        {
+            fieldname: 'filter_by_text',
+            fieldtype: 'Data',
+            label: __('Filter Text (Optional)')
         }
     ];
     
@@ -489,10 +411,11 @@ function show_mobile_fetch_dialog(frm) {
             fetch_opl: values.item_type === 'OPL Jobs' || values.item_type === 'All',
             fetch_expenses: values.item_type === 'Expenses' || values.item_type === 'All',
             only_without_po: values.only_without_po,
-            mark_billable: values.mark_billable
+            mark_billable: values.mark_billable,
+            filter_by_text: values.filter_by_text
         };
         
-        fetch_work_order_items(frm, desktop_values);
+        car_workshop.utils.fetch_work_order_items(frm, desktop_values);
     }, __('Fetch Items from Work Order'), __('Fetch'));
 }
 
@@ -583,6 +506,28 @@ function show_add_item_dialog(frm) {
             default: 'Nos'
         },
         {
+            fieldname: 'tax_section',
+            fieldtype: 'Section Break',
+            label: __('Tax and Billing')
+        },
+        {
+            fieldname: 'use_default_tax',
+            fieldtype: 'Check',
+            label: __('Use Default Tax Template'),
+            default: 1
+        },
+        {
+            fieldname: 'tax_template',
+            fieldtype: 'Link',
+            label: __('Tax Template'),
+            options: 'Purchase Taxes and Charges Template',
+            depends_on: 'eval:!doc.use_default_tax'
+        },
+        {
+            fieldname: 'col_break2',
+            fieldtype: 'Column Break'
+        },
+        {
             fieldname: 'billable',
             fieldtype: 'Check',
             label: __('Billable to Customer'),
@@ -614,13 +559,23 @@ function show_add_item_dialog(frm) {
             item.amount = flt(values.quantity) * flt(values.rate);
             item.uom = values.uom;
             item.billable = values.billable;
+            item.use_default_tax = values.use_default_tax;
+            
+            if (!values.use_default_tax && values.tax_template) {
+                item.tax_template = values.tax_template;
+            } else if (values.use_default_tax) {
+                // Set tax template based on settings
+                setTimeout(function() {
+                    car_workshop.utils.set_tax_template(frm, item);
+                }, 300);
+            }
             
             if (frm.doc.work_order) {
                 item.work_order = frm.doc.work_order;
             }
             
             frm.refresh_field('items');
-            calculate_totals(frm);
+            car_workshop.utils.calculate_totals(frm);
             dialog.hide();
             
             // Show a success message
@@ -645,6 +600,16 @@ function show_add_item_dialog(frm) {
         dialog.set_value('reference_type', reference_type);
     };
     
+    // Handle tax template visibility based on use_default_tax
+    dialog.fields_dict.use_default_tax.df.onchange = function() {
+        let use_default = dialog.get_value('use_default_tax');
+        dialog.set_df_property('tax_template', 'hidden', use_default);
+        
+        if (use_default) {
+            dialog.set_value('tax_template', '');
+        }
+    };
+    
     // Fetch details when reference is selected
     dialog.fields_dict.reference_doctype.df.onchange = function() {
         let reference = dialog.get_value('reference_doctype');
@@ -659,6 +624,11 @@ function show_add_item_dialog(frm) {
                     if (r) {
                         dialog.set_value('description', r.part_name);
                         dialog.set_value('rate', r.current_price);
+                    } else {
+                        frappe.show_alert({
+                            message: __(`Part '${reference}' details not found`),
+                            indicator: 'orange'
+                        });
                     }
                 }
             );
@@ -669,6 +639,27 @@ function show_add_item_dialog(frm) {
                     if (r) {
                         dialog.set_value('description', r.description);
                         dialog.set_value('rate', r.default_price);
+                    } else {
+                        frappe.show_alert({
+                            message: __(`Job Type '${reference}' details not found`),
+                            indicator: 'orange'
+                        });
+                    }
+                }
+            );
+        } else if (reference_type === 'Expense Type') {
+            frappe.db.get_value('Expense Type', reference, 
+                ['description', 'default_rate'], 
+                function(r) {
+                    if (r) {
+                        dialog.set_value('description', r.description || reference);
+                        dialog.set_value('rate', r.default_rate || 0);
+                    } else {
+                        dialog.set_value('description', reference);
+                        frappe.show_alert({
+                            message: __(`Expense Type '${reference}' details not found`),
+                            indicator: 'orange'
+                        });
                     }
                 }
             );
@@ -681,120 +672,36 @@ function show_add_item_dialog(frm) {
     dialog.set_value('reference_type', 'Part');
 }
 
-// Fetch items from work order based on selected options
-function fetch_work_order_items(frm, values) {
-    if (!frm.doc.work_order) {
-        frappe.throw(__("Please select a Work Order first"));
+// Mark Purchase Order as received
+function mark_as_received(frm) {
+    // Prevent duplicate updates - only allow if status is Submitted
+    if (frm.doc.status !== "Submitted") {
+        frappe.show_alert({
+            message: __('This Purchase Order is already marked as ' + frm.doc.status),
+            indicator: 'orange'
+        });
         return;
     }
     
-    frappe.call({
-        method: 'car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.fetch_work_order_items',
-        args: {
-            work_order: frm.doc.work_order,
-            fetch_parts: values.fetch_parts || false,
-            fetch_opl: values.fetch_opl || false,
-            fetch_expenses: values.fetch_expenses || false,
-            only_without_po: values.only_without_po || false,
-            filter_text: values.filter_by_text || '',
-            current_po: frm.doc.name || 'new'
-        },
-        freeze: true,
-        freeze_message: __('Fetching items from Work Order...'),
-        callback: function(r) {
-            if (r.message) {
-                let added_count = 0;
-                
-                // Process parts
-                if (r.message.parts && r.message.parts.length > 0) {
-                    r.message.parts.forEach(part => {
-                        let item = frm.add_child('items');
-                        item.item_type = 'Part';
-                        item.reference_doctype = part.part;
-                        item.description = part.part_name;
-                        item.quantity = part.quantity;
-                        item.rate = part.rate;
-                        item.amount = part.amount;
-                        item.uom = 'Nos';
-                        item.billable = values.mark_billable;
-                        item.work_order = frm.doc.work_order;
-                        added_count++;
-                    });
-                }
-                
-                // Process OPL jobs
-                if (r.message.opl_jobs && r.message.opl_jobs.length > 0) {
-                    r.message.opl_jobs.forEach(job => {
-                        let item = frm.add_child('items');
-                        item.item_type = 'OPL';
-                        item.reference_doctype = job.job_type;
-                        item.description = job.description;
-                        item.quantity = 1;
-                        item.rate = job.price;
-                        item.amount = job.price;
-                        item.uom = 'Nos';
-                        item.billable = values.mark_billable;
-                        item.work_order = frm.doc.work_order;
-                        added_count++;
-                    });
-                }
-                
-                // Process expenses
-                if (r.message.expenses && r.message.expenses.length > 0) {
-                    r.message.expenses.forEach(expense => {
-                        let item = frm.add_child('items');
-                        item.item_type = 'Expense';
-                        item.reference_doctype = expense.expense_type;
-                        item.description = expense.description;
-                        item.quantity = 1;
-                        item.rate = expense.amount;
-                        item.amount = expense.amount;
-                        item.uom = 'Nos';
-                        item.billable = values.mark_billable;
-                        item.work_order = frm.doc.work_order;
-                        added_count++;
-                    });
-                }
-                
-                if (added_count > 0) {
-                    frm.refresh_field('items');
-                    calculate_totals(frm);
-                    
-                    frappe.show_alert({
-                        message: __(`${added_count} items added from Work Order`),
-                        indicator: 'green'
-                    }, 5);
-                } else {
-                    frappe.show_alert({
-                        message: __('No items found matching the criteria'),
-                        indicator: 'blue'
-                    }, 5);
-                }
-            }
-        }
-    });
-}
-
-// Mark Purchase Order as received
-function mark_as_received(frm) {
     frappe.confirm(
         __('Are you sure you want to mark this Purchase Order as received?'),
         function() {
-            frm.set_value('status', 'Received');
-            frm.save();
-            frappe.show_alert({
-                message: __('Purchase Order marked as received'),
-                indicator: 'green'
-            }, 5);
+            frm.call({
+                method: "set_status",
+                doc: frm.doc,
+                args: {
+                    status: "Received"
+                },
+                callback: function(r) {
+                    if (r.message && r.message.success) {
+                        frm.reload_doc();
+                        frappe.show_alert({
+                            message: __('Purchase Order marked as received'),
+                            indicator: 'green'
+                        }, 5);
+                    }
+                }
+            });
         }
     );
-}
-
-if (frm.doc.docstatus === 1 && frm.doc.status !== "Cancelled") {
-    frm.add_custom_button(__('Create Receipt'), function() {
-        frappe.model.open_mapped_doc({
-            method: "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.make_purchase_receipt",
-            frm: frm
-        });
-    }).addClass('btn-primary');
 }

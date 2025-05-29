@@ -839,6 +839,75 @@ def fetch_work_order_items(work_order, fetch_parts=0, fetch_opl=0, fetch_expense
     return result
 
 @frappe.whitelist()
+def generate_receipt(purchase_order):
+    """
+    Generate a Workshop Purchase Receipt document from a submitted Purchase Order.
+    Only items with type 'Part' will be included in the receipt.
+    
+    Args:
+        purchase_order (str): The name of the Workshop Purchase Order
+        
+    Returns:
+        str: The name of the generated Workshop Purchase Receipt
+        
+    Raises:
+        frappe.ValidationError: If the Purchase Order is not submitted
+    """
+    # Validate that purchase order exists and is submitted
+    if not frappe.db.exists("Workshop Purchase Order", purchase_order):
+        frappe.throw(_("Purchase Order {0} does not exist").format(purchase_order))
+        
+    po_doc = frappe.get_doc("Workshop Purchase Order", purchase_order)
+    
+    if po_doc.docstatus != 1:
+        frappe.throw(_("Purchase Order {0} must be submitted to generate a receipt").format(purchase_order))
+    
+    # Get default warehouse from Stock Settings
+    default_warehouse = frappe.db.get_single_value("Stock Settings", "default_warehouse")
+    
+    # Create a new receipt
+    receipt = frappe.new_doc("Workshop Purchase Receipt")
+    receipt.purchase_order = purchase_order
+    receipt.supplier = po_doc.supplier
+    receipt.receipt_date = frappe.utils.nowdate()
+    receipt.warehouse = default_warehouse
+    
+    # Add only Part items to the receipt
+    part_count = 0
+    for po_item in po_doc.items:
+        if po_item.item_type == "Part":
+            # Determine the reference type
+            item_reference_type = "Part"
+            
+            # Add the item to the receipt
+            receipt.append("items", {
+                "item_type": po_item.item_type,
+                "reference_doctype": po_item.reference_doctype,
+                "description": po_item.description or po_item.reference_doctype,
+                "quantity": po_item.quantity,
+                "uom": po_item.uom or "Nos",
+                "rate": po_item.rate,
+                "amount": po_item.amount,
+                "warehouse": default_warehouse,
+                "po_item": po_item.name,
+                "ordered_qty": po_item.quantity,
+                "previously_received_qty": 0,
+                "item_reference_type": item_reference_type
+            })
+            part_count += 1
+    
+    if part_count == 0:
+        frappe.throw(_("No Part items found in Purchase Order {0}").format(purchase_order))
+    
+    # Save the receipt
+    receipt.insert(ignore_permissions=True)
+    
+    frappe.msgprint(_("Workshop Purchase Receipt {0} has been created with {1} part items").format(
+        receipt.name, part_count))
+    
+    return receipt.name
+
+@frappe.whitelist()
 def get_dashboard_data(data):
     """
     Get dashboard data for the Workshop Purchase Order
