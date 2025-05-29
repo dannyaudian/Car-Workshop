@@ -10,7 +10,8 @@ doctype_js = {
     "Customer Vehicle": "public/js/customer_vehicle.js",
     "Part": "public/js/part.js",
     "Service Package": "public/js/service_package.js",
-    "Job Type": "public/js/job_type.js"
+    "Job Type": "public/js/job_type.js",
+    "Work Order": "public/js/work_order.js"  # Added Work Order JS
 }
 
 # Setup function
@@ -21,6 +22,19 @@ doc_events = {
     "Customer Vehicle": {
         "after_insert": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.create_vehicle_log"
         # Note: on_update is handled directly in CustomerVehicle.on_update()
+    },
+    "Work Order": {
+        "validate": "car_workshop.car_workshop.doctype.work_order.work_order.validate",
+        "before_submit": "car_workshop.car_workshop.doctype.work_order.work_order.before_submit"
+    },
+    "Work Order Part": {
+        "validate": "car_workshop.car_workshop.doctype.work_order_part.work_order_part.validate"
+    },
+    "Work Order Job Type": {
+        "validate": "car_workshop.car_workshop.doctype.work_order_job_type.work_order_job_type.validate"
+    },
+    "Work Order Service Package": {
+        "validate": "car_workshop.car_workshop.doctype.work_order_service_package.work_order_service_package.validate"
     }
 }
 
@@ -40,13 +54,43 @@ fixtures = [
     },
     {
         "doctype": "Role",
-        "filters": [["name", "in", ["Workshop Manager", "Technician"]]]
+        "filters": [["name", "in", ["Workshop Manager", "Technician", "Car Workshop Manager"]]]
     },
     {
         "doctype": "Workspace",
         "filters": [["name", "=", "Car Workshop"]]
+    },
+    {
+        "doctype": "Print Format",
+        "filters": [["module", "=", "Car Workshop"]]
     }
 ]
 
 # Master data setup
 vehicle_master_data_setup = "car_workshop.config.load_vehicle_master_data.execute"
+
+# Dashboard links for Work Order
+get_dashboard_data = {
+    "Work Order": "car_workshop.car_workshop.doctype.work_order.work_order.get_dashboard_data"
+}
+
+# Override calendar views
+calendars = ["Work Order"]
+
+# Add DocTypes to global search
+global_search_doctypes = {
+    "Default": [
+        {"doctype": "Work Order"},
+        {"doctype": "Customer Vehicle"},
+        {"doctype": "Part"},
+        {"doctype": "Job Type"},
+        {"doctype": "Service Package"}
+    ]
+}
+
+# Jinja template filters
+jinja = {
+    "filters": [
+        "car_workshop.utils.format_currency_idr"
+    ]
+}
