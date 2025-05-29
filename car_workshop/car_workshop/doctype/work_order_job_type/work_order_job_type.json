@@ -1,0 +1,93 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2025-05-29 02:08:11",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "job_type",
+    "description",
+    "price",
+    "is_opl",
+    "vendor",
+    "vendor_item_code",
+    "vendor_notes",
+    "status"
+  ],
+  "fields": [
+    {
+      "fieldname": "job_type",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Job Type",
+      "options": "Job Type",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "job_type.description",
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "job_type.default_price",
+      "fieldname": "price",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Price"
+    },
+    {
+      "default": "0",
+      "fetch_from": "job_type.is_opl",
+      "fieldname": "is_opl",
+      "fieldtype": "Check",
+      "label": "Dikerjakan oleh Vendor Luar",
+      "read_only": 1
+    },
+    {
+      "fieldname": "vendor",
+      "fieldtype": "Link",
+      "label": "Vendor",
+      "options": "Supplier",
+      "fetch_from": "job_type.opl_vendor",
+      "depends_on": "eval:doc.is_opl==1"
+    },
+    {
+      "fieldname": "vendor_item_code",
+      "fieldtype": "Link",
+      "label": "Vendor Item Code",
+      "options": "Item",
+      "fetch_from": "job_type.opl_item_code",
+      "depends_on": "eval:doc.is_opl==1"
+    },
+    {
+      "fieldname": "vendor_notes",
+      "fieldtype": "Small Text",
+      "label": "Notes for Vendor",
+      "fetch_from": "job_type.opl_notes",
+      "depends_on": "eval:doc.is_opl==1"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Status",
+      "options": "Pending\nIn Progress\nCompleted\nCancelled",
+      "default": "Pending"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 1,
+  "links": [],
+  "modified": "2025-05-29 02:08:11",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Work Order Job Type",
+  "owner": "dannyaudian",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
