@@ -11,12 +11,14 @@ doctype_js = {
     "Part": "public/js/part.js",
     "Service Package": "public/js/service_package.js",
     "Job Type": "public/js/job_type.js",
-    "Work Order": ["public/js/work_order.js", "public/js/work_order_material_issue_button.js"],  # Added material issue button
+    "Work Order": ["public/js/work_order.js", "public/js/work_order_material_issue_button.js"],
     "Workshop Purchase Order": "public/js/workshop_purchase_order.js",
     "Workshop Purchase Receipt": "public/js/workshop_purchase_receipt.js",
     "Workshop Purchase Invoice": "public/js/workshop_purchase_invoice.js",
-    "Workshop Material Issue": "public/js/workshop_material_issue.js",  # Added Workshop Material Issue JS
-    "Return Material": "public/js/return_material.js"  # Added Return Material JS
+    "Workshop Material Issue": "public/js/workshop_material_issue.js",
+    "Return Material": "public/js/return_material.js",
+    "Part Stock Opname": "public/js/part_stock_opname.js",  # Added Part Stock Opname JS
+    "Part Stock Adjustment": "public/js/part_stock_adjustment.js"  # Added Part Stock Adjustment JS
 }
 
 # Include JS utility files
@@ -91,6 +93,27 @@ doc_events = {
     "Return Material Item": {
         "validate": "car_workshop.car_workshop.doctype.return_material_item.return_material_item.validate"
     },
+    # Add Part Stock Opname events
+    "Part Stock Opname": {
+        "validate": "car_workshop.car_workshop.doctype.part_stock_opname.part_stock_opname.validate",
+        "on_submit": "car_workshop.car_workshop.doctype.part_stock_opname.part_stock_opname.on_submit",
+        "on_cancel": "car_workshop.car_workshop.doctype.part_stock_opname.part_stock_opname.on_cancel"
+    },
+    # Add Part Stock Opname Item events
+    "Part Stock Opname Item": {
+        "validate": "car_workshop.car_workshop.doctype.part_stock_opname_item.part_stock_opname_item.validate",
+        "on_update": "car_workshop.car_workshop.doctype.part_stock_opname_item.part_stock_opname_item.on_update"
+    },
+    # Add Part Stock Adjustment events
+    "Part Stock Adjustment": {
+        "validate": "car_workshop.car_workshop.doctype.part_stock_adjustment.part_stock_adjustment.validate",
+        "on_submit": "car_workshop.car_workshop.doctype.part_stock_adjustment.part_stock_adjustment.on_submit",
+        "on_cancel": "car_workshop.car_workshop.doctype.part_stock_adjustment.part_stock_adjustment.on_cancel"
+    },
+    # Add Part Stock Adjustment Item events
+    "Part Stock Adjustment Item": {
+        "validate": "car_workshop.car_workshop.doctype.part_stock_adjustment_item.part_stock_adjustment_item.validate"
+    },
     # Add Payment Entry events to handle cancellation
     "Payment Entry": {
         "on_cancel": "car_workshop.car_workshop.doctype.payment_entry.payment_entry_hooks.update_workshop_purchase_invoices_on_cancel"
@@ -139,7 +162,9 @@ get_dashboard_data = {
     "Workshop Purchase Receipt": "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.get_dashboard_data",
     "Workshop Purchase Invoice": "car_workshop.car_workshop.doctype.workshop_purchase_invoice.workshop_purchase_invoice.get_dashboard_data",
     "Workshop Material Issue": "car_workshop.car_workshop.doctype.workshop_material_issue.workshop_material_issue.get_dashboard_data",
-    "Return Material": "car_workshop.car_workshop.doctype.return_material.return_material.get_dashboard_data"  # Added dashboard data for Return Material
+    "Return Material": "car_workshop.car_workshop.doctype.return_material.return_material.get_dashboard_data",
+    "Part Stock Opname": "car_workshop.car_workshop.doctype.part_stock_opname.part_stock_opname.get_dashboard_data",  # Added dashboard data for Part Stock Opname
+    "Part Stock Adjustment": "car_workshop.car_workshop.doctype.part_stock_adjustment.part_stock_adjustment.get_dashboard_data"  # Added dashboard data for Part Stock Adjustment
 }
 
 # Override calendar views
@@ -149,7 +174,9 @@ calendars = [
     "Workshop Purchase Receipt",
     "Workshop Purchase Invoice",
     "Workshop Material Issue",
-    "Return Material"  # Added Return Material to calendars
+    "Return Material",
+    "Part Stock Opname",  # Added Part Stock Opname to calendars
+    "Part Stock Adjustment"  # Added Part Stock Adjustment to calendars
 ]
 
 # Add DocTypes to global search
@@ -164,7 +191,9 @@ global_search_doctypes = {
         {"doctype": "Workshop Purchase Receipt"},
         {"doctype": "Workshop Purchase Invoice"},
         {"doctype": "Workshop Material Issue"},
-        {"doctype": "Return Material"}  # Added Return Material to global search
+        {"doctype": "Return Material"},
+        {"doctype": "Part Stock Opname"},  # Added Part Stock Opname to global search
+        {"doctype": "Part Stock Adjustment"}  # Added Part Stock Adjustment to global search
     ]
 }
 
@@ -178,7 +207,9 @@ jinja = {
 # Add print formats
 print_format = [
     {"doctype": "Workshop Material Issue", "print_format": "Workshop Material Issue"},
-    {"doctype": "Return Material", "print_format": "Return Material"}  # Added Return Material print format
+    {"doctype": "Return Material", "print_format": "Return Material"},
+    {"doctype": "Part Stock Opname", "print_format": "Part Stock Opname"},  # Added Part Stock Opname print format
+    {"doctype": "Part Stock Adjustment", "print_format": "Part Stock Adjustment"}  # Added Part Stock Adjustment print format
 ]
 
 # Add custom fields to Stock Entry
@@ -199,6 +230,20 @@ doctype_custom_fields = {
             "options": "Return Material",
             "insert_after": "workshop_material_issue",
             "read_only": 1
+        },
+        {
+            "fieldname": "reference_doctype",
+            "label": "Reference DocType",
+            "fieldtype": "Data",
+            "insert_after": "return_material",
+            "read_only": 1
+        },
+        {
+            "fieldname": "reference_docname",
+            "label": "Reference DocName",
+            "fieldtype": "Data",
+            "insert_after": "reference_doctype",
+            "read_only": 1
         }
     ]
 }
@@ -207,7 +252,10 @@ doctype_custom_fields = {
 doctype_mapped_functions = {
     "Work Order": {
         "make_material_issue": "car_workshop.car_workshop.doctype.work_order.work_order.make_material_issue",
-        "make_return_material": "car_workshop.car_workshop.doctype.work_order.work_order.make_return_material"  # Added make_return_material function
+        "make_return_material": "car_workshop.car_workshop.doctype.work_order.work_order.make_return_material"
+    },
+    "Part Stock Opname": {
+        "make_stock_adjustment": "car_workshop.car_workshop.doctype.part_stock_opname.part_stock_opname.make_stock_adjustment"  # Added make_stock_adjustment function
     }
 }
 
@@ -219,6 +267,12 @@ override_whitelisted_methods = {
 # Add scheduled tasks
 scheduler_events = {
     "daily": [
-        "car_workshop.car_workshop.doctype.return_material.return_material.process_pending_returns"
+        "car_workshop.car_workshop.doctype.return_material.return_material.process_pending_returns",
+        "car_workshop.car_workshop.doctype.part_stock_opname.part_stock_opname.remind_pending_opnames"  # Added scheduled task for opname reminders
     ]
+}
+
+# Barcode API
+barcode_handlers = {
+    "Part": "car_workshop.car_workshop.doctype.part_stock_opname.part_stock_opname.get_part_from_barcode"
 }
