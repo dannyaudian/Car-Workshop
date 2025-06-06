@@ -1,0 +1,171 @@
+<!-- Stock Opname Manual Counting Sheet -->
+<div class="print-format-container">
+    <div class="print-format-header">
+        <div class="row">
+            <div class="col-xs-3">
+                <!-- Company Logo -->
+                <img src="{{ frappe.db.get_value('Website Settings', 'Website Settings', 'brand_image') }}" 
+                     style="max-height: 70px; max-width: 100%;" alt="Company Logo">
+            </div>
+            <div class="col-xs-6 text-center">
+                <h2 style="margin-top: 0;">STOCK OPNAME COUNT SHEET</h2>
+                <h4>{{ doc.name }}</h4>
+            </div>
+            <div class="col-xs-3 text-right">
+                <p><strong>Date:</strong> {{ frappe.utils.formatdate(doc.posting_date, 'dd-MM-yyyy') }}</p>
+                <p><strong>Time:</strong> {{ doc.posting_time }}</p>
+            </div>
+        </div>
+        
+        <div class="row" style="margin-top: 20px;">
+            <div class="col-xs-6">
+                <table class="table table-condensed no-border">
+                    <tr>
+                        <th style="width: 150px;">Warehouse:</th>
+                        <td>{{ doc.warehouse }}</td>
+                    </tr>
+                    <tr>
+                        <th>Print Date:</th>
+                        <td>{{ frappe.datetime.str_to_user(frappe.datetime.now_datetime()) }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-xs-6">
+                <table class="table table-condensed no-border">
+                    <tr>
+                        <th style="width: 150px;">Printed By:</th>
+                        <td>{{ frappe.session.user }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>{{ doc.status }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="print-format-content" style="margin-top: 20px;">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th style="width: 5%;" class="text-center">No</th>
+                    <th style="width: 30%;">Part Name</th>
+                    <th style="width: 20%;">Part Code</th>
+                    <th style="width: 20%;">Barcode</th>
+                    <th style="width: 25%;" class="text-center">Count Qty</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if doc.opname_items %}
+                    {% for item in doc.opname_items %}
+                        <tr>
+                            <td class="text-center">{{ loop.index }}</td>
+                            <td>{{ item.part_name or item.part }}</td>
+                            <td>{{ item.part }}</td>
+                            <td>{{ item.barcode or '' }}</td>
+                            <td style="height: 30px;"></td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <!-- Empty table rows for manual filling -->
+                    {% for i in range(1, 26) %}
+                        <tr>
+                            <td class="text-center">{{ i }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td style="height: 30px;"></td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="print-format-footer" style="margin-top: 50px;">
+        <div class="row">
+            <div class="col-xs-4 text-center">
+                <div style="border-top: 1px solid #000; margin-top: 60px; padding-top: 10px;">
+                    <p><strong>Prepared By</strong></p>
+                    <p style="color: #777; font-size: 12px; margin-top: -10px;">(Storekeeper)</p>
+                </div>
+            </div>
+            <div class="col-xs-4 text-center">
+                <div style="border-top: 1px solid #000; margin-top: 60px; padding-top: 10px;">
+                    <p><strong>Verified By</strong></p>
+                    <p style="color: #777; font-size: 12px; margin-top: -10px;">(Supervisor)</p>
+                </div>
+            </div>
+            <div class="col-xs-4 text-center">
+                <div style="border-top: 1px solid #000; margin-top: 60px; padding-top: 10px;">
+                    <p><strong>Approved By</strong></p>
+                    <p style="color: #777; font-size: 12px; margin-top: -10px;">(Manager)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-xs-12">
+                <div class="notes-section" style="border: 1px solid #ddd; padding: 10px; min-height: 70px;">
+                    <p><strong>Notes:</strong></p>
+                    <p>{{ doc.remarks or '' }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row" style="margin-top: 20px;">
+            <div class="col-xs-12 text-center" style="font-size: 11px; color: #777;">
+                <p>This document is generated for manual stock counting purposes.<br>
+                Printed on {{ frappe.datetime.str_to_user(frappe.datetime.now_datetime()) }} by {{ frappe.session.user }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .print-format-container {
+        font-size: 12px;
+        font-family: Arial, sans-serif;
+    }
+    
+    .print-format-header h2, .print-format-header h4 {
+        margin: 5px 0;
+    }
+    
+    .no-border td, .no-border th {
+        border: none !important;
+        padding: 3px !important;
+    }
+    
+    .table-bordered {
+        border-collapse: collapse;
+    }
+    
+    .table-bordered th, .table-bordered td {
+        border: 1px solid #000 !important;
+        padding: 5px !important;
+        vertical-align: middle !important;
+    }
+    
+    @media print {
+        .print-format-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        
+        .print-format-container {
+            page-break-after: always;
+        }
+        
+        .table-bordered th, .table-bordered td {
+            border: 1px solid #000 !important;
+        }
+    }
+</style>

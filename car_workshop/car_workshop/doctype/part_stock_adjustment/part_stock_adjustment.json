@@ -1,0 +1,208 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "PSA-.YYYY.-.#####",
+  "creation": "2025-06-06 10:20:00",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "reference_opname",
+    "posting_date",
+    "posting_time",
+    "warehouse",
+    "column_break_5",
+    "company",
+    "status",
+    "amended_from",
+    "section_break_9",
+    "adjustment_items",
+    "section_break_11",
+    "total_quantity_difference",
+    "total_value_difference",
+    "section_break_14",
+    "remarks",
+    "stock_entries_section",
+    "stock_entries_html",
+    "stock_entry_logs_section",
+    "stock_entry_logs"
+  ],
+  "fields": [
+    {
+      "fieldname": "stock_entries_section",
+      "fieldtype": "Section Break",
+      "label": "Stock Entries",
+      "depends_on": "eval:doc.docstatus==1"
+    },
+    {
+      "fieldname": "stock_entries_html",
+      "fieldtype": "HTML",
+      "label": "Stock Entries HTML"
+    },
+    {
+      "fieldname": "stock_entry_logs_section",
+      "fieldtype": "Section Break",
+      "label": "Stock Entry Logs",
+      "depends_on": "eval:doc.docstatus==1"
+    },
+    {
+      "fieldname": "stock_entry_logs",
+      "fieldtype": "Table",
+      "label": "Stock Entry Logs",
+      "options": "Stock Entry Log",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reference_opname",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Reference Stock Opname",
+      "options": "Part Stock Opname",
+      "reqd": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "posting_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Posting Date",
+      "reqd": 1
+    },
+    {
+      "default": "now",
+      "fieldname": "posting_time",
+      "fieldtype": "Time",
+      "label": "Posting Time",
+      "reqd": 1
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Warehouse",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_5",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fetch_from": "warehouse.company",
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "read_only": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nSubmitted\nCancelled",
+      "read_only": 1
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "Part Stock Adjustment",
+      "print_hide": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_9",
+      "fieldtype": "Section Break",
+      "label": "Items"
+    },
+    {
+      "fieldname": "adjustment_items",
+      "fieldtype": "Table",
+      "label": "Adjustment Items",
+      "options": "Part Stock Adjustment Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_11",
+      "fieldtype": "Section Break",
+      "label": "Totals"
+    },
+    {
+      "fieldname": "total_quantity_difference",
+      "fieldtype": "Float",
+      "label": "Total Quantity Difference",
+      "read_only": 1
+    },
+    {
+      "fieldname": "total_value_difference",
+      "fieldtype": "Currency",
+      "label": "Total Value Difference",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_14",
+      "fieldtype": "Section Break",
+      "label": "Additional Information"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    },
+    {
+      "fieldname": "stock_entries_section",
+      "fieldtype": "Section Break",
+      "label": "Stock Entries",
+      "depends_on": "eval:doc.docstatus==1"
+    },
+    {
+      "fieldname": "stock_entries_html",
+      "fieldtype": "HTML",
+      "label": "Stock Entries HTML"
+    }
+  ],
+  "is_submittable": 1,
+  "links": [],
+  "modified": "2025-06-06 10:20:00",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Part Stock Adjustment",
+  "owner": "dannyaudian",
+  "permissions": [
+    {
+      "amend": 1,
+      "cancel": 1,
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "amend": 1,
+      "cancel": 1,
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock User",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "track_changes": 1
+}
