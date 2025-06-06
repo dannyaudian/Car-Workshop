@@ -1,0 +1,68 @@
+{
+  "actions": [],
+  "creation": "2025-06-06 10:26:16",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "stock_entry",
+    "entry_type",
+    "posting_date",
+    "column_break_4",
+    "created_by",
+    "creation_date"
+  ],
+  "fields": [
+    {
+      "fieldname": "stock_entry",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Stock Entry",
+      "options": "Stock Entry",
+      "read_only": 1
+    },
+    {
+      "fieldname": "entry_type",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Entry Type",
+      "options": "Material Receipt\nMaterial Issue",
+      "read_only": 1
+    },
+    {
+      "fieldname": "posting_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Posting Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_4",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "dannyaudian",
+      "fieldname": "created_by",
+      "fieldtype": "Data",
+      "label": "Created By",
+      "read_only": 1
+    },
+    {
+      "default": "2025-06-06 10:26:16",
+      "fieldname": "creation_date",
+      "fieldtype": "Datetime",
+      "label": "Creation Date",
+      "read_only": 1
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2025-06-06 10:26:16",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Stock Entry Log",
+  "owner": "dannyaudian",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}
