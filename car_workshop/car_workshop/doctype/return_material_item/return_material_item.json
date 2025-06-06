@@ -1,0 +1,124 @@
+{
+  "actions": [],
+  "creation": "2025-06-06 09:58:23",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "part",
+    "item_code",
+    "item_name",
+    "column_break_4",
+    "qty",
+    "uom",
+    "warehouse",
+    "section_break_8",
+    "valuation_rate",
+    "amount",
+    "column_break_11",
+    "work_order_item",
+    "batch_no",
+    "serial_no"
+  ],
+  "fields": [
+    {
+      "fieldname": "part",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Part",
+      "options": "Part",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "part.item",
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item Code",
+      "options": "Item",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "item_code.item_name",
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_4",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "qty",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Qty",
+      "precision": 3,
+      "reqd": 1
+    },
+    {
+      "fetch_from": "item_code.stock_uom",
+      "fieldname": "uom",
+      "fieldtype": "Link",
+      "label": "UOM",
+      "options": "UOM",
+      "reqd": 1
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Warehouse",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_8",
+      "fieldtype": "Section Break",
+      "label": "Valuation"
+    },
+    {
+      "fetch_from": "item_code.valuation_rate",
+      "fieldname": "valuation_rate",
+      "fieldtype": "Currency",
+      "label": "Valuation Rate"
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "label": "Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_11",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "work_order_item",
+      "fieldtype": "Link",
+      "label": "Work Order Item",
+      "options": "Work Order Part"
+    },
+    {
+      "fieldname": "batch_no",
+      "fieldtype": "Link",
+      "label": "Batch No",
+      "options": "Batch"
+    },
+    {
+      "fieldname": "serial_no",
+      "fieldtype": "Small Text",
+      "label": "Serial No"
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2025-06-06 09:58:23",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Return Material Item",
+  "owner": "dannyaudian",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}

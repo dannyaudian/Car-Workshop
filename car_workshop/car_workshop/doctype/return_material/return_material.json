@@ -1,0 +1,167 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "format:RM-.YYYY.-.#####",
+  "creation": "2025-06-06 09:51:13",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "work_order",
+    "posting_date",
+    "posting_time",
+    "column_break_4",
+    "return_to_warehouse",
+    "status",
+    "amended_from",
+    "items_section",
+    "items",
+    "section_break_9",
+    "total_qty",
+    "column_break_11",
+    "total_amount",
+    "section_break_13",
+    "remarks"
+  ],
+  "fields": [
+    {
+      "fieldname": "work_order",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Work Order",
+      "options": "Work Order",
+      "reqd": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "posting_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Posting Date",
+      "reqd": 1
+    },
+    {
+      "default": "now",
+      "fieldname": "posting_time",
+      "fieldtype": "Time",
+      "label": "Posting Time",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_4",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "return_to_warehouse",
+      "fieldtype": "Link",
+      "label": "Return To Warehouse",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Status",
+      "no_copy": 1,
+      "options": "Draft\nSubmitted\nCancelled",
+      "print_hide": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "Return Material",
+      "print_hide": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "items_section",
+      "fieldtype": "Section Break",
+      "label": "Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "Return Material Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_9",
+      "fieldtype": "Section Break",
+      "label": "Totals"
+    },
+    {
+      "fieldname": "total_qty",
+      "fieldtype": "Float",
+      "label": "Total Quantity",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_11",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "total_amount",
+      "fieldtype": "Currency",
+      "label": "Total Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_13",
+      "fieldtype": "Section Break",
+      "label": "Additional Information"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    }
+  ],
+  "is_submittable": 1,
+  "links": [],
+  "modified": "2025-06-06 09:51:13",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Return Material",
+  "owner": "dannyaudian",
+  "permissions": [
+    {
+      "amend": 1,
+      "cancel": 1,
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "amend": 1,
+      "cancel": 1,
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock User",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "track_changes": 1
+}
