@@ -1,0 +1,95 @@
+{
+  "actions": [],
+  "creation": "2025-06-06 08:00:54",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "item_type",
+    "purchase_order",
+    "item_reference",
+    "column_break_4",
+    "work_order",
+    "description",
+    "section_break_7",
+    "amount",
+    "billable",
+    "reference_doctype"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_type",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Item Type",
+      "options": "Part\nOPL\nExpense",
+      "reqd": 1
+    },
+    {
+      "fieldname": "item_reference",
+      "fieldtype": "Dynamic Link",
+      "in_list_view": 1,
+      "label": "Item Reference",
+      "options": "reference_doctype"
+    },
+    {
+      "fieldname": "work_order",
+      "fieldtype": "Link",
+      "label": "Work Order",
+      "options": "Work Order"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Description"
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Amount",
+      "reqd": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "billable",
+      "fieldtype": "Check",
+      "label": "Billable"
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Purchase Order",
+      "options": "Workshop Purchase Order"
+    },
+    {
+      "fieldname": "column_break_4",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "section_break_7",
+      "fieldtype": "Section Break",
+      "label": "Amount Details"
+    },
+    {
+      "fieldname": "reference_doctype",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Reference DocType"
+    }
+  ],
+  "idx": 0,
+  "istable": 1,
+  "modified": "2025-06-06 08:00:54",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Workshop Purchase Invoice Item",
+  "naming_rule": "Random",
+  "owner": "dannyaudian",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

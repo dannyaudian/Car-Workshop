@@ -1,0 +1,248 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "allow_rename": 0,
+  "autoname": "naming_series:",
+  "creation": "2025-06-06 07:54:08",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "invoice_date",
+    "supplier",
+    "due_date",
+    "column_break_4",
+    "work_order",
+    "status",
+    "amended_from",
+    "section_break_8",
+    "invoice_items",
+    "section_break_10",
+    "bill_total",
+    "tax_amount",
+    "column_break_13",
+    "grand_total",
+    "payment_section",
+    "paid_amount",
+    "payment_entry",
+    "section_break_15",
+    "remarks",
+    "section_break_17",
+    "attachment_invoice",
+    "column_break_19",
+    "attachment_tax_invoice",
+    "tax_invoice_number"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "WPI-.YYYY.-",
+      "reqd": 1,
+      "set_only_once": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "invoice_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Invoice Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "supplier",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Supplier",
+      "options": "Supplier",
+      "reqd": 1
+    },
+    {
+      "fieldname": "due_date",
+      "fieldtype": "Date",
+      "label": "Due Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_4",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "work_order",
+      "fieldtype": "Link",
+      "label": "Work Order",
+      "options": "Work Order"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nSubmitted\nPaid\nCancelled",
+      "read_only": 1,
+      "default": "Draft"
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "Workshop Purchase Invoice",
+      "print_hide": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_8",
+      "fieldtype": "Section Break",
+      "label": "Items"
+    },
+    {
+      "fieldname": "invoice_items",
+      "fieldtype": "Table",
+      "label": "Invoice Items",
+      "options": "Workshop Purchase Invoice Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_10",
+      "fieldtype": "Section Break",
+      "label": "Totals"
+    },
+    {
+      "fieldname": "bill_total",
+      "fieldtype": "Currency",
+      "label": "Bill Total",
+      "read_only": 1
+    },
+    {
+      "fieldname": "tax_amount",
+      "fieldtype": "Currency",
+      "label": "Tax Amount"
+    },
+    {
+      "fieldname": "column_break_13",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "grand_total",
+      "fieldtype": "Currency",
+      "label": "Grand Total",
+      "read_only": 1,
+      "bold": 1
+    },
+    {
+      "fieldname": "payment_section",
+      "fieldtype": "Section Break",
+      "label": "Payment Information"
+    },
+    {
+      "fieldname": "paid_amount",
+      "fieldtype": "Currency",
+      "label": "Paid Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "payment_entry",
+      "fieldtype": "Link",
+      "label": "Payment Entry",
+      "options": "Payment Entry",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_15",
+      "fieldtype": "Section Break",
+      "label": "Notes"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    },
+    {
+      "fieldname": "section_break_17",
+      "fieldtype": "Section Break",
+      "label": "Attachments"
+    },
+    {
+      "fieldname": "attachment_invoice",
+      "fieldtype": "Attach",
+      "label": "Attachment Invoice"
+    },
+    {
+      "fieldname": "column_break_19",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "attachment_tax_invoice",
+      "fieldtype": "Attach",
+      "label": "Attachment Tax Invoice"
+    },
+    {
+      "fieldname": "tax_invoice_number",
+      "fieldtype": "Data",
+      "label": "Tax Invoice Number"
+    }
+  ],
+  "is_submittable": 1,
+  "links": [
+    {
+      "link_doctype": "Payment Entry",
+      "link_fieldname": "reference_name"
+    }
+  ],
+  "modified": "2025-06-06 07:54:08",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Workshop Purchase Invoice",
+  "naming_rule": "By \"Naming Series\" field",
+  "owner": "dannyaudian",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Workshop Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1,
+      "cancel": 1,
+      "amend": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts User",
+      "share": 1,
+      "submit": 1,
+      "write": 1,
+      "cancel": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Technician",
+      "share": 0,
+      "submit": 0,
+      "write": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

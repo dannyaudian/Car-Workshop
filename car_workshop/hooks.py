@@ -12,8 +12,9 @@ doctype_js = {
     "Service Package": "public/js/service_package.js",
     "Job Type": "public/js/job_type.js",
     "Work Order": "public/js/work_order.js",
-    "Workshop Purchase Order": "public/js/workshop_purchase_order.js",  # Added Workshop Purchase Order JS
-    "Workshop Purchase Receipt": "public/js/workshop_purchase_receipt.js"  # Adding Workshop Purchase Receipt JS
+    "Workshop Purchase Order": "public/js/workshop_purchase_order.js",
+    "Workshop Purchase Receipt": "public/js/workshop_purchase_receipt.js",
+    "Workshop Purchase Invoice": "public/js/workshop_purchase_invoice.js"  # Added Workshop Purchase Invoice JS
 }
 
 # Include JS utility files
@@ -55,6 +56,22 @@ doc_events = {
     # Add Workshop Purchase Receipt Item events
     "Workshop Purchase Receipt Item": {
         "validate": "car_workshop.car_workshop.doctype.workshop_purchase_receipt_item.workshop_purchase_receipt_item.validate"
+    },
+    # Add Workshop Purchase Invoice events
+    "Workshop Purchase Invoice": {
+        "validate": "car_workshop.car_workshop.doctype.workshop_purchase_invoice.workshop_purchase_invoice.validate",
+        "on_submit": "car_workshop.car_workshop.doctype.workshop_purchase_invoice.workshop_purchase_invoice.on_submit",
+        "on_cancel": "car_workshop.car_workshop.doctype.workshop_purchase_invoice.workshop_purchase_invoice.on_cancel",
+        "on_update_after_submit": "car_workshop.car_workshop.doctype.workshop_purchase_invoice.workshop_purchase_invoice.on_update_after_submit"
+    },
+    # Add Workshop Purchase Invoice Item events
+    "Workshop Purchase Invoice Item": {
+        "validate": "car_workshop.car_workshop.doctype.workshop_purchase_invoice_item.workshop_purchase_invoice_item.validate",
+        "on_update": "car_workshop.car_workshop.doctype.workshop_purchase_invoice_item.workshop_purchase_invoice_item.on_update"
+    },
+    # Add Payment Entry events to handle cancellation
+    "Payment Entry": {
+        "on_cancel": "car_workshop.car_workshop.doctype.payment_entry.payment_entry_hooks.update_workshop_purchase_invoices_on_cancel"
     }
 }
 
@@ -92,12 +109,18 @@ vehicle_master_data_setup = "car_workshop.config.load_vehicle_master_data.execut
 # Dashboard links for Work Order
 get_dashboard_data = {
     "Work Order": "car_workshop.car_workshop.doctype.work_order.work_order.get_dashboard_data",
-    "Workshop Purchase Order": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.get_dashboard_data",  # Added dashboard data for Workshop Purchase Order
-    "Workshop Purchase Receipt": "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.get_dashboard_data"  # Added dashboard data for Workshop Purchase Receipt
+    "Workshop Purchase Order": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.get_dashboard_data",
+    "Workshop Purchase Receipt": "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.get_dashboard_data",
+    "Workshop Purchase Invoice": "car_workshop.car_workshop.doctype.workshop_purchase_invoice.workshop_purchase_invoice.get_dashboard_data"  # Added dashboard data for Workshop Purchase Invoice
 }
 
 # Override calendar views
-calendars = ["Work Order", "Workshop Purchase Order", "Workshop Purchase Receipt"]  # Added Workshop Purchase Receipt to calendars
+calendars = [
+    "Work Order", 
+    "Workshop Purchase Order", 
+    "Workshop Purchase Receipt",
+    "Workshop Purchase Invoice"  # Added Workshop Purchase Invoice to calendars
+]
 
 # Add DocTypes to global search
 global_search_doctypes = {
@@ -107,8 +130,9 @@ global_search_doctypes = {
         {"doctype": "Part"},
         {"doctype": "Job Type"},
         {"doctype": "Service Package"},
-        {"doctype": "Workshop Purchase Order"},  # Added Workshop Purchase Order to global search
-        {"doctype": "Workshop Purchase Receipt"}  # Added Workshop Purchase Receipt to global search
+        {"doctype": "Workshop Purchase Order"},
+        {"doctype": "Workshop Purchase Receipt"},
+        {"doctype": "Workshop Purchase Invoice"}  # Added Workshop Purchase Invoice to global search
     ]
 }
 
