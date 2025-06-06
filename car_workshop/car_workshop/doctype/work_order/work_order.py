@@ -169,3 +169,74 @@ class WorkOrder(Document):
                 frappe.throw(_(
                     "Row #{0}: Amount is mandatory for Expense '{1}' before submitting"
                 ).format(idx + 1, expense.expense_type))
+
+@frappe.whitelist()
+def make_material_issue(source_name, target_doc=None):
+    """
+    Create a new Workshop Material Issue from a Work Order
+    
+    Args:
+        source_name: Work Order name
+        target_doc: Target doc if provided
+        
+    Returns:
+        Workshop Material Issue doc
+    """
+    def set_missing_values(source, target):
+        # Set default values if missing
+        target.posting_date = frappe.utils.getdate()
+        
+        # Set issued_by as the current user's Employee record if exists
+        employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+        if employee:
+            target.issued_by = employee
+            
+        # Add any remarks
+        target.remarks = _("Material Issue created from Work Order {0}").format(source_name)
+        
+    def update_item(source_obj, target_obj, source_parent):
+        # Find corresponding Part for this item
+        parts = frappe.get_all("Part", 
+            filters={"item": source_obj.item_code},
+            fields=["name", "description"])
+            
+        if parts:
+            # Set the Part and related fields
+            target_obj.part = parts[0].name
+            target_obj.description = parts[0].description
+            
+            # Get stock information for rate calculation
+            bin_data = frappe.db.get_value("Bin", 
+                {"item_code": source_obj.item_code, "warehouse": source_parent.source_warehouse}, 
+                ["valuation_rate"], as_dict=1) or {"valuation_rate": 0}
+                
+            target_obj.rate = bin_data.valuation_rate
+            target_obj.amount = flt(target_obj.qty) * flt(target_obj.rate)
+    
+    # Get the source document
+    doc = frappe.get_doc("Work Order", source_name)
+    
+    # Create the target document using mapped doc
+    target_doc = get_mapped_doc("Work Order", source_name, {
+        "Work Order": {
+            "doctype": "Workshop Material Issue",
+            "field_map": {
+                "name": "work_order",
+                "source_warehouse": "set_warehouse"
+            },
+            "validation": {
+                "docstatus": ["=", 1]  # Only allow if Work Order is submitted
+            }
+        },
+        "Work Order Item": {  # Assuming this is the name of your required_items table
+            "doctype": "Workshop Material Issue Item",
+            "field_map": {
+                "item_code": "item_code",
+                "required_qty": "qty",
+                "stock_uom": "uom"
+            },
+            "postprocess": update_item
+        }
+    }, target_doc, set_missing_values)
+    
+    return target_doc

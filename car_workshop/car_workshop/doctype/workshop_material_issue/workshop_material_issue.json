@@ -1,0 +1,187 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "naming_series:",
+  "creation": "2025-06-06 08:36:05",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "work_order",
+    "posting_date",
+    "set_warehouse",
+    "column_break_4",
+    "issued_by",
+    "status",
+    "amended_from",
+    "section_break_8",
+    "items",
+    "section_break_10",
+    "total_qty",
+    "column_break_12",
+    "total_amount",
+    "section_break_14",
+    "remarks"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "WMI-.YYYY.-",
+      "reqd": 1,
+      "set_only_once": 1
+    },
+    {
+      "fieldname": "work_order",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Work Order",
+      "options": "Work Order",
+      "reqd": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "posting_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Posting Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "set_warehouse",
+      "fieldtype": "Link",
+      "label": "Source Warehouse",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_4",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "issued_by",
+      "fieldtype": "Link",
+      "label": "Issued By",
+      "options": "Employee"
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nSubmitted\nCancelled",
+      "read_only": 1
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "Workshop Material Issue",
+      "print_hide": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_8",
+      "fieldtype": "Section Break",
+      "label": "Parts"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Parts Issued",
+      "options": "Workshop Material Issue Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_10",
+      "fieldtype": "Section Break",
+      "label": "Totals"
+    },
+    {
+      "fieldname": "total_qty",
+      "fieldtype": "Float",
+      "label": "Total Quantity",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_12",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "total_amount",
+      "fieldtype": "Currency",
+      "label": "Total Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_14",
+      "fieldtype": "Section Break",
+      "label": "Additional Information"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    }
+  ],
+  "is_submittable": 1,
+  "links": [],
+  "modified": "2025-06-06 08:36:05",
+  "modified_by": "dannyaudian",
+  "module": "Car Workshop",
+  "name": "Workshop Material Issue",
+  "naming_rule": "By \"Naming Series\" field",
+  "owner": "dannyaudian",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Workshop Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1,
+      "cancel": 1,
+      "amend": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1,
+      "cancel": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Technician",
+      "share": 0,
+      "submit": 0,
+      "write": 0
+    }
+  ],
+  "search_fields": "work_order",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

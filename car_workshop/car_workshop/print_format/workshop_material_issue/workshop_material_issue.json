@@ -1,0 +1,20 @@
+{
+    "doctype": "Print Format",
+    "font": "Default",
+    "format_data": null,
+    "html": "",
+    "line_breaks": 0,
+    "module": "Car Workshop",
+    "name": "Workshop Material Issue",
+    "print_format_builder": 0,
+    "print_format_type": "Server",
+    "raw_printing": 0,
+    "show_section_headings": 0,
+    "standard": "Yes",
+    "custom_format": 1,
+    "doc_type": "Workshop Material Issue",
+    "disabled": 0,
+    "align_labels_right": 0,
+    "absolute_value": 0,
+    "default_print_language": "en"
+}

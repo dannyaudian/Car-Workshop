@@ -1,0 +1,203 @@
+{%- from "templates/print_formats/standard_macros.html" import add_header -%}
+<div class="print-format">
+    <!-- Add the header with company logo and title -->
+    {{ add_header(0, 1, doc, letter_head, no_letterhead) }}
+
+    <div class="print-heading">
+        <h2>WORKSHOP MATERIAL ISSUE</h2>
+        <div class="document-id">{{ doc.name }}</div>
+    </div>
+
+    <!-- Main details section -->
+    <div class="row section-break">
+        <div class="col-xs-6">
+            <div class="row">
+                <div class="col-xs-5"><label>Posting Date:</label></div>
+                <div class="col-xs-7">{{ doc.posting_date }}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-5"><label>Work Order No:</label></div>
+                <div class="col-xs-7">{{ doc.work_order }}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-5"><label>Source Warehouse:</label></div>
+                <div class="col-xs-7">{{ doc.set_warehouse }}</div>
+            </div>
+        </div>
+        <div class="col-xs-6">
+            <div class="row">
+                <div class="col-xs-5"><label>Issued By:</label></div>
+                <div class="col-xs-7">{{ doc.issued_by or "" }}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-5"><label>Status:</label></div>
+                <div class="col-xs-7">{{ doc.status }}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-5"><label>Document Status:</label></div>
+                <div class="col-xs-7">{{ _("Submitted") if doc.docstatus == 1 else _("Draft") if doc.docstatus == 0 else _("Cancelled") }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remarks section if available -->
+    {% if doc.remarks %}
+    <div class="row section-break">
+        <div class="col-xs-12">
+            <div class="row">
+                <div class="col-xs-3"><label>Remarks:</label></div>
+                <div class="col-xs-9">{{ doc.remarks }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Items table -->
+    <div class="row section-break">
+        <div class="col-xs-12">
+            <table class="table table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th style="width: 5%">#</th>
+                        <th style="width: 15%">Part Code</th>
+                        <th style="width: 30%">Description</th>
+                        <th style="width: 10%">Item Code</th>
+                        <th style="width: 10%" class="text-right">Quantity</th>
+                        <th style="width: 10%">UOM</th>
+                        <th style="width: 10%" class="text-right">Rate</th>
+                        <th style="width: 10%" class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in doc.items %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.part }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.item_code }}</td>
+                        <td class="text-right">{{ item.qty }}</td>
+                        <td>{{ item.uom }}</td>
+                        <td class="text-right">{{ frappe.format_value(item.rate, {"fieldtype": "Currency"}) }}</td>
+                        <td class="text-right">{{ frappe.format_value(item.amount, {"fieldtype": "Currency"}) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="4" class="text-right">Total</th>
+                        <th class="text-right">{{ doc.total_qty }}</th>
+                        <th></th>
+                        <th></th>
+                        <th class="text-right">{{ frappe.format_value(doc.total_amount, {"fieldtype": "Currency"}) }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- QR/Barcode section (optional) -->
+    <div class="row section-break">
+        <div class="col-xs-12 text-center">
+            <div class="barcode-container">
+                <img src="/api/method/frappe.utils.barcode.get_barcode?barcode_type=Code128&value={{ doc.name }}" class="barcode-img">
+                <div>{{ doc.name }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature section -->
+    <div class="row section-break signature-section">
+        <div class="col-xs-4 text-center">
+            <div class="signature-field"></div>
+            <div>________________________</div>
+            <p><strong>Issued By</strong></p>
+            <p>{{ doc.issued_by or "" }}</p>
+        </div>
+        <div class="col-xs-4 text-center">
+            <div class="signature-field"></div>
+            <div>________________________</div>
+            <p><strong>Approved By</strong></p>
+            <p></p>
+        </div>
+        <div class="col-xs-4 text-center">
+            <div class="signature-field"></div>
+            <div>________________________</div>
+            <p><strong>Warehouse Receiver</strong></p>
+            <p></p>
+        </div>
+    </div>
+
+    <!-- Notes and terms section -->
+    <div class="row section-break">
+        <div class="col-xs-12 small text-muted">
+            <p><strong>Note:</strong> This document is computer generated and does not require a physical signature to be valid.</p>
+            <p>Issued Date: {{ frappe.utils.now_datetime().strftime('%Y-%m-%d %H:%M:%S') }}</p>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Custom CSS for Workshop Material Issue Print Format */
+.print-format {
+    font-family: 'Courier New', monospace;
+    font-size: 10pt;
+}
+
+.print-heading {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.print-heading h2 {
+    margin: 0;
+    font-weight: bold;
+}
+
+.document-id {
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.section-break {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.table-bordered {
+    border: 1px solid #333;
+}
+
+.table-bordered td,
+.table-bordered th {
+    border: 1px solid #333;
+    padding: 5px;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+label {
+    font-weight: bold;
+}
+
+.signature-section {
+    margin-top: 50px;
+}
+
+.signature-field {
+    height: 40px;
+}
+
+.barcode-container {
+    margin: 15px 0;
+}
+
+.barcode-img {
+    height: 50px;
+}
+</style>

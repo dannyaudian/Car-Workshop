@@ -11,10 +11,11 @@ doctype_js = {
     "Part": "public/js/part.js",
     "Service Package": "public/js/service_package.js",
     "Job Type": "public/js/job_type.js",
-    "Work Order": "public/js/work_order.js",
+    "Work Order": ["public/js/work_order.js", "public/js/work_order_material_issue_button.js"],  # Added material issue button
     "Workshop Purchase Order": "public/js/workshop_purchase_order.js",
     "Workshop Purchase Receipt": "public/js/workshop_purchase_receipt.js",
-    "Workshop Purchase Invoice": "public/js/workshop_purchase_invoice.js"  # Added Workshop Purchase Invoice JS
+    "Workshop Purchase Invoice": "public/js/workshop_purchase_invoice.js",
+    "Workshop Material Issue": "public/js/workshop_material_issue.js"  # Added Workshop Material Issue JS
 }
 
 # Include JS utility files
@@ -69,9 +70,23 @@ doc_events = {
         "validate": "car_workshop.car_workshop.doctype.workshop_purchase_invoice_item.workshop_purchase_invoice_item.validate",
         "on_update": "car_workshop.car_workshop.doctype.workshop_purchase_invoice_item.workshop_purchase_invoice_item.on_update"
     },
+    # Add Workshop Material Issue events
+    "Workshop Material Issue": {
+        "validate": "car_workshop.car_workshop.doctype.workshop_material_issue.workshop_material_issue.validate",
+        "on_submit": "car_workshop.car_workshop.doctype.workshop_material_issue.workshop_material_issue.on_submit",
+        "on_cancel": "car_workshop.car_workshop.doctype.workshop_material_issue.workshop_material_issue.on_cancel"
+    },
+    # Add Workshop Material Issue Item events
+    "Workshop Material Issue Item": {
+        "validate": "car_workshop.car_workshop.doctype.workshop_material_issue_item.workshop_material_issue_item.validate"
+    },
     # Add Payment Entry events to handle cancellation
     "Payment Entry": {
         "on_cancel": "car_workshop.car_workshop.doctype.payment_entry.payment_entry_hooks.update_workshop_purchase_invoices_on_cancel"
+    },
+    # Add Stock Entry events for linking with Workshop Material Issue
+    "Stock Entry": {
+        "on_cancel": "car_workshop.car_workshop.doctype.workshop_material_issue.workshop_material_issue.on_stock_entry_cancel"
     }
 }
 
@@ -111,7 +126,8 @@ get_dashboard_data = {
     "Work Order": "car_workshop.car_workshop.doctype.work_order.work_order.get_dashboard_data",
     "Workshop Purchase Order": "car_workshop.car_workshop.doctype.workshop_purchase_order.workshop_purchase_order.get_dashboard_data",
     "Workshop Purchase Receipt": "car_workshop.car_workshop.doctype.workshop_purchase_receipt.workshop_purchase_receipt.get_dashboard_data",
-    "Workshop Purchase Invoice": "car_workshop.car_workshop.doctype.workshop_purchase_invoice.workshop_purchase_invoice.get_dashboard_data"  # Added dashboard data for Workshop Purchase Invoice
+    "Workshop Purchase Invoice": "car_workshop.car_workshop.doctype.workshop_purchase_invoice.workshop_purchase_invoice.get_dashboard_data",
+    "Workshop Material Issue": "car_workshop.car_workshop.doctype.workshop_material_issue.workshop_material_issue.get_dashboard_data"  # Added dashboard data for Workshop Material Issue
 }
 
 # Override calendar views
@@ -119,7 +135,8 @@ calendars = [
     "Work Order", 
     "Workshop Purchase Order", 
     "Workshop Purchase Receipt",
-    "Workshop Purchase Invoice"  # Added Workshop Purchase Invoice to calendars
+    "Workshop Purchase Invoice",
+    "Workshop Material Issue"  # Added Workshop Material Issue to calendars
 ]
 
 # Add DocTypes to global search
@@ -132,7 +149,8 @@ global_search_doctypes = {
         {"doctype": "Service Package"},
         {"doctype": "Workshop Purchase Order"},
         {"doctype": "Workshop Purchase Receipt"},
-        {"doctype": "Workshop Purchase Invoice"}  # Added Workshop Purchase Invoice to global search
+        {"doctype": "Workshop Purchase Invoice"},
+        {"doctype": "Workshop Material Issue"}  # Added Workshop Material Issue to global search
     ]
 }
 
@@ -141,4 +159,33 @@ jinja = {
     "filters": [
         "car_workshop.utils.format_currency_idr"
     ]
+}
+
+# Add print formats
+print_format = [
+    {"doctype": "Workshop Material Issue", "print_format": "Workshop Material Issue"}
+]
+
+# Add custom fields to Stock Entry
+doctype_custom_fields = {
+    "Stock Entry": [
+        {
+            "fieldname": "workshop_material_issue",
+            "label": "Workshop Material Issue",
+            "fieldtype": "Link",
+            "options": "Workshop Material Issue",
+            "insert_after": "work_order",
+            "read_only": 1
+        }
+    ]
+}
+
+# Define mapped document functions
+doctype_mapped_functions = {
+    "Work Order": "car_workshop.car_workshop.doctype.work_order.work_order.make_material_issue"
+}
+
+# Define override whitelisted methods
+override_whitelisted_methods = {
+    "frappe.desk.calendar.get_events": "car_workshop.car_workshop.utils.calendar.get_events"
 }

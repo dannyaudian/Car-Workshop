@@ -1,6 +1,6 @@
 # Car Workshop Modules – By Innovasi Terbaik Bangsa
 
-This repository contains a set of integrated Frappe/ERPNext modules to manage modern automotive workshop operations. It includes detailed management of customer vehicles, job types, parts inventory, service packages, and work orders for comprehensive workshop management.
+This repository contains a set of integrated Frappe/ERPNext modules to manage modern automotive workshop operations. It includes detailed management of customer vehicles, job types, parts inventory, service packages, work orders, purchase orders, and invoicing for comprehensive workshop management.
 
 ---
 
@@ -109,6 +109,40 @@ Comprehensive service records management for vehicle repair and maintenance oper
 * Vendor and PO management for outsourced jobs
 * Dialog view for related purchase orders
 
+#### 7. Workshop Purchase Order
+
+Manage purchase orders for parts and outsourced labor services (OPL).
+
+**Features:**
+* Links to work orders and suppliers
+* Supports multiple item types (Part, OPL)
+* Tracks status through the procurement process
+* Validates items against required specifications
+
+#### 8. Workshop Purchase Invoice
+
+Process supplier invoices for parts and outsourced services with payment tracking.
+
+**Features:**
+* Auto-naming with format `WPI-.YYYY.-`
+* Links to suppliers, work orders, and purchase orders
+* Handles different item types (Part, OPL, Expense)
+* Calculates totals with tax handling
+* Integrated with Payment Entry for payment processing
+* Validates items to prevent duplicate payments
+
+**Integration Points:**
+* Connected to Payment Entry for payment processing
+* Links to Work Orders and Purchase Orders
+* Tracks payment status (Draft, Submitted, Paid, Cancelled)
+
+**JavaScript Features:**
+* One-click Payment Entry creation
+* Dynamic field validation based on item type
+* Real-time total calculations
+* Auto-fill from Purchase Order references
+* Visibility controls based on item types
+
 ---
 
 ## ⚙️ Installation
@@ -128,7 +162,10 @@ Comprehensive service records management for vehicle repair and maintenance oper
            ├── work_order_job_type/
            ├── work_order_service_package/
            ├── work_order_part/
-           └── work_order_expense/
+           ├── work_order_expense/
+           ├── workshop_purchase_order/
+           ├── workshop_purchase_invoice/
+           └── workshop_purchase_invoice_item/
    ```
 
 2. Run migrations:
@@ -152,12 +189,15 @@ Comprehensive service records management for vehicle repair and maintenance oper
    * Create work orders for service requests
    * Select appropriate job types or packages
    * Add required parts with quantities
+   * Generate purchase orders for parts and outsourced labor
+   * Process supplier invoices and make payments
    * Calculate and finalize totals
    * Submit and link to invoices
 
 3. **Management & Reporting**
    * Track service history by vehicle
    * Monitor outsourced work with vendors
+   * Manage supplier payments and invoices
    * Analyze service profitability
    * Review part usage patterns
    * Manage customer service timelines
@@ -190,6 +230,13 @@ Comprehensive service records management for vehicle repair and maintenance oper
 * Use service packages for common maintenance procedures
 * Validate all details before submission
 
+### Purchase and Payment
+* Create purchase orders promptly for all outsourced work
+* Process supplier invoices timely for accurate accounting
+* Match invoice items to purchase order references
+* Use the integrated payment system for tracking payments
+* Regularly reconcile outstanding payments
+
 ---
 
 ## 📞 Support
@@ -199,26 +246,3 @@ For bugs, ideas, or deployment help, please reach out via GitHub Issues or your 
 ---
 
 **Note:** Ensure regular backups and test all pricing rules before deploying to production.
-```
-
-I've reorganized the README with these improvements:
-
-1. **Improved Categorization**:
-   - Grouped related modules under logical categories (Vehicle, Service, Inventory, Pricing, Operations)
-   - Used clearer section hierarchies with better headings
-
-2. **Enhanced Visual Structure**:
-   - Added emoji icons to main sections for quick visual reference
-   - Improved the installation directory layout with a tree structure
-   - Created dedicated tables and lists for clearer reading
-
-3. **Workflow-Based Approach**:
-   - Transformed "Usage Highlights" into a sequential workflow
-   - Divided into Setup, Daily Operations, and Management phases
-   - Makes it easier to understand the system's operational flow
-
-4. **Better Best Practices Organization**:
-   - Grouped best practices by category for easier reference
-   - Added specific guidance for each major system component
-
-This reorganized structure provides a more professional, visually appealing, and easier-to-navigate documentation that highlights all system components while maintaining a logical flow.
