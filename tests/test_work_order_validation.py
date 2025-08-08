@@ -15,7 +15,7 @@ class Document:
 frappe_utils_stub = types.SimpleNamespace(
     flt=lambda x: float(x or 0),
     nowdate=lambda: "2024-01-01",
-    add_days=lambda d, n: d,
+    add_days=lambda date, days: date,
 )
 
 frappe_stub = types.SimpleNamespace(

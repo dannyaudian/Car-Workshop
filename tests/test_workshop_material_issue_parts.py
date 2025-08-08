@@ -156,3 +156,40 @@ def test_stock_entry_submission_without_target_warehouse():
     assert se.to_warehouse is None
     assert all("t_warehouse" not in d for d in se.items)
     assert se.submitted
+
+
+def test_update_work_order_updates_duplicate_parts():
+    frappe = setup_frappe_stub()
+    messages = []
+    frappe.msgprint = lambda msg, *args, **kwargs: messages.append(msg)
+
+    part1 = types.SimpleNamespace(item_code="ITEM-001", consumed_qty=0)
+    part2 = types.SimpleNamespace(item_code="ITEM-001", consumed_qty=0)
+    work_order = types.SimpleNamespace(
+        part_detail=[part1, part2],
+        flags=types.SimpleNamespace(),
+        save=lambda: None,
+        add_comment=lambda *args, **kwargs: None,
+        update_status=lambda: None,
+        calculate_total_consumed_qty=lambda: None,
+    )
+
+    def get_doc(doctype, name):
+        if doctype == "Work Order":
+            return work_order
+        return types.SimpleNamespace()
+
+    frappe.get_doc = get_doc
+
+    module = import_doctype(
+        "car_workshop.car_workshop.doctype.workshop_material_issue.workshop_material_issue"
+    )
+    wmi = module.WorkshopMaterialIssue()
+    wmi.name = "WMI-001"
+    wmi.work_order = "WO-001"
+    wmi.items = [types.SimpleNamespace(item_code="ITEM-001", qty=1)]
+    wmi.update_work_order()
+
+    assert part1.consumed_qty == 1
+    assert part2.consumed_qty == 1
+    assert any("ITEM-001: 0.0 → 2.0" in m for m in messages)
