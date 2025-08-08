@@ -17,6 +17,13 @@ def setup_frappe_stub():
                 return {"actual_qty": 5, "reserved_qty": 1, "valuation_rate": 10}
             if doctype == "Item" and fieldname == "stock_uom":
                 return "Nos"
+            if doctype == "Work Order" and fieldname == "project":
+                return None
+            return None
+
+        def get_single_value(self, doctype, fieldname):
+            if doctype == "Workshop Settings" and fieldname == "company":
+                return "Test Company"
             return None
 
     frappe.db = DB()
@@ -44,13 +51,49 @@ def setup_frappe_stub():
     utils.nowtime = lambda: "00:00:00"
     frappe.utils = utils
     frappe.whitelist = lambda *args, **kwargs: (lambda f: f)
+    frappe.msgprint = lambda *args, **kwargs: None
+    frappe.get_desk_link = lambda doctype, name: name
+    frappe.log_error = lambda *args, **kwargs: None
+    frappe.defaults = types.SimpleNamespace(get_user_default=lambda key: "Test Company")
+
+    class StockEntryStub:
+        def __init__(self):
+            self.items = []
+            self.flags = types.SimpleNamespace()
+            self.name = "SE-TEST"
+            self.submitted = False
+
+        def append(self, table, values):
+            getattr(self, table).append(values)
+
+        def set_missing_values(self):
+            pass
+
+        def save(self):
+            pass
+
+        def submit(self):
+            self.submitted = True
+
+    created_docs = []
+
+    def new_doc(doctype):
+        doc = StockEntryStub()
+        created_docs.append(doc)
+        return doc
+
+    frappe.new_doc = new_doc
+    frappe.created_docs = created_docs
 
     sys.modules["frappe"] = frappe
     sys.modules["frappe.utils"] = utils
     model = types.ModuleType("frappe.model")
     document = types.ModuleType("frappe.model.document")
+
     class Document:
-        pass
+        def db_set(self, fieldname, value):
+            setattr(self, fieldname, value)
+
     document.Document = Document
     model.document = document
     sys.modules["frappe.model"] = model
@@ -84,3 +127,32 @@ def test_get_work_order_parts_uses_part_detail():
     assert parts[0]["required_qty"] == 3
     assert parts[0]["consumed_qty"] == 1
     assert parts[0]["qty"] == 2
+
+
+def test_stock_entry_submission_without_target_warehouse():
+    frappe = setup_frappe_stub()
+    module = import_doctype(
+        "car_workshop.car_workshop.doctype.workshop_material_issue.workshop_material_issue"
+    )
+    wmi = module.WorkshopMaterialIssue()
+    wmi.name = "WMI-001"
+    wmi.posting_date = "2024-01-01"
+    wmi.work_order = "WO-001"
+    wmi.set_warehouse = "WH"
+    item = types.SimpleNamespace(
+        item_code="ITEM-001",
+        qty=1,
+        uom="Nos",
+        rate=10,
+        amount=10,
+        serial_no=None,
+        batch_no=None,
+        description="Test Item",
+    )
+    wmi.items = [item]
+    wmi.remarks = ""
+    wmi.create_stock_entry()
+    se = frappe.created_docs[0]
+    assert se.to_warehouse is None
+    assert all("t_warehouse" not in d for d in se.items)
+    assert se.submitted

@@ -302,7 +302,7 @@ class WorkshopMaterialIssue(Document):
             stock_entry.posting_time = nowtime()
             stock_entry.company = frappe.db.get_single_value("Workshop Settings", "company") or frappe.defaults.get_user_default("Company")
             stock_entry.from_warehouse = self.set_warehouse
-            stock_entry.to_warehouse = ""  # Material Issue doesn't need a to_warehouse
+            stock_entry.to_warehouse = None  # Material Issue doesn't need a target warehouse
             stock_entry.project = frappe.db.get_value("Work Order", self.work_order, "project")
             stock_entry.work_order = self.work_order
             
@@ -319,7 +319,6 @@ class WorkshopMaterialIssue(Document):
             for item in self.items:
                 stock_entry.append("items", {
                     "s_warehouse": self.set_warehouse,
-                    "t_warehouse": None,  # Material Issue doesn't need a t_warehouse
                     "item_code": item.item_code,
                     "qty": item.qty,
                     "uom": item.uom,
