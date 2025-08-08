@@ -1,4 +1,5 @@
 import importlib
+import json
 import os
 import sys
 import types
@@ -25,6 +26,8 @@ def setup_frappe_stub():
             if doctype == "Part":
                 return "ITEM-001"
             if doctype == "Bin":
+                if kwargs.get("as_dict"):
+                    return {"actual_qty": 0, "valuation_rate": 0}
                 return types.SimpleNamespace(actual_qty=0, valuation_rate=0)
             return None
 
@@ -71,14 +74,10 @@ def setup_frappe_stub():
 
     frappe.get_doc = get_doc
     def get_all(doctype, filters=None, fields=None, *args, **kwargs):
-        frappe.get_all_calls.append((doctype, filters, fields))
-        if doctype == "Part":
-            return [types.SimpleNamespace(name="PART-001", item_code="ITEM-001")]
         if doctype == "Bin":
             return [types.SimpleNamespace(item_code="ITEM-001", actual_qty=0, valuation_rate=0)]
         return []
 
-    frappe.get_all_calls = []
     frappe.get_all = get_all
     frappe.new_doc = lambda doctype: Document()
     frappe.msgprint = lambda msg: None
@@ -106,7 +105,23 @@ def test_part_stock_opname_item_code():
     opname.warehouse = "WH"
     module.frappe = frappe
     opname.store_system_quantities()
-    assert "item_code" in frappe.get_all_calls[0][2]
+    assert frappe.db.calls[0] == ("Part", "PART-001", "item_code")
+
+
+def test_part_stock_opname_system_quantities_cached():
+    frappe = setup_frappe_stub()
+    module = import_doctype(
+        "car_workshop.car_workshop.doctype.part_stock_opname.part_stock_opname"
+    )
+    opname = module.PartStockOpname()
+    opname.opname_items = [types.SimpleNamespace(part="PART-001", qty_counted=1, uom="Nos")]
+    opname.warehouse = "WH"
+    module.frappe = frappe
+    opname.store_system_quantities()
+    cache = json.loads(opname.system_quantities_cache)
+    assert cache["PART-001"]["item_code"] == "ITEM-001"
+    assert cache["PART-001"]["actual_qty"] == 0
+    assert cache["PART-001"]["valuation_rate"] == 0
 
 
 def test_return_material_item_code():

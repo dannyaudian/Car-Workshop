@@ -87,20 +87,21 @@ class PartStockOpname(Document):
         """
         system_quantities = {}
 
-        # Collect unique part IDs from opname items
-        part_ids = list({item.part for item in self.opname_items if item.part})
-        if not part_ids:
+        # Map parts to their corresponding item codes
+        part_to_item_code = {}
+        for item in self.opname_items:
+            if not item.part:
+                continue
+            item_code = frappe.db.get_value("Part", item.part, "item_code")
+            if item_code:
+                part_to_item_code[item.part] = item_code
+
+        if not part_to_item_code:
             self.system_quantities_cache = json.dumps(system_quantities)
             return
 
-        # Fetch item codes for all parts in a single query
-        parts = frappe.get_all(
-            "Part", filters={"name": ["in", part_ids]}, fields=["name", "item_code"]
-        )
-        part_to_item_code = {p.name: p.item_code for p in parts if p.item_code}
-
         # Prefetch Bin records for all item codes
-        item_codes = [p.item_code for p in parts if p.item_code]
+        item_codes = list(part_to_item_code.values())
         bins = frappe.get_all(
             "Bin",
             filters={"item_code": ["in", item_codes], "warehouse": self.warehouse},
@@ -115,6 +116,8 @@ class PartStockOpname(Document):
                 continue
 
             item_code = part_to_item_code.get(part)
+            if not item_code:
+                continue
             bin_data = bin_by_item_code.get(item_code)
 
             system_quantities[part] = {
@@ -122,7 +125,7 @@ class PartStockOpname(Document):
                 "actual_qty": flt(bin_data.actual_qty) if bin_data else 0,
                 "valuation_rate": flt(bin_data.valuation_rate) if bin_data else 0,
             }
-        
+
         # Store as JSON string in a hidden field
         self.system_quantities_cache = json.dumps(system_quantities)
     
