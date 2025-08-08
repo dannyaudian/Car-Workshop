@@ -84,13 +84,25 @@ def update_last_service_info(doc):
 
 
 # Logging Functions
+
+
+def _ensure_vehicle_log_permission():
+    if not frappe.has_permission("Vehicle Change Log", "write", user=frappe.session.user):
+        frappe.throw(
+            _("You do not have permission to create Vehicle Change Log entries"),
+            frappe.PermissionError,
+        )
+
+
 def create_vehicle_log(doc, method=None):
     """
     Mencatat pembuatan kendaraan baru dalam Vehicle Change Log
     """
     if frappe.flags.in_install or frappe.flags.in_patch or frappe.flags.in_migrate or frappe.flags.in_import:
         return
-        
+
+    _ensure_vehicle_log_permission()
+
     frappe.get_doc({
         "doctype": "Vehicle Change Log",
         "customer_vehicle": doc.name,
@@ -102,7 +114,7 @@ def create_vehicle_log(doc, method=None):
         "reference": doc.name,
         "updated_by": frappe.session.user,
         "remarks": "Customer Vehicle created"
-    }).insert(ignore_permissions=True)
+    }).insert()
 
 
 def log_vehicle_updates(doc, method=None):
@@ -137,6 +149,8 @@ def create_change_log_entry(vehicle_name, field_name, old_value, new_value, rema
     """
     Helper function to create a change log entry
     """
+    _ensure_vehicle_log_permission()
+
     frappe.get_doc({
         "doctype": "Vehicle Change Log",
         "customer_vehicle": vehicle_name,
@@ -149,4 +163,4 @@ def create_change_log_entry(vehicle_name, field_name, old_value, new_value, rema
         "reference": vehicle_name,
         "updated_by": frappe.session.user,
         "remarks": remarks
-    }).insert(ignore_permissions=True)
+    }).insert()
