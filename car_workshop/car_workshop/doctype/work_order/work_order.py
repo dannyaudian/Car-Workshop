@@ -3,6 +3,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import flt
+from frappe.model.mapper import get_mapped_doc
 
 
 class WorkOrder(Document):
@@ -241,5 +242,5 @@ def make_material_issue(source_name, target_doc=None):
             "postprocess": update_item
         }
     }, target_doc, set_missing_values)
-    
+
     return target_doc
