@@ -39,17 +39,32 @@ class WorkshopPurchaseOrder(Document):
             # Calculate amount if not set
             if not item.amount:
                 item.amount = flt(item.quantity) * flt(item.rate)
-                
+
             # Check reference based on item type
             if item.item_type == "Part" and not item.reference_doctype:
                 frappe.throw(_("Row {0}: Part reference is required for Part items").format(item.idx))
-                
+
             elif item.item_type == "OPL" and not item.reference_doctype:
                 frappe.throw(_("Row {0}: Job Type reference is required for OPL items").format(item.idx))
-                
+
             elif item.item_type == "Expense" and not item.reference_doctype:
                 frappe.throw(_("Row {0}: Expense Type reference is required for Expense items").format(item.idx))
-                
+
+            # Validate that the referenced document exists
+            if item.reference_doctype:
+                reference_map = {
+                    "Part": "Part",
+                    "OPL": "Job Type",
+                    "Expense": "Expense Type",
+                }
+                ref_doctype = reference_map.get(item.item_type)
+                if ref_doctype and not frappe.db.exists(ref_doctype, item.reference_doctype):
+                    frappe.throw(
+                        _(
+                            "Row {0}: {1} {2} does not exist"
+                        ).format(item.idx, ref_doctype, item.reference_doctype)
+                    )
+
             # Validate work_order is set if item is billable
             if cint(item.billable) == 1 and not self.work_order:
                 frappe.throw(_("Row {0}: Work Order is required for billable items").format(item.idx))
