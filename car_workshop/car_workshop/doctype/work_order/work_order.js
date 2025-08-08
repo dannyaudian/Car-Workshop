@@ -4,7 +4,17 @@ frappe.ui.form.on('Work Order', {
         frm.add_custom_button(__('Lihat Semua PO Terkait'), function() {
             show_related_purchase_orders(frm);
         }).addClass('btn-primary');
-        
+
+        // Add Material Issue button when submitted and not cancelled
+        if (frm.doc.docstatus === 1 && frm.doc.status !== 'Cancelled') {
+            frm.add_custom_button(__('Material Issue'), function() {
+                frappe.model.open_mapped_doc({
+                    method: 'car_workshop.car_workshop.doctype.work_order.work_order.make_material_issue',
+                    frm: frm
+                });
+            }, __('Create'));
+        }
+
         // Update field requirements based on source
         set_purchase_order_requirements(frm);
     },

@@ -6,20 +6,7 @@ app_email = "danny.a.pratama@cao-group.co.id"
 app_license = "MIT"
 
 # JavaScript customizations
-doctype_js = {
-    "Customer Vehicle": "public/js/customer_vehicle.js",
-    "Part": "public/js/part.js",
-    "Service Package": "public/js/service_package.js",
-    "Job Type": "public/js/job_type.js",
-    "Work Order": ["public/js/work_order.js", "public/js/work_order_material_issue_button.js"],
-    "Workshop Purchase Order": "public/js/workshop_purchase_order.js",
-    "Workshop Purchase Receipt": "public/js/workshop_purchase_receipt.js",
-    "Workshop Purchase Invoice": "public/js/workshop_purchase_invoice.js",
-    "Workshop Material Issue": "public/js/workshop_material_issue.js",
-    "Return Material": "public/js/return_material.js",
-    "Part Stock Opname": "public/js/part_stock_opname.js",  # Added Part Stock Opname JS
-    "Part Stock Adjustment": "public/js/part_stock_adjustment.js"  # Added Part Stock Adjustment JS
-}
+doctype_js = {}
 
 # Include JS utility files
 app_include_js = [
