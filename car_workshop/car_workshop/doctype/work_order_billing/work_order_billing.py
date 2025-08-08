@@ -335,89 +335,98 @@ class WorkOrderBilling(AccountsController):
         """Create a Sales Invoice from this billing document"""
         if self.sales_invoice:
             return
-            
+
         if not self.company:
             frappe.throw(_("Company is required to create a Sales Invoice"))
-            
-        sinv = frappe.new_doc("Sales Invoice")
-        sinv.customer = self.customer
-        sinv.posting_date = self.posting_date
-        sinv.due_date = self.due_date
-        sinv.company = self.company
-        sinv.cost_center = self.cost_center
-        sinv.work_order_billing = self.name
-        sinv.work_order = self.work_order
-        sinv.customer_vehicle = self.customer_vehicle
-        
-        # Add job type items
-        for item in self.job_type_items:
-            sinv_item = sinv.append("items", {})
-            sinv_item.item_code = frappe.db.get_value("Job Type", item.job_type, "item")
-            sinv_item.qty = item.hours
-            sinv_item.rate = item.rate
-            sinv_item.amount = item.amount
-            sinv_item.description = f"Job: {item.job_type_name}"
-            
-        # Add service package items
-        for item in self.service_package_items:
-            sinv_item = sinv.append("items", {})
-            sinv_item.item_code = frappe.db.get_value("Service Package", item.service_package, "item")
-            sinv_item.qty = item.quantity
-            sinv_item.rate = item.rate
-            sinv_item.amount = item.amount
-            sinv_item.description = f"Service Package: {item.service_package_name}"
-            
-        # Add part items
-        for item in self.part_items:
-            sinv_item = sinv.append("items", {})
-            sinv_item.item_code = frappe.db.get_value("Part", item.part, "item")
-            sinv_item.qty = item.quantity
-            sinv_item.rate = item.rate
-            sinv_item.amount = item.amount
-            sinv_item.description = f"Part: {item.part_name}"
-            
-        # Add external service items
-        for item in self.external_service_items:
-            sinv_item = sinv.append("items", {})
-            # For external services, we may need a generic item
-            default_service_item = frappe.db.get_single_value("Car Workshop Settings", "default_external_service_item")
-            if not default_service_item:
-                frappe.throw(_("Please set Default External Service Item in Car Workshop Settings"))
-                
-            sinv_item.item_code = default_service_item
-            sinv_item.qty = 1
-            sinv_item.rate = item.rate
-            sinv_item.amount = item.amount
-            sinv_item.description = f"External Service: {item.service_name}"
-            
-        # Add taxes
-        if self.taxes_and_charges:
-            tax_template = frappe.get_doc("Sales Taxes and Charges Template", self.taxes_and_charges)
-            for tax in tax_template.taxes:
-                sinv.append("taxes", {
-                    "charge_type": tax.charge_type,
-                    "account_head": tax.account_head,
-                    "description": tax.description,
-                    "rate": tax.rate
-                })
-                
-        # Add discount
-        if flt(self.discount_amount) > 0:
-            sinv.apply_discount_on = "Grand Total"
-            sinv.discount_amount = self.discount_amount
-            
-        # Save and submit sales invoice
-        sinv.flags.ignore_permissions = True
-        sinv.flags.ignore_mandatory = True
-        sinv.insert()
-        sinv.submit()
-        
-        # Update sales_invoice field
-        self.db_set('sales_invoice', sinv.name)
-        
-        # Create payment entry if payment was made
-        if self.payment_amount > 0:
-            self.create_payment_entry(sinv.name)
+
+        def append_items(sinv):
+            for item in self.job_type_items:
+                sinv_item = sinv.append("items", {})
+                sinv_item.item_code = frappe.db.get_value("Job Type", item.job_type, "item")
+                sinv_item.qty = item.hours
+                sinv_item.rate = item.rate
+                sinv_item.amount = item.amount
+                sinv_item.description = f"Job: {item.job_type_name}"
+
+            for item in self.service_package_items:
+                sinv_item = sinv.append("items", {})
+                sinv_item.item_code = frappe.db.get_value("Service Package", item.service_package, "item")
+                sinv_item.qty = item.quantity
+                sinv_item.rate = item.rate
+                sinv_item.amount = item.amount
+                sinv_item.description = f"Service Package: {item.service_package_name}"
+
+            for item in self.part_items:
+                sinv_item = sinv.append("items", {})
+                sinv_item.item_code = frappe.db.get_value("Part", item.part, "item")
+                sinv_item.qty = item.quantity
+                sinv_item.rate = item.rate
+                sinv_item.amount = item.amount
+                sinv_item.description = f"Part: {item.part_name}"
+
+            for item in self.external_service_items:
+                sinv_item = sinv.append("items", {})
+                default_service_item = frappe.db.get_single_value("Car Workshop Settings", "default_external_service_item")
+                if not default_service_item:
+                    frappe.throw(_("Please set Default External Service Item in Car Workshop Settings"))
+                sinv_item.item_code = default_service_item
+                sinv_item.qty = 1
+                sinv_item.rate = item.rate
+                sinv_item.amount = item.amount
+                sinv_item.description = f"External Service: {item.service_name}"
+
+            if self.taxes_and_charges:
+                tax_template = frappe.get_doc("Sales Taxes and Charges Template", self.taxes_and_charges)
+                for tax in tax_template.taxes:
+                    sinv.append("taxes", {
+                        "charge_type": tax.charge_type,
+                        "account_head": tax.account_head,
+                        "description": tax.description,
+                        "rate": tax.rate
+                    })
+
+            if flt(self.discount_amount) > 0:
+                sinv.apply_discount_on = "Grand Total"
+                sinv.discount_amount = self.discount_amount
+
+        pref = frappe.db.get_value("Customer", self.customer, "billing_preference") or "Separate"
+
+        if pref == "Consolidate":
+            sinv_name = frappe.db.get_value(
+                "Sales Invoice",
+                {"customer": self.customer, "docstatus": 0, "consolidated_invoice": 1},
+                "name",
+            )
+            sinv = frappe.get_doc("Sales Invoice", sinv_name) if sinv_name else frappe.new_doc("Sales Invoice")
+            if not sinv_name:
+                sinv.customer = self.customer
+                sinv.posting_date = self.posting_date
+                sinv.due_date = self.due_date
+                sinv.company = self.company
+                sinv.cost_center = self.cost_center
+                sinv.consolidated_invoice = 1
+            append_items(sinv)
+            sinv.flags.ignore_permissions = True
+            sinv.save()
+            self.db_set('sales_invoice', sinv.name)
+        else:
+            sinv = frappe.new_doc("Sales Invoice")
+            sinv.customer = self.customer
+            sinv.posting_date = self.posting_date
+            sinv.due_date = self.due_date
+            sinv.company = self.company
+            sinv.cost_center = self.cost_center
+            sinv.work_order_billing = self.name
+            sinv.work_order = self.work_order
+            sinv.customer_vehicle = self.customer_vehicle
+            append_items(sinv)
+            sinv.flags.ignore_permissions = True
+            sinv.flags.ignore_mandatory = True
+            sinv.insert()
+            sinv.submit()
+            self.db_set('sales_invoice', sinv.name)
+            if self.payment_amount > 0:
+                self.create_payment_entry(sinv.name)
     
     def create_payment_entry(self, sales_invoice):
         """Create a Payment Entry for the received payment"""

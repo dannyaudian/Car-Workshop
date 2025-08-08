@@ -98,6 +98,7 @@ def log_incentive(
     work_order: str,
     work_order_billing: str,
     additional_salary: str,
+    supplementary_of: Optional[str] = None,
 ) -> None:
     """Insert a record into ``Incentive History`` for audit trail."""
 
@@ -108,6 +109,8 @@ def log_incentive(
     history.salary_component = salary_component
     history.amount = amount
     history.additional_salary = additional_salary
+    if supplementary_of:
+        history.supplementary_of = supplementary_of
     history.flags.ignore_permissions = True
     history.insert()
 
@@ -161,5 +164,6 @@ def process_work_order_billing(doc, method=None):  # pragma: no cover - Frappe h
                 work_order=doc.work_order,
                 work_order_billing=doc.name,
                 additional_salary=add_sal,
+                supplementary_of=frappe.db.get_value("Work Order", doc.work_order, "supplementary_of"),
             )
 
