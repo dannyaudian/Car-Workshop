@@ -43,12 +43,12 @@
       "reqd": 1
     },
     {
+      "default": "Part",
       "fieldname": "item_reference_type",
       "fieldtype": "Select",
       "hidden": 1,
       "label": "Item Reference Type",
-      "options": "Part\nJob Type\nExpense Type",
-      "default": "Part"
+      "options": "Part\nJob Type\nExpense Type"
     },
     {
       "fieldname": "work_order",
@@ -115,11 +115,11 @@
       "label": "Use Default Tax"
     },
     {
+      "depends_on": "eval:!doc.use_default_tax",
       "fieldname": "tax_template",
       "fieldtype": "Link",
       "label": "Tax Template",
-      "options": "Purchase Taxes and Charges Template",
-      "depends_on": "eval:!doc.use_default_tax"
+      "options": "Purchase Taxes and Charges Template"
     },
     {
       "fieldname": "section_break_12",
@@ -144,5 +144,6 @@
   "permissions": [],
   "sort_field": "modified",
   "sort_order": "DESC",
-  "states": []
+  "states": [],
+  "track_changes": 1
 }

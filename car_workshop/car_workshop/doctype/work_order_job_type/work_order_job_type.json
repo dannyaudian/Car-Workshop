@@ -47,35 +47,35 @@
       "read_only": 1
     },
     {
+      "depends_on": "eval:doc.is_opl==1",
+      "fetch_from": "job_type.opl_vendor",
       "fieldname": "vendor",
       "fieldtype": "Link",
       "label": "Vendor",
-      "options": "Supplier",
-      "fetch_from": "job_type.opl_vendor",
-      "depends_on": "eval:doc.is_opl==1"
+      "options": "Supplier"
     },
     {
+      "depends_on": "eval:doc.is_opl==1",
+      "fetch_from": "job_type.opl_item_code",
       "fieldname": "vendor_item_code",
       "fieldtype": "Link",
       "label": "Vendor Item Code",
-      "options": "Item",
-      "fetch_from": "job_type.opl_item_code",
-      "depends_on": "eval:doc.is_opl==1"
+      "options": "Item"
     },
     {
+      "depends_on": "eval:doc.is_opl==1",
+      "fetch_from": "job_type.opl_notes",
       "fieldname": "vendor_notes",
       "fieldtype": "Small Text",
-      "label": "Notes for Vendor",
-      "fetch_from": "job_type.opl_notes",
-      "depends_on": "eval:doc.is_opl==1"
+      "label": "Notes for Vendor"
     },
     {
+      "default": "Pending",
       "fieldname": "status",
       "fieldtype": "Select",
       "in_list_view": 1,
       "label": "Status",
-      "options": "Pending\nIn Progress\nCompleted\nCancelled",
-      "default": "Pending"
+      "options": "Pending\nIn Progress\nCompleted\nCancelled"
     }
   ],
   "index_web_pages_for_search": 0,
@@ -89,5 +89,6 @@
   "permissions": [],
   "sort_field": "modified",
   "sort_order": "DESC",
-  "states": []
+  "states": [],
+  "track_changes": 1
 }

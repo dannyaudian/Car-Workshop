@@ -1,8 +1,5 @@
 {
   "doctype": "DocType",
-  "name": "Incentive Tier",
-  "module": "Car Workshop",
-  "istable": 1,
   "fields": [
     {
       "fieldname": "threshold",
@@ -15,5 +12,9 @@
       "label": "Rate (%)"
     }
   ],
-  "permissions": []
+  "istable": 1,
+  "module": "Car Workshop",
+  "name": "Incentive Tier",
+  "permissions": [],
+  "track_changes": 1
 }
