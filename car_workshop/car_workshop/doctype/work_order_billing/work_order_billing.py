@@ -17,6 +17,7 @@ class WorkOrderBilling(AccountsController):
         self.calculate_totals()
         self.update_payment_status()
         self.set_status()
+        self.validate_discount_approval()
         self.update_approval_fields()
         
     def on_submit(self):
@@ -25,6 +26,7 @@ class WorkOrderBilling(AccountsController):
         self.create_sales_invoice()
         self.create_down_payment_entry()
         self.process_returns_and_cancellations()
+        self.record_status_history()
         
     def on_cancel(self):
         self.update_work_order_billing_status(cancel=True)
@@ -42,8 +44,35 @@ class WorkOrderBilling(AccountsController):
 
     def record_status_history(self):
         """Log status changes with user and timestamp"""
-        message = _("Status changed to {0}").format(self.status)
+        timestamp = get_datetime()
+        user = getattr(frappe.session, "user", "Unknown")
+        message = _("Status changed to {0} by {1} on {2}").format(self.status, user, timestamp)
         self.add_comment("Info", message)
+
+    def get_discount_threshold(self):
+        """Fetch the discount threshold from settings"""
+        return flt(frappe.db.get_single_value("Car Workshop Settings", "discount_approval_threshold") or 0)
+
+    def get_discount_approver_roles(self):
+        roles = frappe.db.get_single_value("Car Workshop Settings", "discount_approver_roles") or "Accountant"
+        return [r.strip() for r in roles.replace("\n", ",").split(",") if r.strip()]
+
+    def validate_discount_approval(self):
+        threshold = self.get_discount_threshold()
+        if flt(self.discount_amount) <= threshold:
+            return
+
+        approver_roles = self.get_discount_approver_roles()
+        get_roles = getattr(frappe, "get_roles", lambda user=None: [])
+        user_roles = set(get_roles(getattr(frappe.session, "user", None)))
+        if not user_roles.intersection(set(approver_roles)):
+            frappe.throw(
+                _("Discount exceeds allowed threshold of {0}. Requires approval from roles: {1}").format(
+                    threshold, ", ".join(approver_roles)
+                )
+            )
+        if getattr(self, "approval_status", "Pending Approval") != "Approved":
+            frappe.throw(_("Discount exceeds allowed threshold and needs approval."))
     
     def validate_work_order(self):
         if not self.work_order:
