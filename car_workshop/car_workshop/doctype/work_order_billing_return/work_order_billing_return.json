@@ -1,0 +1,46 @@
+{
+ "doctype": "DocType",
+ "istable": 1,
+ "module": "Car Workshop",
+ "name": "Work Order Billing Return",
+ "field_order": [
+  "part_item",
+  "quantity",
+  "rate",
+  "amount",
+  "reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "part_item",
+   "fieldtype": "Link",
+   "label": "Part Item",
+   "options": "Work Order Billing Part",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "label": "Rate",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason"
+  }
+ ]
+}
