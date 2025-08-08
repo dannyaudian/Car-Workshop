@@ -237,3 +237,32 @@ def make_material_issue(source_name, target_doc=None):
     }, target_doc, set_missing_values)
 
     return target_doc
+
+# Add the following function to the existing work_order.py file
+
+@frappe.whitelist()
+def make_billing(source_name, target_doc=None):
+    """Create a Work Order Billing from Work Order"""
+    from frappe.model.mapper import get_mapped_doc
+    
+    def set_missing_values(source, target):
+        target.company = source.company
+        target.posting_date = nowdate()
+        target.due_date = add_days(target.posting_date, 30)  # Default 30 days
+        
+    doclist = get_mapped_doc("Work Order", source_name, {
+        "Work Order": {
+            "doctype": "Work Order Billing",
+            "field_map": {
+                "name": "work_order",
+                "customer": "customer",
+                "customer_vehicle": "customer_vehicle"
+            },
+            "validation": {
+                "docstatus": ["=", 1],
+                "status": ["in", ["Completed", "Closed"]]
+            }
+        }
+    }, target_doc, set_missing_values)
+    
+    return doclist
