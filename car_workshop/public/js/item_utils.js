@@ -28,7 +28,11 @@ car_workshop.utils = {
         let total_amount = 0;
         let billable_amount = 0;
         let non_billable_amount = 0;
-        
+
+        // Determine field availability once to avoid repeated lookups
+        const hasBillable = !!frm.fields_dict.billable_amount;
+        const hasNonBillable = !!frm.fields_dict.non_billable_amount;
+
         (frm.doc.items || []).forEach(item => {
             let amount = flt(item.amount);
             total_amount += amount;
@@ -43,11 +47,11 @@ car_workshop.utils = {
         frm.set_value('total_amount', total_amount);
         
         // Set these values if they exist in the doctype
-        if (frm.meta.fields.find(field => field.fieldname === 'billable_amount')) {
+        if (hasBillable) {
             frm.set_value('billable_amount', billable_amount);
         }
-        
-        if (frm.meta.fields.find(field => field.fieldname === 'non_billable_amount')) {
+
+        if (hasNonBillable) {
             frm.set_value('non_billable_amount', non_billable_amount);
         }
     },
