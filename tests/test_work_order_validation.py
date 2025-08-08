@@ -12,7 +12,11 @@ class Document:
     def get(self, name):
         return getattr(self, name, None)
 
-frappe_utils_stub = types.SimpleNamespace(flt=lambda x: float(x or 0))
+frappe_utils_stub = types.SimpleNamespace(
+    flt=lambda x: float(x or 0),
+    nowdate=lambda: "2024-01-01",
+    add_days=lambda d, n: d,
+)
 
 frappe_stub = types.SimpleNamespace(
     _=lambda msg: msg,
