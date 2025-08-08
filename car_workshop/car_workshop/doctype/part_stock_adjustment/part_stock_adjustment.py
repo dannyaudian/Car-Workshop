@@ -303,7 +303,7 @@ class PartStockAdjustment(Document):
         for item in self.adjustment_items:
             if not item.item_code:
                 # Get item code from part
-                item_code = frappe.db.get_value("Part", item.part, "item")
+                item_code = frappe.db.get_value("Part", item.part, "item_code")
                 if not item_code:
                     frappe.throw(_("Item Code not found for Part {0}").format(item.part))
                 item.item_code = item_code
@@ -552,7 +552,7 @@ def create_adjustment_from_opname(opname_id: str) -> Optional[Any]:
                 continue
                 
             # Get item_code from part
-            item_code = frappe.db.get_value("Part", item.part, "item")
+            item_code = frappe.db.get_value("Part", item.part, "item_code")
             if not item_code:
                 continue
                 
