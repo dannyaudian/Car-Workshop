@@ -1,0 +1,20 @@
+{
+  "actions": [],
+  "doctype": "DocType",
+  "name": "Incentive History",
+  "module": "Car Workshop",
+  "custom": 0,
+  "istable": 0,
+  "fields": [
+    {"fieldname": "employee", "fieldtype": "Link", "label": "Employee", "options": "Employee", "reqd": 1},
+    {"fieldname": "work_order", "fieldtype": "Link", "label": "Work Order", "options": "Work Order"},
+    {"fieldname": "work_order_billing", "fieldtype": "Link", "label": "Work Order Billing", "options": "Work Order Billing"},
+    {"fieldname": "salary_component", "fieldtype": "Link", "label": "Salary Component", "options": "Salary Component"},
+    {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount"},
+    {"fieldname": "additional_salary", "fieldtype": "Link", "label": "Additional Salary", "options": "Additional Salary"}
+  ],
+  "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "Car Workshop Manager", "read": 1, "write": 1, "create": 1, "delete": 1}
+  ]
+}

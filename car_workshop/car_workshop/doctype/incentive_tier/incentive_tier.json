@@ -1,0 +1,19 @@
+{
+  "doctype": "DocType",
+  "name": "Incentive Tier",
+  "module": "Car Workshop",
+  "istable": 1,
+  "fields": [
+    {
+      "fieldname": "threshold",
+      "fieldtype": "Float",
+      "label": "Amount Threshold"
+    },
+    {
+      "fieldname": "rate",
+      "fieldtype": "Float",
+      "label": "Rate (%)"
+    }
+  ],
+  "permissions": []
+}
