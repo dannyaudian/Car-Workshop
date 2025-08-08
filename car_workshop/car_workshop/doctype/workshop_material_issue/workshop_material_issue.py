@@ -486,7 +486,7 @@ def get_work_order_parts(work_order):
         # Get stock information
         bin_data = frappe.db.get_value(
             "Bin",
-            {"item_code": item.item_code, "warehouse": wo.source_warehouse},
+            {"item_code": item.item_code, "warehouse": wo.set_warehouse},
             ["actual_qty", "reserved_qty", "valuation_rate"],
             as_dict=1,
         ) or {"actual_qty": 0, "reserved_qty": 0, "valuation_rate": 0}

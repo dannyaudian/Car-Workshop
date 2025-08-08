@@ -53,7 +53,7 @@ frappe.ui.form.on('Workshop Material Issue', {
                     if (r.message) {
                         // Set warehouse from Work Order if empty
                         if (!frm.doc.set_warehouse) {
-                            frm.set_value('set_warehouse', r.message.source_warehouse);
+                            frm.set_value('set_warehouse', r.message.set_warehouse);
                         }
                         
                         // Ask user if they want to fetch required parts
@@ -439,7 +439,7 @@ frappe.provide('car_workshop.car_workshop.doctype.work_order.work_order');
 car_workshop.car_workshop.doctype.work_order.work_order.make_material_issue = function(frm) {
     frappe.route_options = {
         "work_order": frm.doc.name,
-        "set_warehouse": frm.doc.source_warehouse
+        "set_warehouse": frm.doc.set_warehouse
     };
     frappe.new_doc("Workshop Material Issue");
 };
