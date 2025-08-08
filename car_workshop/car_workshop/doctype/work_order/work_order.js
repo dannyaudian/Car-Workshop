@@ -15,32 +15,12 @@ frappe.ui.form.on('Work Order', {
             }, __('Create'));
         }
 
-        // Update field requirements based on source
-        set_purchase_order_requirements(frm);
     },
-    
-    validate: function(frm) {
-        // Validate purchase order requirement based on source
-        if (frm.doc.source === "Beli Baru" && !frm.doc.purchase_order) {
-            frappe.validated = false;
-            frappe.throw(__("Purchase Order is mandatory when Source is 'Beli Baru'"));
-        }
-    },
-    
-    source: function(frm) {
-        // Update field requirements when source changes
-        set_purchase_order_requirements(frm);
-    },
-    
+
     setup: function(frm) {
         // Set up event handlers for child tables
         setup_child_table_events(frm);
     },
-    
-    // Event handlers for each field that affects total_amount
-    purchase_order: function(frm) {
-        // Optional: You can add additional logic here when purchase_order changes
-    }
 });
 
 // Setup event handlers for all child tables
@@ -187,28 +167,10 @@ function calculate_total_amount(frm) {
     frm.set_value('total_amount', total_amount);
 }
 
-// Function to set purchase_order field as mandatory based on source
-function set_purchase_order_requirements(frm) {
-    if (frm.doc.source === "Beli Baru") {
-        frm.set_df_property("purchase_order", "reqd", 1);
-    } else {
-        frm.set_df_property("purchase_order", "reqd", 0);
-    }
-}
-
 // Function to show related purchase orders in a dialog
 function show_related_purchase_orders(frm) {
     // Collect all purchase orders from job types with is_opl=1 and expenses
     var related_pos = [];
-    
-    // Add the main purchase order if it exists
-    if (frm.doc.purchase_order) {
-        related_pos.push({
-            purchase_order: frm.doc.purchase_order,
-            source: "Main",
-            reference: frm.doc.name
-        });
-    }
     
     // Add purchase orders from job types with is_opl=1
     $.each(frm.doc.job_type_detail || [], function(i, job) {
