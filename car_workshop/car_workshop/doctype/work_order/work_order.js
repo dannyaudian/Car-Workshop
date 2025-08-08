@@ -7,6 +7,12 @@ frappe.ui.form.on('Work Order', {
 
         // Add Material Issue button when submitted and not cancelled
         if (frm.doc.docstatus === 1 && frm.doc.status !== 'Cancelled') {
+            frm.add_custom_button(__('Supplementary Work Order'), function() {
+                frappe.model.open_mapped_doc({
+                    method: 'car_workshop.car_workshop.doctype.work_order.work_order.make_supplementary_work_order',
+                    frm: frm
+                });
+            }, __('Create'));
             frm.add_custom_button(__('Material Issue'), function() {
                 frappe.model.open_mapped_doc({
                     method: 'car_workshop.car_workshop.doctype.work_order.work_order.make_material_issue',

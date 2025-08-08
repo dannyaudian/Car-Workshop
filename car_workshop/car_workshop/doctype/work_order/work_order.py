@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
-from frappe.utils import flt
+from frappe.utils import flt, nowdate, add_days
 from frappe.model.mapper import get_mapped_doc
 
 
@@ -264,5 +264,18 @@ def make_billing(source_name, target_doc=None):
             }
         }
     }, target_doc, set_missing_values)
-    
+
     return doclist
+
+
+@frappe.whitelist()
+def make_supplementary_work_order(source_name):
+    """Create a supplementary Work Order from an existing Work Order."""
+    source = frappe.get_doc("Work Order", source_name)
+    target = frappe.new_doc("Work Order")
+    target.customer = source.customer
+    target.customer_vehicle = source.customer_vehicle
+    target.service_advisor = source.service_advisor
+    target.supplementary_of = source.name
+    target.service_date = nowdate()
+    return target
