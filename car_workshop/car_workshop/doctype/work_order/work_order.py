@@ -202,7 +202,7 @@ def make_material_issue(source_name, target_doc=None):
         # Set valuation rate and amount based on warehouse stock
         bin_data = frappe.db.get_value(
             "Bin",
-            {"item_code": source_obj.item_code, "warehouse": source_parent.source_warehouse},
+            {"item_code": source_obj.item_code, "warehouse": source_parent.set_warehouse},
             ["valuation_rate"],
             as_dict=1,
         ) or {"valuation_rate": 0}
@@ -219,7 +219,7 @@ def make_material_issue(source_name, target_doc=None):
             "doctype": "Workshop Material Issue",
             "field_map": {
                 "name": "work_order",
-                "source_warehouse": "set_warehouse"
+                "set_warehouse": "set_warehouse"
             },
             "validation": {
                 "docstatus": ["=", 1]  # Only allow if Work Order is submitted

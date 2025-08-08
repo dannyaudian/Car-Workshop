@@ -31,7 +31,7 @@ def setup_frappe_stub():
                 quantity=3,
                 name="WO_PART_1",
             )
-            return types.SimpleNamespace(part_detail=[part], source_warehouse="WH")
+            return types.SimpleNamespace(part_detail=[part], set_warehouse="WH")
         return types.SimpleNamespace()
 
     frappe.get_doc = get_doc
