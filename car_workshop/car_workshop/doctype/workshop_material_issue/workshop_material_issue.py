@@ -361,26 +361,26 @@ class WorkshopMaterialIssue(Document):
             updated_items = []
             
             for item in self.items:
-                # Find the matching required item in the Work Order
-                for wo_item in work_order.required_items:
+                # Find the matching part in the Work Order's part table
+                for wo_item in getattr(work_order, "part_detail", []):
                     if wo_item.item_code == item.item_code:
-                        previous_qty = flt(wo_item.consumed_qty)
-                        
+                        previous_qty = flt(getattr(wo_item, "consumed_qty", 0))
+
                         if cancel:
                             # Ensure we don't go below zero
-                            wo_item.consumed_qty = max(0, flt(wo_item.consumed_qty) - flt(item.qty))
+                            wo_item.consumed_qty = max(0, previous_qty - flt(item.qty))
                         else:
-                            wo_item.consumed_qty = flt(wo_item.consumed_qty) + flt(item.qty)
-                        
+                            wo_item.consumed_qty = previous_qty + flt(item.qty)
+
                         # Track if any change was made
                         if previous_qty != wo_item.consumed_qty:
                             changes_made = True
                             updated_items.append({
                                 "item_code": wo_item.item_code,
                                 "previous_qty": previous_qty,
-                                "new_qty": wo_item.consumed_qty
+                                "new_qty": wo_item.consumed_qty,
                             })
-                            
+
                         break
             
             # Only update if changes were made
@@ -469,48 +469,44 @@ def get_work_order_parts(work_order):
         return []
     
     wo = frappe.get_doc("Work Order", work_order)
-    
-    # Get required items from the Work Order
+
+    # Get required parts from the Work Order's part table
     required_items = []
-    for item in wo.required_items:
-        # Find the corresponding Part for this item
-        parts = frappe.get_all("Part", 
-            filters={"item": item.item_code},
-            fields=["name", "description"])
-        
-        if not parts:
-            continue
-        
-        part = parts[0]
-        
+    for item in getattr(wo, "part_detail", []):
+        # Fetch part description if available
+        part_doc = frappe.db.get_value("Part", item.part, ["name", "description"], as_dict=1)
+
         # Get stock information
-        bin_data = frappe.db.get_value("Bin", 
-            {"item_code": item.item_code, "warehouse": wo.source_warehouse}, 
-            ["actual_qty", "reserved_qty", "valuation_rate"], 
-            as_dict=1) or {"actual_qty": 0, "reserved_qty": 0, "valuation_rate": 0}
-        
+        bin_data = frappe.db.get_value(
+            "Bin",
+            {"item_code": item.item_code, "warehouse": wo.source_warehouse},
+            ["actual_qty", "reserved_qty", "valuation_rate"],
+            as_dict=1,
+        ) or {"actual_qty": 0, "reserved_qty": 0, "valuation_rate": 0}
+
         # Calculate remaining quantity to be issued
-        consumed_qty = flt(item.consumed_qty)
-        required_qty = flt(item.required_qty)
+        consumed_qty = flt(getattr(item, "consumed_qty", 0))
+        required_qty = flt(getattr(item, "quantity", 0))
         remaining_qty = required_qty - consumed_qty
-        
+
         # Calculate available quantity considering reserved qty
         available_qty = flt(bin_data.actual_qty) - flt(bin_data.reserved_qty)
-        
+
         # Only include items that haven't been fully consumed
         if remaining_qty > 0:
+            issue_qty = min(remaining_qty, available_qty)
             required_items.append({
-                "part": part.name,
+                "part": item.part if item.part else (part_doc.name if part_doc else None),
                 "item_code": item.item_code,
-                "description": part.description,
-                "qty": min(remaining_qty, available_qty),  # Don't issue more than available
+                "description": (item.part_name if hasattr(item, "part_name") else None) or (part_doc.description if part_doc else None),
+                "qty": issue_qty,  # Don't issue more than available
                 "uom": frappe.db.get_value("Item", item.item_code, "stock_uom"),
                 "rate": bin_data.valuation_rate,
-                "amount": bin_data.valuation_rate * min(remaining_qty, available_qty),
+                "amount": bin_data.valuation_rate * issue_qty,
                 "required_qty": required_qty,
                 "consumed_qty": consumed_qty,
                 "available_qty": available_qty,
-                "work_order_item": item.name
+                "work_order_item": item.name,
             })
-    
+
     return required_items

@@ -23,9 +23,14 @@ def setup_frappe_stub():
         def get_value(self, doctype, name, fieldname, *args, **kwargs):
             self.calls.append((doctype, name, fieldname))
             if doctype == "Part":
-                return "ITEM-001"
+                if fieldname == "item_code":
+                    return "ITEM-001"
+                if isinstance(fieldname, list):
+                    return types.SimpleNamespace(name="PART-001", description="Part 001")
             if doctype == "Bin":
-                return types.SimpleNamespace(actual_qty=0, valuation_rate=0)
+                return types.SimpleNamespace(actual_qty=10, reserved_qty=0, valuation_rate=1)
+            if doctype == "Item":
+                return "Nos"
             return None
 
     frappe.db = DB()
@@ -61,9 +66,14 @@ def setup_frappe_stub():
     def get_doc(doctype, name):
         if doctype == "Work Order":
             part = types.SimpleNamespace(
-                consumed_qty=1, item_code="ITEM-001", part="PART-001", name="WO_ITEM"
+                consumed_qty=1,
+                item_code="ITEM-001",
+                part="PART-001",
+                part_name="Part 001",
+                name="WO_ITEM",
+                quantity=2,
             )
-            return types.SimpleNamespace(part_detail=[part])
+            return types.SimpleNamespace(part_detail=[part], source_warehouse="WH")
         if doctype == "Return Material":
             item = types.SimpleNamespace(item_code="ITEM-001", qty=1)
             return types.SimpleNamespace(items=[item])
@@ -73,9 +83,9 @@ def setup_frappe_stub():
     def get_all(doctype, filters=None, fields=None, *args, **kwargs):
         frappe.get_all_calls.append((doctype, filters, fields))
         if doctype == "Part":
-            return [types.SimpleNamespace(name="PART-001", item_code="ITEM-001")]
+            return [types.SimpleNamespace(name="PART-001", item_code="ITEM-001", description="Part 001")]
         if doctype == "Bin":
-            return [types.SimpleNamespace(item_code="ITEM-001", actual_qty=0, valuation_rate=0)]
+            return [types.SimpleNamespace(item_code="ITEM-001", actual_qty=10, valuation_rate=1)]
         return []
 
     frappe.get_all_calls = []
@@ -88,6 +98,24 @@ def setup_frappe_stub():
     sys.modules["frappe.utils"] = utils
     sys.modules["frappe.model"] = model
     sys.modules["frappe.model.document"] = document
+
+    # Stub erpnext stock entry dependencies
+    erpnext = types.ModuleType("erpnext")
+    stock = types.ModuleType("erpnext.stock")
+    stock.__path__ = []
+    doctype = types.ModuleType("erpnext.stock.doctype")
+    doctype.__path__ = []
+    stock_entry_pkg = types.ModuleType("erpnext.stock.doctype.stock_entry")
+    stock_entry_pkg.__path__ = []
+    stock_entry = types.ModuleType("erpnext.stock.doctype.stock_entry.stock_entry")
+    stock_entry.get_uom_details = lambda *a, **k: None
+
+    sys.modules["erpnext"] = erpnext
+    sys.modules["erpnext.stock"] = stock
+    sys.modules["erpnext.stock.doctype"] = doctype
+    sys.modules["erpnext.stock.doctype.stock_entry"] = stock_entry_pkg
+    sys.modules["erpnext.stock.doctype.stock_entry.stock_entry"] = stock_entry
+
     return frappe
 
 
