@@ -15,72 +15,31 @@ class ServicePriceList(Document):
     
     def validate_duplicate(self):
         """Check for duplicate active price list entry"""
-        filters = {
-            "reference_type": self.reference_type,
-            "reference_name": self.reference_name,
-            "price_list": self.price_list,
-            "is_active": 1,
-            "name": ["!=", self.name]  # Exclude current document
-        }
-        
-        # Date-based filter conditions
-        date_conditions = []
-        today = nowdate()
-        
-        if self.valid_from and self.valid_upto:
-            # This entry has a date range, check for overlaps
-            date_conditions.extend([
-                # Other entry with no dates (always valid)
-                {"valid_from": ["is", "not set"], "valid_upto": ["is", "not set"]},
-                
-                # Other entry with only from date, check if it's before our upto
-                {"valid_from": ["<=", self.valid_upto], "valid_upto": ["is", "not set"]},
-                
-                # Other entry with only upto date, check if it's after our from
-                {"valid_from": ["is", "not set"], "valid_upto": [">=", self.valid_from]},
-                
-                # Other entry with both dates, check for any overlap
-                {"valid_from": ["<=", self.valid_upto], "valid_upto": [">=", self.valid_from]}
-            ])
-        elif self.valid_from:
-            # Only from date, valid from that date onwards
-            date_conditions.extend([
-                # Other entry with no dates
-                {"valid_from": ["is", "not set"], "valid_upto": ["is", "not set"]},
-                
-                # Other entry with only from date
-                {"valid_from": ["is", "not set"], "valid_upto": [">=", self.valid_from]},
-                
-                # Other entry with both dates, check if end date is after our from
-                {"valid_from": ["is", "not set"], "valid_upto": [">=", self.valid_from]}
-            ])
-        elif self.valid_upto:
-            # Only upto date, valid until that date
-            date_conditions.extend([
-                # Other entry with no dates
-                {"valid_from": ["is", "not set"], "valid_upto": ["is", "not set"]},
-                
-                # Other entry with only upto date
-                {"valid_from": ["<=", self.valid_upto], "valid_upto": ["is", "not set"]},
-                
-                # Other entry with both dates, check if start date is before our upto
-                {"valid_from": ["<=", self.valid_upto], "valid_upto": ["is", "not set"]}
-            ])
-        else:
-            # No dates, always valid
-            # Any other entry with this reference and price list would conflict
-            pass
-        
-        # Check for duplicates with date conditions
-        duplicates = []
-        if date_conditions:
-            for condition in date_conditions:
-                combined_filters = {**filters, **condition}
-                duplicates.extend(frappe.get_all("Service Price List", filters=combined_filters))
-        else:
-            # No date conditions, simple duplicate check
-            duplicates = frappe.get_all("Service Price List", filters=filters)
-        
+        start = self.valid_from or "1000-01-01"
+        end = self.valid_upto or "9999-12-31"
+
+        duplicates = frappe.db.sql(
+            """
+            select name from `tabService Price List`
+            where reference_type = %(reference_type)s
+              and reference_name = %(reference_name)s
+              and price_list = %(price_list)s
+              and is_active = 1
+              and name != %(name)s
+              and ifnull(nullif(valid_from, '0000-00-00'), '1000-01-01') <= %(end)s
+              and ifnull(nullif(valid_upto, '0000-00-00'), '9999-12-31') >= %(start)s
+            """,
+            {
+                "reference_type": self.reference_type,
+                "reference_name": self.reference_name,
+                "price_list": self.price_list,
+                "name": self.name,
+                "start": start,
+                "end": end,
+            },
+            as_dict=True,
+        )
+
         if duplicates:
             frappe.throw(
                 f"An active price already exists for {self.reference_type} '{self.reference_name}' "
