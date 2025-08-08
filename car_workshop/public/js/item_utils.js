@@ -68,8 +68,9 @@ car_workshop.utils = {
                         car_workshop.utils.calculate_item_amount(frm, cdt, cdn);
                     } else {
                         // Fallback warning if reference not found
+                        const ref = frappe.utils.escape_html(row.reference_doctype);
                         frappe.show_alert({
-                            message: __(`Part '${row.reference_doctype}' details not found`),
+                            message: __('Part "{0}" details not found', [ref]),
                             indicator: 'orange'
                         });
                     }
@@ -87,8 +88,9 @@ car_workshop.utils = {
                         car_workshop.utils.calculate_item_amount(frm, cdt, cdn);
                     } else {
                         // Fallback warning if reference not found
+                        const ref = frappe.utils.escape_html(row.reference_doctype);
                         frappe.show_alert({
-                            message: __(`Job Type '${row.reference_doctype}' details not found`),
+                            message: __('Job Type "{0}" details not found', [ref]),
                             indicator: 'orange'
                         });
                     }
@@ -108,8 +110,9 @@ car_workshop.utils = {
                     } else {
                         // If no description found, use reference name as fallback
                         frappe.model.set_value(cdt, cdn, 'description', row.reference_doctype);
+                        const ref = frappe.utils.escape_html(row.reference_doctype);
                         frappe.show_alert({
-                            message: __(`Expense Type '${row.reference_doctype}' details not found`),
+                            message: __('Expense Type "{0}" details not found', [ref]),
                             indicator: 'orange'
                         });
                     }
@@ -134,8 +137,9 @@ car_workshop.utils = {
             },
             callback: function(r) {
                 if (r.message && r.message.exists) {
+                    const poNumber = frappe.utils.escape_html(r.message.po_number);
                     frappe.show_alert({
-                        message: __(`Warning: This item already has an active Purchase Order: ${r.message.po_number}`),
+                        message: __('Warning: This item already has an active Purchase Order: {0}', [poNumber]),
                         indicator: 'orange'
                     }, 10);
                 }
@@ -281,9 +285,10 @@ car_workshop.utils = {
                     if (added_count > 0) {
                         frm.refresh_field('items');
                         car_workshop.utils.calculate_totals(frm);
-                        
+
+                        const count = frappe.utils.escape_html(String(added_count));
                         frappe.show_alert({
-                            message: __(`${added_count} items added from Work Order`),
+                            message: __('{0} items added from Work Order', [count]),
                             indicator: 'green'
                         }, 5);
                     } else {
@@ -313,11 +318,12 @@ car_workshop.utils = {
             freeze_message: __('Generating Purchase Receipt...'),
             callback: function(r) {
                 if (r.message) {
+                    const receipt = frappe.utils.escape_html(r.message);
                     frappe.show_alert({
-                        message: __(`Purchase Receipt ${r.message} has been created`),
+                        message: __('Purchase Receipt {0} has been created', [receipt]),
                         indicator: 'green'
                     });
-                    
+
                     // Open the created receipt
                     frappe.set_route('Form', 'Workshop Purchase Receipt', r.message);
                 }

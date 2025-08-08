@@ -250,8 +250,10 @@ function validate_qty_against_work_order(frm, row) {
             
             // Check if this item was found in the work order
             if (!item_found) {
+                const itemCode = frappe.utils.escape_html(row.item_code);
+                const workOrder = frappe.utils.escape_html(frm.doc.work_order || '');
                 frappe.show_alert({
-                    message: __('Item {0} was not found in Work Order {1}', [row.item_code, frm.doc.work_order]),
+                    message: __('Item {0} was not found in Work Order {1}', [itemCode, workOrder]),
                     indicator: 'red'
                 }, 5);
                 return;
@@ -316,21 +318,25 @@ function validate_qty_against_work_order(frm, row) {
                 let available_qty = Math.max(0, consumed_qty - already_returned);
                 
                 if (flt(row.qty) > available_qty) {
+                    const qtyVal = frappe.utils.escape_html(String(row.qty));
+                    const available = frappe.utils.escape_html(String(available_qty));
+                    const itemCode = frappe.utils.escape_html(row.item_code);
                     frappe.show_alert({
-                        message: __('Return quantity {0} exceeds available quantity {1} for item {2}', 
-                            [row.qty, available_qty, row.item_code]),
+                        message: __('Return quantity {0} exceeds available quantity {1} for item {2}',
+                            [qtyVal, available, itemCode]),
                         indicator: 'red'
                     }, 7);
-                    
+
                     // Add visual indicator to the row
                     let grid_row = frm.fields_dict.items.grid.grid_rows_by_docname[row.name];
                     $(grid_row.columns.qty.field_area).addClass('has-error');
-                    
+
                     // Add warning icon if not already there
                     if (!$(grid_row.columns.qty.field_area).find('.qty-warning').length) {
-                        let warning = $(`<i class="fa fa-exclamation-triangle qty-warning" 
-                                          style="color: red; margin-left: 5px;" 
-                                          title="Exceeds available quantity of ${available_qty}"></i>`);
+                        const availableTitle = frappe.utils.escape_html(String(available_qty));
+                        let warning = $(`<i class="fa fa-exclamation-triangle qty-warning"
+                                          style="color: red; margin-left: 5px;"
+                                          title="Exceeds available quantity of ${availableTitle}"></i>`);
                         $(grid_row.columns.qty.field_area).append(warning);
                     }
                 } else {
@@ -338,11 +344,12 @@ function validate_qty_against_work_order(frm, row) {
                     let grid_row = frm.fields_dict.items.grid.grid_rows_by_docname[row.name];
                     $(grid_row.columns.qty.field_area).removeClass('has-error');
                     $(grid_row.columns.qty.field_area).find('.qty-warning').remove();
-                    
+
                     // If qty is close to max, show informational message
                     if (flt(row.qty) > 0 && flt(row.qty) === available_qty) {
+                        const itemCode = frappe.utils.escape_html(row.item_code);
                         frappe.show_alert({
-                            message: __('Using maximum available quantity for item {0}', [row.item_code]),
+                            message: __('Using maximum available quantity for item {0}', [itemCode]),
                             indicator: 'blue'
                         }, 4);
                     }
@@ -432,16 +439,22 @@ function fetch_returnable_items(frm) {
                 `;
                 
                 r.message.forEach((item, idx) => {
+                    const idxAttr = frappe.utils.escape_html(String(idx));
+                    const itemCode = frappe.utils.escape_html(item.item_code || '');
+                    const itemName = frappe.utils.escape_html(item.item_name || '');
+                    const itemQty = frappe.utils.escape_html(String(item.qty));
+                    const itemUom = frappe.utils.escape_html(item.uom || '');
+                    const valuationRate = frappe.utils.escape_html(format_currency(item.valuation_rate));
                     items_html += `
                         <tr>
-                            <td><input type="checkbox" data-idx="${idx}" title="Select"></td>
+                            <td><input type="checkbox" data-idx="${idxAttr}" title="Select"></td>
                             <td>
-                                <div><strong>${item.item_code}</strong></div>
-                                <div class="text-muted small">${item.item_name || ''}</div>
+                                <div><strong>${itemCode}</strong></div>
+                                <div class="text-muted small">${itemName}</div>
                             </td>
-                            <td>${item.qty}</td>
-                            <td>${item.uom}</td>
-                            <td>${format_currency(item.valuation_rate)}</td>
+                            <td>${itemQty}</td>
+                            <td>${itemUom}</td>
+                            <td>${valuationRate}</td>
                         </tr>
                     `;
                 });
@@ -491,5 +504,6 @@ function add_items_to_table(frm, items) {
     
     frm.refresh_field('items');
     calculate_totals(frm);
-    frappe.show_alert(__('Added {0} items', [items.length]), 3);
+    const count = frappe.utils.escape_html(String(items.length));
+    frappe.show_alert(__('Added {0} items', [count]), 3);
 }

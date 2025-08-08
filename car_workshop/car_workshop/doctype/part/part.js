@@ -24,8 +24,9 @@ frappe.ui.form.on('Part', {
                             frm.save();
                             
                             // Show success message
+                            const itemName = frappe.utils.escape_html(response.message);
                             frappe.show_alert({
-                                message: __('Item {0} created successfully', [response.message]),
+                                message: __('Item {0} created successfully', [itemName]),
                                 indicator: 'green'
                             }, 5);
                             
@@ -35,8 +36,9 @@ frappe.ui.form.on('Part', {
                     },
                     error: function(err) {
                         // Handle errors gracefully
+                        const errMsg = frappe.utils.escape_html(err.message || 'Unknown error');
                         frappe.show_alert({
-                            message: __('Error creating item: {0}', [err.message || 'Unknown error']),
+                            message: __('Error creating item: {0}', [errMsg]),
                             indicator: 'red'
                         }, 5);
                     }
@@ -222,10 +224,11 @@ function desktop_camera_scan(frm) {
                         indicator: 'red'
                     }, 5);
                 } else {
-                    frappe.show_alert({
-                        message: __('Camera error: {0}', [err.message || 'Unknown error']),
-                        indicator: 'red'
-                    }, 5);
+                        const errMsg = frappe.utils.escape_html(err.message || 'Unknown error');
+                        frappe.show_alert({
+                            message: __('Camera error: {0}', [errMsg]),
+                            indicator: 'red'
+                        }, 5);
                 }
                 
                 reject(err);
@@ -276,13 +279,16 @@ function fetch_current_price(frm) {
                 frm.refresh_field('current_price');
                 
                 // Show indicator of where the price came from
-                frm.set_df_property('current_price', 'description', 
-                    `Price from Service Price List (${price_list})`);
+                frm.set_df_property('current_price', 'description',
+                    `Price from Service Price List (${frappe.utils.escape_html(price_list)})`);
                 
                 // Show success message
+                const price = frappe.utils.escape_html(
+                    format_currency(r.message.rate, frappe.defaults.get_default('currency'))
+                );
                 frappe.show_alert({
                     message: __('Price updated from Service Price List: {0}', [
-                        format_currency(r.message.rate, frappe.defaults.get_default('currency'))
+                        price
                     ]),
                     indicator: 'green'
                 }, 3);
@@ -338,14 +344,17 @@ function get_price_from_item_price(frm, price_list) {
                 frm.refresh_field('current_price');
                 
                 // Show indicator of where the price came from
-                frm.set_df_property('current_price', 'description', 
-                    `Price from Item Price (${price_list})`);
+                frm.set_df_property('current_price', 'description',
+                    `Price from Item Price (${frappe.utils.escape_html(price_list)})`);
                 
                 // Show info message
+                const price = frappe.utils.escape_html(
+                    format_currency(response.message[0].price_list_rate,
+                        frappe.defaults.get_default('currency'))
+                );
                 frappe.show_alert({
                     message: __('Price updated from Item Price: {0}', [
-                        format_currency(response.message[0].price_list_rate, 
-                        frappe.defaults.get_default('currency'))
+                        price
                     ]),
                     indicator: 'blue'
                 }, 3);

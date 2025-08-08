@@ -54,10 +54,11 @@ function fetch_active_service_price(frm) {
                     frm.set_value('current_price_display', r.message.rate);
                     
                     // Show a flash message with the price information
+                    const rate = frappe.utils.escape_html(
+                        format_currency(r.message.rate, frappe.defaults.get_default('currency'))
+                    );
                     frappe.show_alert({
-                        message: __('Current price from Retail Price List: {0}', [
-                            format_currency(r.message.rate, frappe.defaults.get_default('currency'))
-                        ]),
+                        message: __('Current price from Retail Price List: {0}', [rate]),
                         indicator: 'green'
                     }, 5);
                 } else {
@@ -65,9 +66,12 @@ function fetch_active_service_price(frm) {
                     frm.set_value('current_price_display', frm.doc.default_price);
                     
                     if (frm.doc.default_price) {
+                        const defaultPrice = frappe.utils.escape_html(
+                            format_currency(frm.doc.default_price, frappe.defaults.get_default('currency'))
+                        );
                         frappe.show_alert({
                             message: __('No price found in Service Price List. Using default price: {0}', [
-                                format_currency(frm.doc.default_price, frappe.defaults.get_default('currency'))
+                                defaultPrice
                             ]),
                             indicator: 'blue'
                         }, 5);

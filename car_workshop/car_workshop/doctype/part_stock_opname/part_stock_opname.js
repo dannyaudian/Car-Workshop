@@ -82,7 +82,7 @@ frappe.ui.form.on('Part Stock Opname', {
         
         $.each(frm.doc.opname_items || [], function(i, item) {
             if (flt(item.qty_counted) <= 0) {
-                items_with_zero_qty.push(item.part || `Row #${i+1}`);
+                items_with_zero_qty.push(frappe.utils.escape_html(item.part || `Row #${i+1}`));
             }
         });
         
@@ -90,7 +90,7 @@ frappe.ui.form.on('Part Stock Opname', {
             frappe.msgprint({
                 title: __('Zero Quantities Found'),
                 indicator: 'red',
-                message: __('The following items have zero or negative quantities: {0}', 
+                message: __('The following items have zero or negative quantities: {0}',
                     [items_with_zero_qty.join(', ')])
             });
             frappe.validated = false;
@@ -407,8 +407,10 @@ function process_barcode(frm, barcode, existing_row = null, qty = 1) {
         let new_qty = flt(row.qty_counted) + flt(qty);
         frappe.model.set_value(existing_item.doctype, existing_item.name, 'qty_counted', new_qty);
         
+        const qtyValue = frappe.utils.escape_html(String(new_qty));
+        const barcodeVal = frappe.utils.escape_html(barcode);
         frappe.show_alert({
-            message: __('Quantity updated to {0} for barcode {1}', [new_qty, barcode]),
+            message: __('Quantity updated to {0} for barcode {1}', [qtyValue, barcodeVal]),
             indicator: 'green'
         }, 3);
         
@@ -443,8 +445,9 @@ function process_barcode(frm, barcode, existing_row = null, qty = 1) {
                     highlight_row(frm, existing_row.name);
                 } else {
                     // No part found for this barcode
+                    const barcodeVal = frappe.utils.escape_html(barcode);
                     frappe.show_alert({
-                        message: __('No part found for barcode {0}', [barcode]),
+                        message: __('No part found for barcode {0}', [barcodeVal]),
                         indicator: 'red'
                     }, 5);
                 }
@@ -469,8 +472,10 @@ function process_barcode(frm, barcode, existing_row = null, qty = 1) {
                     
                     frm.refresh_field('opname_items');
                     
+                    const partCode = frappe.utils.escape_html(r.message.part);
+                    const barcodeVal = frappe.utils.escape_html(barcode);
                     frappe.show_alert({
-                        message: __('Added part {0} from barcode {1}', [r.message.part, barcode]),
+                        message: __('Added part {0} from barcode {1}', [partCode, barcodeVal]),
                         indicator: 'green'
                     }, 3);
                     
@@ -483,8 +488,9 @@ function process_barcode(frm, barcode, existing_row = null, qty = 1) {
                     }, 100);
                 } else {
                     // No part found for this barcode
+                    const barcodeVal = frappe.utils.escape_html(barcode);
                     frappe.show_alert({
-                        message: __('No part found for barcode {0}. Enter part manually.', [barcode]),
+                        message: __('No part found for barcode {0}. Enter part manually.', [barcodeVal]),
                         indicator: 'red'
                     }, 5);
                     
@@ -554,8 +560,10 @@ function add_part_directly(frm, part_code, qty) {
         let new_qty = flt(row.qty_counted) + flt(qty);
         frappe.model.set_value(existing_item.doctype, existing_item.name, 'qty_counted', new_qty);
         
+        const qtyValue = frappe.utils.escape_html(String(new_qty));
+        const partCodeVal = frappe.utils.escape_html(part_code);
         frappe.show_alert({
-            message: __('Quantity updated to {0} for part {1}', [new_qty, part_code]),
+            message: __('Quantity updated to {0} for part {1}', [qtyValue, partCodeVal]),
             indicator: 'green'
         }, 3);
         
@@ -576,8 +584,9 @@ function add_part_directly(frm, part_code, qty) {
                     
                     frm.refresh_field('opname_items');
                     
+                    const partCodeVal = frappe.utils.escape_html(part_code);
                     frappe.show_alert({
-                        message: __('Added part {0}', [part_code]),
+                        message: __('Added part {0}', [partCodeVal]),
                         indicator: 'green'
                     }, 3);
                     
