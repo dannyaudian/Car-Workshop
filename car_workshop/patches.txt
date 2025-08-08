@@ -1,1 +1,2 @@
 # Patches file - disimpan di car_workshop/patches.txt
+car_workshop.patches.add_unique_index_on_customer_vehicle_plate

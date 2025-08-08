@@ -10,6 +10,17 @@ class CustomerVehicle(Document):
         Run validation checks before document save
         """
         validate_plate_number(self)
+        # Ensure license plate numbers are unique across Customer Vehicle records
+        if self.plate_number:
+            existing = frappe.db.get_value(
+                "Customer Vehicle", {"plate_number": self.plate_number}, "name"
+            )
+            if existing and existing != self.name:
+                frappe.throw(
+                    _(
+                        "License plate number {0} is already assigned to another vehicle ({1})"
+                    ).format(self.plate_number, existing)
+                )
         update_fuel_type(self)
     
     def on_update(self):
