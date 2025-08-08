@@ -432,8 +432,6 @@ class PartStockAdjustment(Document):
             stock_entry.flags.ignore_permissions = True
             stock_entry.insert()
             stock_entry.submit()
-            
-            frappe.db.commit()
             return stock_entry
         except Exception as e:
             frappe.db.rollback()
