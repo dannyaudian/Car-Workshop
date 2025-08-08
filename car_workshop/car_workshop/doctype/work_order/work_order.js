@@ -1,9 +1,21 @@
 frappe.ui.form.on('Work Order', {
     refresh: function(frm) {
-        // Add "Lihat Semua PO Terkait" button if there are related POs
-        frm.add_custom_button(__('Lihat Semua PO Terkait'), function() {
-            show_related_purchase_orders(frm);
-        }).addClass('btn-primary');
+        // Add "Lihat Semua PO Terkait" button only if there are related Purchase Orders
+        if (!frm.is_new()) {
+            frappe.db.get_list('Workshop Purchase Order', {
+                filters: {
+                    work_order: frm.doc.name,
+                    docstatus: ['!=', 2]
+                },
+                limit: 1
+            }).then(function(pos) {
+                if (pos && pos.length > 0) {
+                    frm.add_custom_button(__('Lihat Semua PO Terkait'), function() {
+                        show_related_purchase_orders(frm);
+                    }).addClass('btn-primary');
+                }
+            });
+        }
 
         // Add Material Issue button when submitted and not cancelled
         if (frm.doc.docstatus === 1 && frm.doc.status !== 'Cancelled') {
