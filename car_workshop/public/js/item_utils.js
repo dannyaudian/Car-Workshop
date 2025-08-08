@@ -55,12 +55,12 @@ car_workshop.utils = {
     // Fetch details for a reference item
     fetch_reference_details: function(frm, row, cdt, cdn) {
         if (row.item_type === 'Part') {
-            frappe.db.get_value('Part', row.reference_doctype, 
-                ['part_name', 'current_price', 'item_code'], 
-                function(r) {
-                    if (r) {
-                        frappe.model.set_value(cdt, cdn, 'description', r.part_name);
-                        frappe.model.set_value(cdt, cdn, 'rate', r.current_price);
+            frappe.db.get_value('Part', row.reference_doctype,
+                ['part_name', 'current_price', 'item_code'])
+                .then(r => {
+                    if (r.message) {
+                        frappe.model.set_value(cdt, cdn, 'description', r.message.part_name);
+                        frappe.model.set_value(cdt, cdn, 'rate', r.message.current_price);
                         car_workshop.utils.calculate_item_amount(frm, cdt, cdn);
                     } else {
                         // Fallback warning if reference not found
@@ -69,15 +69,17 @@ car_workshop.utils = {
                             indicator: 'orange'
                         });
                     }
-                }
-            );
+                })
+                .catch(() => {
+                    frappe.msgprint(__('Unable to fetch item details'));
+                });
         } else if (row.item_type === 'OPL') {
-            frappe.db.get_value('Job Type', row.reference_doctype, 
-                ['description', 'default_price'], 
-                function(r) {
-                    if (r) {
-                        frappe.model.set_value(cdt, cdn, 'description', r.description);
-                        frappe.model.set_value(cdt, cdn, 'rate', r.default_price);
+            frappe.db.get_value('Job Type', row.reference_doctype,
+                ['description', 'default_price'])
+                .then(r => {
+                    if (r.message) {
+                        frappe.model.set_value(cdt, cdn, 'description', r.message.description);
+                        frappe.model.set_value(cdt, cdn, 'rate', r.message.default_price);
                         car_workshop.utils.calculate_item_amount(frm, cdt, cdn);
                     } else {
                         // Fallback warning if reference not found
@@ -86,16 +88,18 @@ car_workshop.utils = {
                             indicator: 'orange'
                         });
                     }
-                }
-            );
+                })
+                .catch(() => {
+                    frappe.msgprint(__('Unable to fetch item details'));
+                });
         } else if (row.item_type === 'Expense') {
             // For expense types, we might need custom handling
-            frappe.db.get_value('Expense Type', row.reference_doctype, 
-                ['description', 'default_rate'], 
-                function(r) {
-                    if (r) {
-                        frappe.model.set_value(cdt, cdn, 'description', r.description || row.reference_doctype);
-                        frappe.model.set_value(cdt, cdn, 'rate', r.default_rate || 0);
+            frappe.db.get_value('Expense Type', row.reference_doctype,
+                ['description', 'default_rate'])
+                .then(r => {
+                    if (r.message) {
+                        frappe.model.set_value(cdt, cdn, 'description', r.message.description || row.reference_doctype);
+                        frappe.model.set_value(cdt, cdn, 'rate', r.message.default_rate || 0);
                         car_workshop.utils.calculate_item_amount(frm, cdt, cdn);
                     } else {
                         // If no description found, use reference name as fallback
@@ -105,8 +109,10 @@ car_workshop.utils = {
                             indicator: 'orange'
                         });
                     }
-                }
-            );
+                })
+                .catch(() => {
+                    frappe.msgprint(__('Unable to fetch item details'));
+                });
         }
     },
     
