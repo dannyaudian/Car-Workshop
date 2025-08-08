@@ -110,7 +110,7 @@ class ReturnMaterial(Document):
             if not item.item_code:
                 # Auto-fetch item_code from part if not set
                 if item.part:
-                    item_code = frappe.db.get_value("Part", item.part, "item")
+                    item_code = frappe.db.get_value("Part", item.part, "item_code")
                     if not item_code:
                         frappe.throw(_("Part {0} at row {1} is not linked to any Item").format(
                             item.part, i+1))

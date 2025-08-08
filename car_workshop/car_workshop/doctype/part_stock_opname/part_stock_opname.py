@@ -92,7 +92,7 @@ class PartStockOpname(Document):
                 continue
                 
             # Get the item_code linked to the part
-            item_code = frappe.db.get_value("Part", item.part, "item")
+            item_code = frappe.db.get_value("Part", item.part, "item_code")
             if not item_code:
                 continue
                 
