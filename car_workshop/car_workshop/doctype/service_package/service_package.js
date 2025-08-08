@@ -45,17 +45,17 @@ frappe.ui.form.on('Service Package Detail', {
                         // Set the rate from the service price list
                         frappe.model.set_value(cdt, cdn, 'rate', r.message.rate);
                     } else {
-                        // Fallback: try to get standard_rate from Job Type
+                        // Fallback: try to get default_price from Job Type
                         frappe.call({
                             method: 'frappe.client.get_value',
                             args: {
                                 doctype: 'Job Type',
                                 filters: { name: row.job_type },
-                                fieldname: ['standard_rate']
+                                fieldname: ['default_price']
                             },
                             callback: function(r) {
-                                if (r.message && r.message.standard_rate) {
-                                    frappe.model.set_value(cdt, cdn, 'rate', r.message.standard_rate);
+                                if (r.message && r.message.default_price) {
+                                    frappe.model.set_value(cdt, cdn, 'rate', r.message.default_price);
                                 } else {
                                     frappe.model.set_value(cdt, cdn, 'rate', 0);
                                 }

@@ -28,14 +28,14 @@ class ServicePackage(Document):
             job_data = frappe.get_all(
                 "Job Type",
                 filters={"name": ["in", job_types]},
-                fields=["name", "standard_rate", "time_minutes"],
+                fields=["name", "default_price", "time_minutes"],
             )
 
             missing_rate = []
             for jd in job_data:
-                job_rates[jd.name] = jd.standard_rate or 0
+                job_rates[jd.name] = jd.default_price or 0
                 job_durations[jd.name] = jd.time_minutes or 0
-                if not jd.standard_rate:
+                if not jd.default_price:
                     missing_rate.append(jd.name)
 
             if missing_rate:
@@ -49,6 +49,15 @@ class ServicePackage(Document):
                     totals[item.parent] += item.amount or (item.qty * item.rate) or 0
                 for jt in missing_rate:
                     job_rates[jt] = totals.get(jt, 0)
+
+                    if not job_rates[jt] and self.price_list:
+                        from car_workshop.car_workshop.doctype.service_price_list.get_active_service_price import (
+                            get_active_service_price,
+                        )
+
+                        result = get_active_service_price("Job Type", jt, self.price_list)
+                        if result and result.get("rate"):
+                            job_rates[jt] = result.get("rate")
 
         part_prices = {}
         if part_names:
@@ -90,25 +99,37 @@ class ServicePackage(Document):
     
     def get_job_type_rate(self, job_type_name):
         """Get the rate from JobType based on its items structure"""
-        # First check if the JobType has a field called 'rate' or 'standard_rate'
-        rate = frappe.db.get_value("Job Type", job_type_name, "standard_rate")
-        
+        # First check if the JobType has a field called 'default_price'
+        rate = frappe.db.get_value("Job Type", job_type_name, "default_price")
+
         if rate:
             return rate
-        
-        # If no direct rate field, calculate from items
+
+        # If no direct price field, calculate from items
         items = frappe.get_all(
-            "Job Type Item",  # Assuming this is the name of the child table
+            "Job Type Item",
             filters={"parent": job_type_name},
-            fields=["qty", "rate", "amount"]
+            fields=["qty", "rate", "amount"],
         )
-        
+
         total_rate = 0
         if items:
             for item in items:
                 total_rate += (item.amount or (item.qty * item.rate) or 0)
-        
-        return total_rate
+
+        if total_rate:
+            return total_rate
+
+        if self.price_list:
+            from car_workshop.car_workshop.doctype.service_price_list.get_active_service_price import (
+                get_active_service_price,
+            )
+
+            result = get_active_service_price("Job Type", job_type_name, self.price_list)
+            if result and result.get("rate"):
+                return result.get("rate")
+
+        return 0
     
     def before_save(self):
         """Set modified package flag"""
