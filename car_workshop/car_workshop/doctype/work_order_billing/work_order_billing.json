@@ -19,6 +19,9 @@
   "posting_date",
   "due_date",
   "status",
+  "approval_status",
+  "approved_by",
+  "approved_on",
   "billing_type",
   "company",
   "cost_center",
@@ -30,6 +33,9 @@
   "part_items",
   "external_services_section",
   "external_service_items",
+  "returns_section",
+  "return_items",
+  "cancellation_items",
   "section_break_totals",
   "total_services_amount",
   "total_parts_amount",
@@ -139,7 +145,27 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-  "options": "Draft\nPending Payment\nPartially Paid\nFully Paid\nCompleted\nOverdue\nCancelled",
+ "options": "Draft\nPending Payment\nPartially Paid\nFully Paid\nCompleted\nOverdue\nCancelled",
+   "read_only": 1
+  },
+  {
+   "default": "Pending Approval",
+   "fieldname": "approval_status",
+   "fieldtype": "Select",
+   "label": "Approval Status",
+   "options": "Pending Approval\nApproved\nRejected"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On",
    "read_only": 1
   },
   {
@@ -205,6 +231,23 @@
    "fieldtype": "Table",
    "label": "External Services",
    "options": "Work Order Billing External Service"
+  },
+  {
+   "fieldname": "returns_section",
+   "fieldtype": "Section Break",
+   "label": "Returns & Cancellations"
+  },
+  {
+   "fieldname": "return_items",
+   "fieldtype": "Table",
+   "label": "Return Items",
+   "options": "Work Order Billing Return"
+  },
+  {
+   "fieldname": "cancellation_items",
+   "fieldtype": "Table",
+   "label": "Cancellation Items",
+   "options": "Work Order Billing Cancellation"
   },
   {
    "fieldname": "section_break_totals",

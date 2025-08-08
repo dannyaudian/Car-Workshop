@@ -1,0 +1,31 @@
+{
+ "doctype": "DocType",
+ "istable": 1,
+ "module": "Car Workshop",
+ "name": "Work Order Billing Cancellation",
+ "field_order": [
+  "job_type_item",
+  "amount",
+  "reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "job_type_item",
+   "fieldtype": "Link",
+   "label": "Job Type Item",
+   "options": "Work Order Billing Job Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason"
+  }
+ ]
+}

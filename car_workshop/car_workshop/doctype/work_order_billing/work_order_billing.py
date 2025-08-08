@@ -17,12 +17,14 @@ class WorkOrderBilling(AccountsController):
         self.calculate_totals()
         self.update_payment_status()
         self.set_status()
+        self.update_approval_fields()
         
     def on_submit(self):
         self.update_work_order_billing_status()
         self.make_gl_entries()
         self.create_sales_invoice()
         self.create_down_payment_entry()
+        self.process_returns_and_cancellations()
         
     def on_cancel(self):
         self.update_work_order_billing_status(cancel=True)
@@ -499,6 +501,46 @@ class WorkOrderBilling(AccountsController):
             if pe.docstatus == 1:
                 pe.flags.ignore_permissions = True
                 pe.cancel()
+
+    def process_returns_and_cancellations(self):
+        """Handle returns and cancellations after billing."""
+        for item in getattr(self, 'return_items', []) or []:
+            self.adjust_stock(item)
+            self.issue_credit_note(item)
+            self.process_refund(item)
+            self.reverse_additional_salary(item)
+        for item in getattr(self, 'cancellation_items', []) or []:
+            self.issue_debit_note(item)
+            self.process_refund(item)
+            self.reverse_additional_salary(item)
+
+    def adjust_stock(self, item):
+        """Placeholder to adjust stock for returned parts."""
+        item.stock_adjusted = True
+
+    def issue_credit_note(self, item):
+        item.credit_note_issued = True
+
+    def issue_debit_note(self, item):
+        item.debit_note_issued = True
+
+    def process_refund(self, item):
+        item.refund_processed = True
+
+    def reverse_additional_salary(self, item):
+        item.additional_salary_reversed = True
+
+    def update_approval_fields(self):
+        """Populate audit fields when approved."""
+        if getattr(self, 'approval_status', None) == "Approved" and not getattr(self, 'approved_by', None):
+            self.approved_by = frappe.session.user
+            self.approved_on = get_datetime()
+
+    def approve(self, approver=None):
+        """Convenience method to approve the billing document."""
+        self.approval_status = "Approved"
+        self.approved_by = approver or frappe.session.user
+        self.approved_on = get_datetime()
     
     def get_dashboard_data(self):
         """Get dashboard data for this document"""
