@@ -226,13 +226,16 @@ class ReturnMaterial(Document):
             
             # Update Work Order consumed quantities
             self.update_work_order_consumed_qty()
-            
+
             frappe.msgprint(_("Stock Entry {0} created and submitted").format(
                 frappe.get_desk_link("Stock Entry", stock_entry.name)))
         except Exception as e:
-            frappe.db.rollback()
-            frappe.log_error(_("Error creating Stock Entry for Return Material {0}: {1}").format(
-                self.name, str(e)), "Return Material Error")
+            frappe.log_error(
+                _("Error creating Stock Entry for Return Material {0}: {1}").format(
+                    self.name, str(e)
+                ),
+                "Return Material Error",
+            )
             frappe.throw(_("Error creating Stock Entry: {0}").format(str(e)))
     
     def update_work_order_consumed_qty(self):
