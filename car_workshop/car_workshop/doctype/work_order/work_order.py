@@ -120,8 +120,17 @@ class WorkOrder(Document):
                 frappe.throw(_("{0} is mandatory before submitting").format(field["label"]))
         
         # Check if there are any details in the Work Order
-        if not (self.job_type_detail or self.service_package_detail or self.part_detail):
-            frappe.throw(_("Work Order must have at least one Job Type, Service Package, or Part detail before submitting"))
+        if not (
+            self.job_type_detail
+            or self.service_package_detail
+            or self.part_detail
+            or self.external_expense
+        ):
+            frappe.throw(
+                _(
+                    "Work Order must have at least one Job Type, Service Package, Part, or Expense detail before submitting"
+                )
+            )
     
     def validate_part_details_before_submit(self):
         """Validate part details before submission"""
