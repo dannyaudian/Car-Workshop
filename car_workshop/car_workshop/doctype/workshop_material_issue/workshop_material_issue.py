@@ -365,10 +365,10 @@ class WorkshopMaterialIssue(Document):
             
             # Track changes for logging
             changes_made = False
-            updated_items = []
-            
+            updated_items = {}
+
             for item in self.items:
-                # Find the matching part in the Work Order
+                # Find all matching parts in the Work Order
                 for wo_item in work_order.part_detail:
                     if wo_item.item_code == item.item_code:
                         previous_qty = flt(getattr(wo_item, "consumed_qty", 0))
@@ -382,14 +382,16 @@ class WorkshopMaterialIssue(Document):
                         # Track if any change was made
                         if previous_qty != wo_item.consumed_qty:
                             changes_made = True
-                            updated_items.append({
-                                "item_code": wo_item.item_code,
-                                "previous_qty": previous_qty,
-                                "new_qty": wo_item.consumed_qty
-                            })
+                            if wo_item.item_code not in updated_items:
+                                updated_items[wo_item.item_code] = {
+                                    "item_code": wo_item.item_code,
+                                    "previous_qty": 0,
+                                    "new_qty": 0,
+                                }
 
-                        break
-            
+                            updated_items[wo_item.item_code]["previous_qty"] += previous_qty
+                            updated_items[wo_item.item_code]["new_qty"] += wo_item.consumed_qty
+
             # Only update if changes were made
             if changes_made:
                 # Update Work Order
@@ -413,8 +415,8 @@ class WorkshopMaterialIssue(Document):
                 
                 # Log the update with details
                 item_details = ", ".join([
-                    f"{item['item_code']}: {item['previous_qty']} → {item['new_qty']}" 
-                    for item in updated_items
+                    f"{item['item_code']}: {item['previous_qty']} → {item['new_qty']}"
+                    for item in updated_items.values()
                 ])
                 
                 frappe.msgprint(_("Consumed quantities updated in Work Order {0}. Items: {1}").format(
