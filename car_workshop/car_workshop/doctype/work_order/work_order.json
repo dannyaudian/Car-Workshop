@@ -13,12 +13,17 @@
     "service_advisor",
     "column_break_5",
     "status",
+    "workflow_state",
     "details_section",
     "job_type_detail",
     "service_package_detail",
     "part_detail",
     "external_expense",
     "totals_section",
+    "total_labor_amount",
+    "total_parts_amount",
+    "column_break_totals",
+    "total_external_amount",
     "total_amount",
     "notes_section",
     "notes"
@@ -27,35 +32,40 @@
     {
       "fieldname": "customer_section",
       "fieldtype": "Section Break",
-      "label": "Customer Information"
+      "label": "Customer Information",
+      "description": "Details about the customer and vehicle"
     },
     {
       "fieldname": "customer",
       "fieldtype": "Link",
       "label": "Customer",
       "options": "Customer",
-      "reqd": 1
+      "reqd": 1,
+      "description": "Select an existing customer or create a new one"
     },
     {
       "fieldname": "customer_vehicle",
       "fieldtype": "Link",
       "label": "Customer Vehicle",
       "options": "Customer Vehicle",
-      "reqd": 1
+      "reqd": 1,
+      "description": "Select the vehicle for this service"
     },
     {
       "fieldname": "service_date",
       "fieldtype": "Date",
       "label": "Service Date",
       "reqd": 1,
-      "default": "Today"
+      "default": "Today",
+      "description": "Date when the service is performed"
     },
     {
       "fieldname": "service_advisor",
       "fieldtype": "Link",
       "label": "Service Advisor",
       "options": "Employee",
-      "reqd": 1
+      "reqd": 1,
+      "description": "Employee responsible for this work order"
     },
     {
       "fieldname": "column_break_5",
@@ -67,47 +77,88 @@
       "label": "Status",
       "options": "Draft\nIn Progress\nCompleted\nCancelled",
       "default": "Draft",
-      "reqd": 1
+      "reqd": 1,
+      "bold": 1,
+      "description": "Current status of the work order"
+    },
+    {
+      "fieldname": "workflow_state",
+      "fieldtype": "Data",
+      "label": "Workflow State",
+      "read_only": 1,
+      "hidden": 1
     },
     {
       "fieldname": "details_section",
       "fieldtype": "Section Break",
-      "label": "Work Details"
+      "label": "Work Details",
+      "description": "Services, parts and expenses for this work order"
     },
     {
       "fieldname": "job_type_detail",
       "fieldtype": "Table",
-      "label": "Job Type Details",
-      "options": "Work Order Job Type"
+      "label": "Labor & Services",
+      "options": "Work Order Job Type",
+      "description": "Labor operations to be performed"
     },
     {
       "fieldname": "service_package_detail",
       "fieldtype": "Table",
-      "label": "Service Package Details",
-      "options": "Work Order Service Package"
+      "label": "Service Packages",
+      "options": "Work Order Service Package",
+      "description": "Predefined service packages that include multiple operations"
     },
     {
       "fieldname": "part_detail",
       "fieldtype": "Table",
-      "label": "Part Details",
-      "options": "Work Order Part"
+      "label": "Parts & Materials",
+      "options": "Work Order Part",
+      "description": "Parts and materials required for this service"
     },
     {
       "fieldname": "external_expense",
       "fieldtype": "Table",
       "label": "External Expenses",
-      "options": "Work Order Expense"
+      "options": "Work Order Expense",
+      "description": "Additional expenses such as outsourced services"
     },
     {
       "fieldname": "totals_section",
       "fieldtype": "Section Break",
-      "label": "Totals"
+      "label": "Cost Summary"
+    },
+    {
+      "fieldname": "total_labor_amount",
+      "fieldtype": "Currency",
+      "label": "Labor Total",
+      "read_only": 1,
+      "description": "Total cost of labor and services"
+    },
+    {
+      "fieldname": "total_parts_amount",
+      "fieldtype": "Currency",
+      "label": "Parts Total",
+      "read_only": 1,
+      "description": "Total cost of parts and materials"
+    },
+    {
+      "fieldname": "column_break_totals",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "total_external_amount",
+      "fieldtype": "Currency",
+      "label": "External Expenses Total",
+      "read_only": 1,
+      "description": "Total cost of external expenses"
     },
     {
       "fieldname": "total_amount",
       "fieldtype": "Currency",
-      "label": "Total Amount",
-      "read_only": 1
+      "label": "Grand Total",
+      "read_only": 1,
+      "bold": 1,
+      "description": "Total amount for this work order"
     },
     {
       "fieldname": "notes_section",
@@ -117,11 +168,33 @@
     {
       "fieldname": "notes",
       "fieldtype": "Small Text",
-      "label": "Notes"
+      "label": "Notes",
+      "description": "Any additional notes or instructions for this work order"
     }
   ],
   "index_web_pages_for_search": 1,
-  "links": [],
+  "links": [
+    {
+      "group": "Reference",
+      "link_doctype": "Customer",
+      "link_fieldname": "customer"
+    },
+    {
+      "group": "Reference",
+      "link_doctype": "Customer Vehicle",
+      "link_fieldname": "customer_vehicle" 
+    },
+    {
+      "group": "Transactions",
+      "link_doctype": "Workshop Material Issue",
+      "link_fieldname": "work_order"
+    },
+    {
+      "group": "Transactions",
+      "link_doctype": "Workshop Purchase Order",
+      "link_fieldname": "work_order"
+    }
+  ],
   "modified": "2025-05-29 02:01:09.000000",
   "modified_by": "dannyaudian",
   "module": "Car Workshop",
@@ -169,5 +242,8 @@
   "sort_field": "modified",
   "sort_order": "DESC",
   "states": [],
-  "track_changes": 1
+  "track_changes": 1,
+  "quick_entry": 0,
+  "search_fields": "customer,customer_vehicle,status",
+  "title_field": "customer_vehicle"
 }
