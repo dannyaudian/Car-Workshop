@@ -46,9 +46,9 @@ class WorkOrderPart(Document):
                 self.purchase_order = None
     
     def calculate_amount(self):
-        """Calculate amount based on quantity and rate"""
-        if self.quantity and self.rate:
-            self.amount = flt(self.quantity) * flt(self.rate)
-        else:
-            # Ensure amount is 0 if either quantity or rate is missing
-            self.amount = 0
+        """Validate quantity and rate then calculate amount"""
+        if flt(self.quantity) <= 0:
+            frappe.throw(_("Quantity must be greater than zero"))
+        if flt(self.rate) <= 0:
+            frappe.throw(_("Rate must be greater than zero"))
+        self.amount = flt(self.quantity) * flt(self.rate)
