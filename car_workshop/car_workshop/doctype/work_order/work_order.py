@@ -95,9 +95,12 @@ class WorkOrder(Document):
     def before_submit(self):
         # Validate all important fields are filled before submitting
         self.validate_important_fields()
-        
-        # Validate part details before submission
+
+        # Validate details before submission
         self.validate_part_details_before_submit()
+        self.validate_job_types_before_submit()
+        self.validate_service_packages_before_submit()
+        self.validate_expenses_before_submit()
     
     def validate_important_fields(self):
         """Validate mandatory fields before submission"""
