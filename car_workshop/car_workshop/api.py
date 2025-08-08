@@ -25,7 +25,7 @@ def get_latest_vehicle_log(customer_vehicle):
         "Vehicle Change Log",
         filters={"customer_vehicle": customer_vehicle},
         fields=[
-            "fieldname", 
+            "fieldname",
             "old_value", 
             "new_value", 
             "change_date", 
@@ -36,5 +36,4 @@ def get_latest_vehicle_log(customer_vehicle):
         order_by="creation desc",
         limit=1
     )
-    
-    # Return data
+    return logs[0] if logs else None
