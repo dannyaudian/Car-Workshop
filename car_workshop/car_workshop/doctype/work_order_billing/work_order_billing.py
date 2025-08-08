@@ -5,8 +5,6 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, cint, getdate, nowdate, add_days, get_datetime
-from erpnext.accounts.general_ledger import make_gl_entries
-from erpnext.accounts.utils import get_account_currency
 from erpnext.accounts.party import get_party_account
 from erpnext.controllers.accounts_controller import AccountsController
 
@@ -201,24 +199,29 @@ class WorkOrderBilling(AccountsController):
         frappe.db.set_value("Work Order", self.work_order, "billing_status", status)
     
     def make_gl_entries(self, cancel=False):
+        if cancel:
+            if self.journal_entry:
+                je = frappe.get_doc("Journal Entry", self.journal_entry)
+                if je.docstatus == 1:
+                    je.flags.ignore_permissions = True
+                    je.cancel()
+            return
+
         gl_entries = []
-        
-        # Revenue entry
+
         revenue_account = frappe.get_cached_value('Company', self.company, 'default_income_account')
         if not revenue_account:
             frappe.throw(_("Please set Default Income Account in Company settings"))
-            
-        # Customer receivable account
+
         receivable_account = get_party_account(
             party_type="Customer",
             party=self.customer,
-            company=self.company
+            company=self.company,
         )
-        
+
         if not receivable_account:
             frappe.throw(_("Please set Receivable Account for customer {0}").format(self.customer))
-        
-        # Revenue GL Entry
+
         gl_entries.append(
             self.get_gl_dict({
                 "account": revenue_account,
@@ -226,60 +229,61 @@ class WorkOrderBilling(AccountsController):
                 "credit_in_account_currency": self.subtotal,
                 "against": self.customer,
                 "cost_center": self.cost_center,
-                "remarks": f"Revenue for Work Order {self.work_order}"
+                "remarks": f"Revenue for Work Order {self.work_order}",
             })
         )
-        
-        # COGS and Inventory entries for parts
+
+        total_parts_cost = 0
         if self.total_parts_amount > 0:
+            for item in self.part_items:
+                item_code = frappe.db.get_value("Part", item.part, "item")
+                valuation_rate = frappe.db.get_value("Item", item_code, "valuation_rate") or 0
+                total_parts_cost += flt(valuation_rate) * flt(item.quantity)
+
             inventory_account = frappe.get_cached_value('Company', self.company, 'default_inventory_account')
             cogs_account = frappe.get_cached_value('Company', self.company, 'default_expense_account')
-            
+
             if not inventory_account:
                 frappe.throw(_("Please set Default Inventory Account in Company settings"))
-                
+
             if not cogs_account:
                 frappe.throw(_("Please set Default Expense Account in Company settings"))
-                
-            # Inventory GL Entry
+
             gl_entries.append(
                 self.get_gl_dict({
                     "account": inventory_account,
-                    "credit": self.total_parts_amount,
-                    "credit_in_account_currency": self.total_parts_amount,
+                    "credit": total_parts_cost,
+                    "credit_in_account_currency": total_parts_cost,
                     "against": cogs_account,
                     "cost_center": self.cost_center,
-                    "remarks": f"Inventory reduction for Work Order {self.work_order}"
+                    "remarks": f"Inventory reduction for Work Order {self.work_order}",
                 })
             )
-            
-            # COGS GL Entry
+
             gl_entries.append(
                 self.get_gl_dict({
                     "account": cogs_account,
-                    "debit": self.total_parts_amount,
-                    "debit_in_account_currency": self.total_parts_amount,
+                    "debit": total_parts_cost,
+                    "debit_in_account_currency": total_parts_cost,
                     "against": inventory_account,
                     "cost_center": self.cost_center,
-                    "remarks": f"COGS for Work Order {self.work_order}"
+                    "remarks": f"COGS for Work Order {self.work_order}",
                 })
             )
-        
-        # Tax account entries
+
         if flt(self.tax_amount) > 0:
             tax_account = None
             if self.taxes_and_charges:
                 tax_template = frappe.get_doc("Sales Taxes and Charges Template", self.taxes_and_charges)
                 if tax_template.taxes:
                     tax_account = tax_template.taxes[0].account_head
-            
+
             if not tax_account:
                 tax_account = frappe.get_cached_value('Company', self.company, 'default_tax_account')
-                
+
             if not tax_account:
                 frappe.throw(_("Please set a Tax Account in the Taxes and Charges Template or Company settings"))
-                
-            # Tax GL Entry
+
             gl_entries.append(
                 self.get_gl_dict({
                     "account": tax_account,
@@ -287,18 +291,16 @@ class WorkOrderBilling(AccountsController):
                     "credit_in_account_currency": self.tax_amount,
                     "against": self.customer,
                     "cost_center": self.cost_center,
-                    "remarks": f"Tax for Work Order {self.work_order}"
+                    "remarks": f"Tax for Work Order {self.work_order}",
                 })
             )
-        
-        # Discount account entries
+
         if flt(self.discount_amount) > 0:
             discount_account = frappe.get_cached_value('Company', self.company, 'discount_allowed_account')
-            
+
             if not discount_account:
                 frappe.throw(_("Please set Discount Allowed Account in Company settings"))
-                
-            # Discount GL Entry
+
             gl_entries.append(
                 self.get_gl_dict({
                     "account": discount_account,
@@ -306,11 +308,10 @@ class WorkOrderBilling(AccountsController):
                     "debit_in_account_currency": self.discount_amount,
                     "against": self.customer,
                     "cost_center": self.cost_center,
-                    "remarks": f"Discount for Work Order {self.work_order}"
+                    "remarks": f"Discount for Work Order {self.work_order}",
                 })
             )
-        
-        # Customer receivable entry
+
         gl_entries.append(
             self.get_gl_dict({
                 "account": receivable_account,
@@ -320,17 +321,15 @@ class WorkOrderBilling(AccountsController):
                 "debit_in_account_currency": self.grand_total,
                 "against": revenue_account,
                 "cost_center": self.cost_center,
-                "remarks": f"Receivable for Work Order {self.work_order}"
+                "remarks": f"Receivable for Work Order {self.work_order}",
             })
         )
-        
-        # Make payment entries if any
+
         if self.payment_amount > 0:
             for payment in self.payment_details:
                 if payment.amount <= 0:
                     continue
-                    
-                # Payment GL Entry
+
                 gl_entries.append(
                     self.get_gl_dict({
                         "account": payment.payment_account,
@@ -338,11 +337,10 @@ class WorkOrderBilling(AccountsController):
                         "debit_in_account_currency": payment.amount,
                         "against": receivable_account,
                         "cost_center": self.cost_center,
-                        "remarks": f"Payment for Work Order {self.work_order}"
+                        "remarks": f"Payment for Work Order {self.work_order}",
                     })
                 )
-                
-                # Reduce receivable
+
                 gl_entries.append(
                     self.get_gl_dict({
                         "account": receivable_account,
@@ -352,13 +350,39 @@ class WorkOrderBilling(AccountsController):
                         "credit_in_account_currency": payment.amount,
                         "against": payment.payment_account,
                         "cost_center": self.cost_center,
-                        "remarks": f"Payment against receivable for Work Order {self.work_order}"
+                        "remarks": f"Payment against receivable for Work Order {self.work_order}",
                     })
                 )
-        
-        # Make GL entries
-        if gl_entries:
-            make_gl_entries(gl_entries, cancel=cancel)
+
+        total_debit = sum(flt(d.get("debit")) for d in gl_entries)
+        total_credit = sum(flt(d.get("credit")) for d in gl_entries)
+        if round(total_debit, 2) != round(total_credit, 2):
+            frappe.throw(_("GL Entries are not balanced"))
+
+        je = frappe.new_doc("Journal Entry")
+        je.posting_date = self.posting_date
+        je.company = self.company
+        je.voucher_type = "Journal Entry"
+        je.user_remark = f"Auto entry for Work Order Billing {self.name}"
+
+        for d in gl_entries:
+            je.append(
+                "accounts",
+                {
+                    "account": d["account"],
+                    "party_type": d.get("party_type"),
+                    "party": d.get("party"),
+                    "debit_in_account_currency": d.get("debit", 0),
+                    "credit_in_account_currency": d.get("credit", 0),
+                    "cost_center": d.get("cost_center"),
+                    "against_account": d.get("against"),
+                },
+            )
+
+        je.flags.ignore_permissions = True
+        je.insert()
+        je.submit()
+        self.db_set("journal_entry", je.name)
     
     def create_sales_invoice(self):
         """Create a Sales Invoice from this billing document"""

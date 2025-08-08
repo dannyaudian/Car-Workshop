@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
-from frappe.utils import flt, nowdate, add_days
+from frappe.utils import flt
 from frappe.model.mapper import get_mapped_doc
 
 
