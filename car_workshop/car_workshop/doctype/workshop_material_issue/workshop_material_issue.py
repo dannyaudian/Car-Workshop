@@ -21,6 +21,7 @@ class WorkshopMaterialIssue(Document):
         self.validate_warehouse()
         self.validate_items()
         self.check_duplicate_parts()
+        self.check_for_duplicates()
         self.validate_stock_availability()
         self.calculate_totals()
     
@@ -238,32 +239,39 @@ class WorkshopMaterialIssue(Document):
         return frappe.db.get_value("Item", item_code, "valuation_rate") or 0
     
     def check_for_duplicates(self):
-        """
-        Check for duplicate issues for the same Part in the same Work Order
-        that haven't been consumed yet
-        """
+        """Check for duplicate issues for the same Part in the same Work Order."""
         for item in self.items:
-            # Skip if this is a new document
-            if self.is_new():
-                continue
-            
-            # Check for existing material issues for this part and work order
-            existing_issues = frappe.db.sql("""
-                SELECT parent
-                FROM `tabWorkshop Material Issue Item`
-                WHERE part = %s
-                AND parent != %s
-                AND parent IN (
-                    SELECT name
-                    FROM `tabWorkshop Material Issue`
-                    WHERE work_order = %s
-                    AND docstatus = 1
-                )
-            """, (item.part, self.name, self.work_order), as_dict=1)
-            
+            query = """
+                SELECT wmi.name, wmi.docstatus
+                FROM `tabWorkshop Material Issue` wmi
+                INNER JOIN `tabWorkshop Material Issue Item` wmii
+                    ON wmii.parent = wmi.name
+                WHERE wmii.part = %s
+                    AND wmi.work_order = %s
+                    AND wmi.docstatus < 2
+            """
+            params = [item.part, self.work_order]
+
+            if not self.is_new():
+                query += " AND wmi.name != %s"
+                params.append(self.name)
+
+            existing_issues = frappe.db.sql(query, params, as_dict=1)
+
             if existing_issues:
-                frappe.throw(_("Part {0} has already been issued for Work Order {1} in Material Issue {2}").format(
-                    item.part, self.work_order, existing_issues[0].parent))
+                duplicate = existing_issues[0]
+                if duplicate.docstatus == 1:
+                    frappe.throw(
+                        _(
+                            "Part {0} has already been issued for Work Order {1} in Material Issue {2}"
+                        ).format(item.part, self.work_order, duplicate.name)
+                    )
+                else:
+                    frappe.throw(
+                        _(
+                            "Part {0} already exists in draft Material Issue {1} for Work Order {2}"
+                        ).format(item.part, duplicate.name, self.work_order)
+                    )
     
     def validate_stock_availability(self):
         """Check if there is enough stock for all items in the set warehouse"""
