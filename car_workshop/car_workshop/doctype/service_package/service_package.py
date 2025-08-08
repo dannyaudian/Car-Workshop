@@ -1,6 +1,8 @@
 import frappe
 from frappe.model.document import Document
 from collections import defaultdict
+import json
+import hashlib
 
 class ServicePackage(Document):
     def validate(self):
@@ -131,9 +133,33 @@ class ServicePackage(Document):
 
         return 0
     
+    def _details_have_changed(self):
+        """Check if child table `details` has changed using a hash comparison"""
+        previous_doc = self.get_doc_before_save()
+        if not previous_doc:
+            return False
+
+        def serialize(details):
+            return [
+                d.as_dict() if hasattr(d, "as_dict") else getattr(d, "__dict__", {})
+                for d in details or []
+            ]
+
+        current_details = serialize(self.get("details"))
+        previous_details = serialize(previous_doc.get("details"))
+
+        current_hash = hashlib.md5(
+            json.dumps(current_details, sort_keys=True).encode()
+        ).hexdigest()
+        previous_hash = hashlib.md5(
+            json.dumps(previous_details, sort_keys=True).encode()
+        ).hexdigest()
+
+        return current_hash != previous_hash
+
     def before_save(self):
         """Set modified package flag"""
-        if self.has_value_changed("price") or self.has_value_changed("details"):
+        if self.has_value_changed("price") or self._details_have_changed():
             self.is_modified = 1
     
     def on_update(self):
