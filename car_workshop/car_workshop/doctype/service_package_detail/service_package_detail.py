@@ -36,9 +36,37 @@ class ServicePackageDetail(Document):
         self.amount = self.quantity * (self.rate or 0)
     
     def get_job_type_rate(self):
-        """Get standard rate from Job Type"""
-        rate = frappe.db.get_value("Job Type", self.job_type, "standard_rate")
-        return rate or 0
+        """Get default price from Job Type, with fallbacks"""
+        rate = frappe.db.get_value("Job Type", self.job_type, "default_price")
+
+        if rate:
+            return rate
+
+        items = frappe.get_all(
+            "Job Type Item",
+            filters={"parent": self.job_type},
+            fields=["qty", "rate", "amount"],
+        )
+
+        total_rate = 0
+        if items:
+            for item in items:
+                total_rate += (item.amount or (item.qty * item.rate) or 0)
+
+        if total_rate:
+            return total_rate
+
+        parent = frappe.get_doc("Service Package", self.parent)
+        if parent and parent.price_list:
+            from car_workshop.car_workshop.doctype.service_price_list.get_active_service_price import (
+                get_active_service_price,
+            )
+
+            result = get_active_service_price("Job Type", self.job_type, parent.price_list)
+            if result and result.get("rate"):
+                return result.get("rate")
+
+        return 0
     
     def get_part_rate(self):
         """Get current price from Part"""
