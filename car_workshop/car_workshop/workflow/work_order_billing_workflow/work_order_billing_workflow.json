@@ -1,0 +1,95 @@
+{
+ "doctype": "Workflow",
+ "workflow_name": "Work Order Billing Workflow",
+ "document_type": "Work Order Billing",
+ "is_active": 1,
+ "state_field": "workflow_state",
+ "states": [
+  {
+   "state": "Draft",
+   "docstatus": 0,
+   "allow_edit": "Workshop Manager",
+   "update_field": "status",
+   "update_value": "Draft",
+   "idx": 1
+  },
+  {
+   "state": "Pending Payment",
+   "docstatus": 1,
+   "allow_edit": "Cashier",
+   "update_field": "status",
+   "update_value": "Pending Payment",
+   "idx": 2
+  },
+  {
+   "state": "Partially Paid",
+   "docstatus": 1,
+   "allow_edit": "Cashier",
+   "update_field": "status",
+   "update_value": "Partially Paid",
+   "idx": 3
+  },
+  {
+   "state": "Fully Paid",
+   "docstatus": 1,
+   "allow_edit": "Cashier",
+   "update_field": "status",
+   "update_value": "Fully Paid",
+   "idx": 4
+  },
+  {
+   "state": "Completed",
+   "docstatus": 1,
+   "allow_edit": "Accountant",
+   "update_field": "status",
+   "update_value": "Completed",
+   "idx": 5
+  }
+ ],
+ "transitions": [
+  {
+   "state": "Draft",
+   "action": "Submit",
+   "next_state": "Pending Payment",
+   "allowed": "Workshop Manager",
+   "condition": "doc.discount_amount == 0",
+   "idx": 1
+  },
+  {
+   "state": "Draft",
+   "action": "Submit with Discount",
+   "next_state": "Pending Payment",
+   "allowed": "Accountant",
+   "condition": "doc.discount_amount > 0",
+   "idx": 2
+  },
+  {
+   "state": "Pending Payment",
+   "action": "Record Partial Payment",
+   "next_state": "Partially Paid",
+   "allowed": "Cashier",
+   "idx": 3
+  },
+  {
+   "state": "Pending Payment",
+   "action": "Record Full Payment",
+   "next_state": "Fully Paid",
+   "allowed": "Cashier",
+   "idx": 4
+  },
+  {
+   "state": "Partially Paid",
+   "action": "Record Remaining Payment",
+   "next_state": "Fully Paid",
+   "allowed": "Cashier",
+   "idx": 5
+  },
+  {
+   "state": "Fully Paid",
+   "action": "Complete",
+   "next_state": "Completed",
+   "allowed": "Accountant",
+   "idx": 6
+  }
+ ]
+}
