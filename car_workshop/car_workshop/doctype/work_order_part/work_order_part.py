@@ -43,7 +43,7 @@ class WorkOrderPart(Document):
         else:
             # Clear purchase order if source is not "Beli Baru"
             if self.purchase_order:
-                self.purchase_order = None
+                self.purchase_order = ""
     
     def calculate_amount(self):
         """Validate quantity and rate then calculate amount"""

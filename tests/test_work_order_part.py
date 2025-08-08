@@ -50,3 +50,15 @@ def test_calculate_amount_raises_for_non_positive_rate():
     with pytest.raises(Exception):
         part.calculate_amount()
 
+
+def test_validate_source_and_po_clears_purchase_order():
+    part = WorkOrderPart(source="Dari Stok", purchase_order="PO-001")
+    part.validate_source_and_po()
+    assert part.purchase_order == ""
+
+
+def test_validate_source_and_po_requires_purchase_order_when_buying():
+    part = WorkOrderPart(source="Beli Baru", purchase_order="")
+    with pytest.raises(Exception):
+        part.validate_source_and_po()
+
