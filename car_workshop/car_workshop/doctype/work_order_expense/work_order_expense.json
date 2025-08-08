@@ -42,23 +42,23 @@
       "options": "Supplier"
     },
     {
+      "default": 1,
       "fieldname": "billable",
       "fieldtype": "Check",
       "in_list_view": 1,
-      "label": "Billable",
-      "default": 1
+      "label": "Billable"
     },
     {
       "fieldname": "gl_account",
       "fieldtype": "Link",
-      "label": "GL Account",
-      "options": "Account",
       "get_query": {
         "filters": {
-          "root_type": "Expense",
-          "account_type": "Direct Expenses"
+          "account_type": "Direct Expenses",
+          "root_type": "Expense"
         }
-      }
+      },
+      "label": "GL Account",
+      "options": "Account"
     },
     {
       "fieldname": "purchase_order",
@@ -78,5 +78,6 @@
   "permissions": [],
   "sort_field": "modified",
   "sort_order": "DESC",
-  "states": []
+  "states": [],
+  "track_changes": 1
 }

@@ -1,26 +1,23 @@
 {
   "actions": [],
-  "doctype": "DocType",
-  "name": "Incentive Configuration",
-  "module": "Car Workshop",
   "custom": 0,
-  "istable": 0,
+  "doctype": "DocType",
   "fields": [
     {
       "fieldname": "job_type",
       "fieldtype": "Link",
+      "in_list_view": 1,
       "label": "Job Type",
       "options": "Job Type",
-      "reqd": 1,
-      "in_list_view": 1
+      "reqd": 1
     },
     {
       "fieldname": "incentive_type",
       "fieldtype": "Select",
+      "in_list_view": 1,
       "label": "Incentive Type",
       "options": "Percentage\nFixed\nTiered\nTeam-Based",
-      "reqd": 1,
-      "in_list_view": 1
+      "reqd": 1
     },
     {
       "fieldname": "rate",
@@ -35,27 +32,31 @@
       "reqd": 1
     },
     {
+      "depends_on": "eval:doc.incentive_type=='Tiered'",
       "fieldname": "tiers",
       "fieldtype": "Table",
       "label": "Tiers",
-      "options": "Incentive Tier",
-      "depends_on": "eval:doc.incentive_type=='Tiered'"
+      "options": "Incentive Tier"
     }
   ],
+  "istable": 0,
+  "module": "Car Workshop",
+  "name": "Incentive Configuration",
   "permissions": [
     {
-      "role": "System Manager",
-      "read": 1,
-      "write": 1,
       "create": 1,
-      "delete": 1
+      "delete": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
     },
     {
-      "role": "Car Workshop Manager",
-      "read": 1,
-      "write": 1,
       "create": 1,
-      "delete": 1
+      "delete": 1,
+      "read": 1,
+      "role": "Car Workshop Manager",
+      "write": 1
     }
-  ]
+  ],
+  "track_changes": 1
 }

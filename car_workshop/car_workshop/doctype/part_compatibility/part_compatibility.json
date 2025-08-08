@@ -23,15 +23,19 @@
     {
       "fieldname": "vehicle_model",
       "fieldtype": "Link",
+      "get_query": {
+        "filters": [
+          [
+            "brand",
+            "=",
+            "eval:doc.vehicle_brand"
+          ]
+        ]
+      },
       "in_list_view": 1,
       "label": "Vehicle Model",
       "options": "Vehicle Model",
-      "reqd": 1,
-      "get_query": {
-        "filters": [
-          ["brand", "=", "eval:doc.vehicle_brand"]
-        ]
-      }
+      "reqd": 1
     },
     {
       "fieldname": "year_start",
@@ -61,5 +65,6 @@
   "permissions": [],
   "sort_field": "modified",
   "sort_order": "DESC",
-  "states": []
+  "states": [],
+  "track_changes": 1
 }

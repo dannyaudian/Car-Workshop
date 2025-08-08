@@ -39,12 +39,12 @@
       "reqd": 1
     },
     {
+      "default": "Part",
       "fieldname": "item_reference_type",
       "fieldtype": "Select",
       "hidden": 1,
       "label": "Item Reference Type",
-      "options": "Part\nJob Type\nExpense Type",
-      "default": "Part"
+      "options": "Part\nJob Type\nExpense Type"
     },
     {
       "fieldname": "description",
@@ -98,10 +98,10 @@
       "options": "Warehouse"
     },
     {
+      "collapsible": 1,
       "fieldname": "purchase_order_reference_section",
       "fieldtype": "Section Break",
-      "label": "Purchase Order Reference",
-      "collapsible": 1
+      "label": "Purchase Order Reference"
     },
     {
       "fieldname": "po_item",
@@ -133,5 +133,6 @@
   "permissions": [],
   "sort_field": "modified",
   "sort_order": "DESC",
-  "states": []
+  "states": [],
+  "track_changes": 1
 }

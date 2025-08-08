@@ -1,10 +1,7 @@
 {
   "actions": [],
-  "doctype": "DocType",
-  "name": "Incentive History",
-  "module": "Car Workshop",
   "custom": 0,
-  "istable": 0,
+  "doctype": "DocType",
   "fields": [
     {
       "fieldname": "employee",
@@ -49,20 +46,24 @@
       "options": "Additional Salary"
     }
   ],
+  "istable": 0,
+  "module": "Car Workshop",
+  "name": "Incentive History",
   "permissions": [
     {
-      "role": "System Manager",
-      "read": 1,
-      "write": 1,
       "create": 1,
-      "delete": 1
+      "delete": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
     },
     {
-      "role": "Car Workshop Manager",
-      "read": 1,
-      "write": 1,
       "create": 1,
-      "delete": 1
+      "delete": 1,
+      "read": 1,
+      "role": "Car Workshop Manager",
+      "write": 1
     }
-  ]
+  ],
+  "track_changes": 1
 }

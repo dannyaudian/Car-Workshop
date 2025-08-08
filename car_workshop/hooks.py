@@ -18,6 +18,9 @@ after_install = "car_workshop.setup.after_install"
 
 # Document events
 doc_events = {
+    "*": {
+        "validate": "car_workshop.utils.validate_mandatory_fields",
+    },
     "Customer Vehicle": {
         "after_insert": "car_workshop.car_workshop.doctype.customer_vehicle.customer_vehicle.create_vehicle_log"
     },

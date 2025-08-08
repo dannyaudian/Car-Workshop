@@ -24,8 +24,8 @@
     {
       "fieldname": "barcode",
       "fieldtype": "Data",
-      "label": "Barcode",
-      "in_list_view": 1
+      "in_list_view": 1,
+      "label": "Barcode"
     },
     {
       "fieldname": "scan_barcode",
@@ -80,5 +80,6 @@
   "owner": "dannyaudian",
   "permissions": [],
   "sort_field": "modified",
-  "sort_order": "DESC"
+  "sort_order": "DESC",
+  "track_changes": 1
 }
