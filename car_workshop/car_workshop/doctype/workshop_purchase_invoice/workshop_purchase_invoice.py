@@ -330,13 +330,13 @@ def get_unpaid_purchase_order_items(purchase_order):
     for item in po_items:
         # Check if this item is referenced in any submitted invoice
         paid_invoices = frappe.db.sql("""
-            SELECT parent 
-            FROM `tabWorkshop Purchase Invoice Item` 
-            WHERE item_reference = %s 
+            SELECT parent
+            FROM `tabWorkshop Purchase Invoice Item`
+            WHERE item_reference = %s
             AND docstatus = 1
-        """, item.name, as_dict=1)
+        """, (item.name,), as_dict=1)
         
         if not paid_invoices:
             unpaid_items.append(item)
-    
+
     return unpaid_items
