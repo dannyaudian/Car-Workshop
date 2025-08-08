@@ -70,7 +70,16 @@ def setup_frappe_stub():
         return types.SimpleNamespace()
 
     frappe.get_doc = get_doc
-    frappe.get_all = lambda *args, **kwargs: []
+    def get_all(doctype, filters=None, fields=None, *args, **kwargs):
+        frappe.get_all_calls.append((doctype, filters, fields))
+        if doctype == "Part":
+            return [types.SimpleNamespace(name="PART-001", item_code="ITEM-001")]
+        if doctype == "Bin":
+            return [types.SimpleNamespace(item_code="ITEM-001", actual_qty=0, valuation_rate=0)]
+        return []
+
+    frappe.get_all_calls = []
+    frappe.get_all = get_all
     frappe.new_doc = lambda doctype: Document()
     frappe.msgprint = lambda msg: None
     frappe.whitelist = lambda *args, **kwargs: (lambda f: f)
@@ -97,7 +106,7 @@ def test_part_stock_opname_item_code():
     opname.warehouse = "WH"
     module.frappe = frappe
     opname.store_system_quantities()
-    assert frappe.db.calls[0][2] == "item_code"
+    assert "item_code" in frappe.get_all_calls[0][2]
 
 
 def test_return_material_item_code():

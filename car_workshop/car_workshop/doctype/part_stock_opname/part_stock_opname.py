@@ -86,28 +86,41 @@ class PartStockOpname(Document):
         when creating adjustment
         """
         system_quantities = {}
-        
+
+        # Collect unique part IDs from opname items
+        part_ids = list({item.part for item in self.opname_items if item.part})
+        if not part_ids:
+            self.system_quantities_cache = json.dumps(system_quantities)
+            return
+
+        # Fetch item codes for all parts in a single query
+        parts = frappe.get_all(
+            "Part", filters={"name": ["in", part_ids]}, fields=["name", "item_code"]
+        )
+        part_to_item_code = {p.name: p.item_code for p in parts if p.item_code}
+
+        # Prefetch Bin records for all item codes
+        item_codes = [p.item_code for p in parts if p.item_code]
+        bins = frappe.get_all(
+            "Bin",
+            filters={"item_code": ["in", item_codes], "warehouse": self.warehouse},
+            fields=["item_code", "actual_qty", "valuation_rate"],
+        )
+        bin_by_item_code = {b.item_code: b for b in bins}
+
+        # Populate system quantities using prefetched data
         for item in self.opname_items:
-            if not item.part:
+            part = item.part
+            if not part:
                 continue
-                
-            # Get the item_code linked to the part
-            item_code = frappe.db.get_value("Part", item.part, "item_code")
-            if not item_code:
-                continue
-                
-            # Get system quantity from Bin
-            bin_data = frappe.db.get_value(
-                "Bin",
-                {"item_code": item_code, "warehouse": self.warehouse},
-                ["actual_qty", "valuation_rate"],
-                as_dict=True
-            )
-            
-            system_quantities[item.part] = {
+
+            item_code = part_to_item_code.get(part)
+            bin_data = bin_by_item_code.get(item_code)
+
+            system_quantities[part] = {
                 "item_code": item_code,
                 "actual_qty": flt(bin_data.actual_qty) if bin_data else 0,
-                "valuation_rate": flt(bin_data.valuation_rate) if bin_data else 0
+                "valuation_rate": flt(bin_data.valuation_rate) if bin_data else 0,
             }
         
         # Store as JSON string in a hidden field
