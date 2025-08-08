@@ -27,6 +27,20 @@ class WorkOrderBilling(AccountsController):
         self.update_work_order_billing_status(cancel=True)
         self.make_gl_entries(cancel=True)
         self.cancel_linked_documents()
+        self.record_status_history()
+
+    def on_update_after_submit(self):
+        self.make_gl_entries(cancel=True)
+        self.make_gl_entries()
+
+    def on_update(self):
+        if self.has_value_changed("status"):
+            self.record_status_history()
+
+    def record_status_history(self):
+        """Log status changes with user and timestamp"""
+        message = _("Status changed to {0}").format(self.status)
+        self.add_comment("Info", message)
     
     def validate_work_order(self):
         if not self.work_order:
@@ -123,14 +137,16 @@ class WorkOrderBilling(AccountsController):
             self.status = "Draft"
         elif self.docstatus == 2:
             self.status = "Cancelled"
+        elif self.workflow_state == "Completed":
+            self.status = "Completed"
         elif self.payment_status == "Paid":
-            self.status = "Paid"
+            self.status = "Fully Paid"
         elif self.payment_status == "Partially Paid":
             self.status = "Partially Paid"
         elif getdate(self.due_date) < getdate(nowdate()):
             self.status = "Overdue"
         else:
-            self.status = "Pending"
+            self.status = "Pending Payment"
     
     def update_work_order_billing_status(self, cancel=False):
         if not self.work_order:

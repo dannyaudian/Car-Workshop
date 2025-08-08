@@ -136,7 +136,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Draft\nPending\nPaid\nPartially Paid\nOverdue\nCancelled",
+  "options": "Draft\nPending Payment\nPartially Paid\nFully Paid\nCompleted\nOverdue\nCancelled",
    "read_only": 1
   },
   {
