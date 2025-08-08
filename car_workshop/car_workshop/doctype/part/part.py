@@ -10,7 +10,7 @@ class Part(Document):
         """Update current price from linked Item"""
         if self.item_code:
             price = frappe.db.get_value("Item", self.item_code, "standard_rate")
-            if price:
+            if price is not None:
                 self.current_price = price
                 
     def validate_compatibility(self):
