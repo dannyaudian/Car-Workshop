@@ -1,0 +1,9 @@
+<div class="receipt">
+  <h2>Payment Receipt</h2>
+  <p>Work Order Billing: {{ doc.name }}</p>
+  <p>Customer: {{ doc.customer_name or doc.customer }}</p>
+  <p>Posting Date: {{ doc.posting_date }}</p>
+  {% set dp = doc.get_down_payment_amount() if doc.get_down_payment_amount else 0 %}
+  <p>Down Payment: {{ frappe.utils.fmt_money(dp) }}</p>
+  <p>Remaining Balance: {{ frappe.utils.fmt_money(doc.remaining_balance) }}</p>
+</div>

@@ -41,6 +41,9 @@
   "discount_amount",
   "grand_total",
   "rounded_total",
+  "down_payment_type",
+  "down_payment_amount",
+  "remaining_balance",
   "section_break_payment",
   "payment_method",
   "payment_details",
@@ -271,6 +274,24 @@
    "fieldname": "rounded_total",
    "fieldtype": "Currency",
    "label": "Rounded Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "down_payment_type",
+   "fieldtype": "Select",
+   "label": "Down Payment Type",
+   "options": "Percentage\nFixed"
+  },
+  {
+   "fieldname": "down_payment_amount",
+   "fieldtype": "Float",
+   "label": "Down Payment",
+   "description": "Enter percentage or fixed amount based on type"
+  },
+  {
+   "fieldname": "remaining_balance",
+   "fieldtype": "Currency",
+   "label": "Remaining Balance",
    "read_only": 1
   },
   {
