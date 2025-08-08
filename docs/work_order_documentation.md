@@ -49,6 +49,24 @@ The Work Order contains four primary child tables:
 3. **Work Order Part**: Parts used in the service
 4. **Work Order Expense**: Additional external expenses
 
+### Work Order Service Package
+
+Represents predefined service packages used in work orders.
+
+#### Fields
+
+- **Service Package**: Link to the predefined Service Package record
+- **Description**: Detailed description of the service package (auto-fetched)
+- **Total Price**: Price of the service package (auto-fetched)
+- **Currency**: Currency for the price (auto-fetched)
+- **Notes**: Additional notes specific to this application of the service package
+
+#### Behavior
+
+- Auto-fetches description, price, and currency from the linked Service Package
+- Read-only fields maintain consistency with the source package
+- Allows additional notes for context-specific information
+
 ### Work Order Expense
 
 Tracks external expenses related to a work order.
@@ -91,6 +109,12 @@ The client-side script provides robust functionality for:
   - Purchase order viewer with filtering and navigation
   - Material issue creation wizard
 
+### Service Package Handling
+
+- Auto-loads service package details including description and pricing
+- Updates totals whenever a service package is added, removed, or modified
+- Maintains pricing consistency with source packages
+
 ## Server-Side Logic
 
 ### Validation and Business Rules
@@ -108,6 +132,13 @@ The server-side code enforces important business rules:
    - Checks all required fields before submission
    - Ensures complete information for parts, job types, service packages, and expenses
 
+### Service Package Integration
+
+The `WorkOrderServicePackage` document includes validation logic that:
+- Fetches missing values from the linked Service Package
+- Ensures description, price, and currency are always correctly populated
+- Maintains data consistency when values change in the source package
+
 ### Financial Calculations
 
 Calculates the total amount by adding:
@@ -120,6 +151,7 @@ Calculates the total amount by adding:
 
 - **Material Issue Creation**: API endpoint to generate material issues from work orders
 - **Purchase Order Linking**: Associates parts and expenses with purchase orders
+- **Service Package Linking**: Connects to predefined service packages for standard service offerings
 
 ## Workflows and Processes
 
@@ -137,6 +169,20 @@ Calculates the total amount by adding:
 3. **Completion**:
    - All services recorded and verified
    - Status updated to "Completed"
+
+### Service Package Application
+
+1. **Selection**:
+   - User selects from predefined service packages
+   - System automatically pulls in details and pricing
+
+2. **Customization**:
+   - Notes can be added for specific application context
+   - Core details remain synchronized with master record
+
+3. **Calculation**:
+   - Package price automatically factored into total amount
+   - Consistent pricing maintained across work orders
 
 ### Material Management
 
@@ -160,6 +206,10 @@ The `make_material_issue` function provides a way to:
 3. **Financial Accuracy**:
    - Verify all prices and amounts
    - Include all external expenses with proper documentation
+
+4. **Service Packages**:
+   - Use standard service packages whenever possible for consistency
+   - Add notes to standard packages rather than modifying their core details
 
 ### When Processing Work Orders
 
@@ -194,3 +244,7 @@ The Work Order module integrates with:
 4. **Financial Management**:
    - GL account integration for expenses
    - Cost tracking and billing preparation
+
+5. **Service Package Management**:
+   - Standardized service offerings
+   - Consistent pricing and descriptions
