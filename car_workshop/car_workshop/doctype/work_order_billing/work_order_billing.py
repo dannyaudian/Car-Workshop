@@ -22,6 +22,7 @@ class WorkOrderBilling(AccountsController):
         self.update_work_order_billing_status()
         self.make_gl_entries()
         self.create_sales_invoice()
+        self.create_down_payment_entry()
         
     def on_cancel(self):
         self.update_work_order_billing_status(cancel=True)
@@ -75,6 +76,12 @@ class WorkOrderBilling(AccountsController):
         if getdate(self.due_date) < getdate(self.posting_date):
             frappe.throw(_("Due Date cannot be before Posting Date"))
     
+    def get_down_payment_amount(self):
+        amount = flt(self.down_payment_amount)
+        if self.down_payment_type == "Percentage":
+            return flt(self.grand_total) * amount / 100
+        return amount
+
     def calculate_totals(self):
         # Calculate job type items total
         self.total_services_amount = 0
@@ -120,14 +127,18 @@ class WorkOrderBilling(AccountsController):
         self.payment_amount = 0
         for payment in self.payment_details:
             self.payment_amount += flt(payment.amount)
-            
+
+        down_payment = self.get_down_payment_amount()
+        self.remaining_balance = flt(self.grand_total) - down_payment
+
         # Calculate balance amount
-        self.balance_amount = flt(self.grand_total) - flt(self.payment_amount)
+        self.balance_amount = flt(self.remaining_balance) - flt(self.payment_amount)
     
     def update_payment_status(self):
-        if flt(self.payment_amount) <= 0:
+        total_paid = flt(self.payment_amount) + self.get_down_payment_amount()
+        if total_paid <= 0:
             self.payment_status = "Unpaid"
-        elif flt(self.payment_amount) < flt(self.grand_total):
+        elif total_paid < flt(self.grand_total):
             self.payment_status = "Partially Paid"
         else:
             self.payment_status = "Paid"
@@ -435,6 +446,44 @@ class WorkOrderBilling(AccountsController):
             if not self.payment_entry:
                 self.db_set('payment_entry', pe.name)
     
+    def create_down_payment_entry(self):
+        """Create advance Payment Entry for down payment"""
+        advance_amount = self.get_down_payment_amount()
+        if advance_amount <= 0:
+            return
+        if not self.payment_details:
+            frappe.throw(_("Payment details are required for down payment"))
+        payment_detail = self.payment_details[0]
+        advance_account = frappe.get_cached_value('Company', self.company, 'default_customer_advance_account')
+        if not advance_account:
+            frappe.throw(_("Please set Default Customer Advance Account in Company settings"))
+        pe = frappe.new_doc("Payment Entry")
+        pe.payment_type = "Receive"
+        pe.party_type = "Customer"
+        pe.party = self.customer
+        pe.company = self.company
+        pe.posting_date = self.posting_date
+        pe.mode_of_payment = payment_detail.payment_method
+        pe.paid_from = advance_account
+        pe.paid_to = payment_detail.payment_account
+        pe.received_amount = advance_amount
+        pe.paid_amount = advance_amount
+        pe.is_advance = "Yes"
+        pe.reference_no = self.name
+        pe.reference_date = self.posting_date
+        pe.remarks = f"Down payment for Work Order Billing {self.name}"
+        if self.sales_invoice:
+            pe.append("references", {
+                "reference_doctype": "Sales Invoice",
+                "reference_name": self.sales_invoice,
+                "allocated_amount": advance_amount
+            })
+        pe.flags.ignore_permissions = True
+        pe.insert()
+        pe.submit()
+        if not self.payment_entry:
+            self.db_set('payment_entry', pe.name)
+
     def cancel_linked_documents(self):
         """Cancel linked Sales Invoice and Payment Entry"""
         # Cancel Sales Invoice
