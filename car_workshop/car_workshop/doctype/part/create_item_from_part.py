@@ -1,20 +1,24 @@
 import frappe
 from frappe import _
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=False)
 def create_item_from_part(part_name, part_number, brand, category):
-    """
-    Create a new Item from a Part
-    
+    """Create a new Item from a Part
+
     Args:
         part_name (str): Name of the part
         part_number (str): Part number to be used as item_code
         brand (str): Brand of the part
         category (str): Category of the part
-        
+
     Returns:
         str: Name of the created Item
     """
+
+    # Ensure the user has the appropriate role
+    if "Workshop Manager" not in frappe.get_roles():
+        frappe.throw(_("You do not have permission to create an Item from a Part."), frappe.PermissionError)
+
     # Validate if an item with the same item_code already exists
     if frappe.db.exists("Item", {"item_code": part_number}):
         frappe.throw(_("An Item with item_code {0} already exists").format(part_number))
