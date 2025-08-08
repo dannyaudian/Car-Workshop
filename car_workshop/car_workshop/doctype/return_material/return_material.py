@@ -257,7 +257,6 @@ class ReturnMaterial(Document):
             # Save the work order with updated consumed quantities
             work_order.flags.ignore_validate_update_after_submit = True
             work_order.save()
-            frappe.db.commit()
     
     def cancel_stock_entry_if_exists(self):
         """Cancel the corresponding Stock Entry if it exists"""
@@ -308,7 +307,6 @@ class ReturnMaterial(Document):
             # Save the work order with restored consumed quantities
             work_order.flags.ignore_validate_update_after_submit = True
             work_order.save()
-            frappe.db.commit()
 
 
 @frappe.whitelist()
