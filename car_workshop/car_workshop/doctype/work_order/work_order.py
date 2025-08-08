@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
-from frappe.utils import flt
+from frappe.utils import flt, nowdate, add_days
 from frappe.model.mapper import get_mapped_doc
 
 
@@ -120,8 +120,17 @@ class WorkOrder(Document):
                 frappe.throw(_("{0} is mandatory before submitting").format(field["label"]))
         
         # Check if there are any details in the Work Order
-        if not (self.job_type_detail or self.service_package_detail or self.part_detail):
-            frappe.throw(_("Work Order must have at least one Job Type, Service Package, or Part detail before submitting"))
+        if not (
+            self.job_type_detail
+            or self.service_package_detail
+            or self.part_detail
+            or self.external_expense
+        ):
+            frappe.throw(
+                _(
+                    "Work Order must have at least one Job Type, Service Package, Part, or Expense detail before submitting"
+                )
+            )
     
     def validate_part_details_before_submit(self):
         """Validate part details before submission"""
@@ -264,5 +273,18 @@ def make_billing(source_name, target_doc=None):
             }
         }
     }, target_doc, set_missing_values)
-    
+
     return doclist
+
+
+@frappe.whitelist()
+def make_supplementary_work_order(source_name):
+    """Create a supplementary Work Order from an existing Work Order."""
+    source = frappe.get_doc("Work Order", source_name)
+    target = frappe.new_doc("Work Order")
+    target.customer = source.customer
+    target.customer_vehicle = source.customer_vehicle
+    target.service_advisor = source.service_advisor
+    target.supplementary_of = source.name
+    target.service_date = nowdate()
+    return target

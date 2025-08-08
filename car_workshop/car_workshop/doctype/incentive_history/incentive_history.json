@@ -17,6 +17,12 @@
       "options": "Work Order"
     },
     {
+      "fieldname": "supplementary_of",
+      "fieldtype": "Link",
+      "label": "Supplementary Of",
+      "options": "Work Order"
+    },
+    {
       "fieldname": "work_order_billing",
       "fieldtype": "Link",
       "label": "Work Order Billing",

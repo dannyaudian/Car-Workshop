@@ -11,6 +11,7 @@
     "customer_vehicle",
     "service_date",
     "service_advisor",
+    "supplementary_of",
     "column_break_5",
     "status",
     "workflow_state",
@@ -66,6 +67,13 @@
       "options": "Employee",
       "reqd": 1,
       "description": "Employee responsible for this work order"
+    },
+    {
+      "fieldname": "supplementary_of",
+      "fieldtype": "Link",
+      "label": "Supplementary Of",
+      "options": "Work Order",
+      "description": "Original Work Order if this is supplementary work"
     },
     {
       "fieldname": "column_break_5",
@@ -182,7 +190,7 @@
     {
       "group": "Reference",
       "link_doctype": "Customer Vehicle",
-      "link_fieldname": "customer_vehicle" 
+      "link_fieldname": "customer_vehicle"
     },
     {
       "group": "Transactions",
@@ -193,6 +201,11 @@
       "group": "Transactions",
       "link_doctype": "Workshop Purchase Order",
       "link_fieldname": "work_order"
+    },
+    {
+      "group": "Reference",
+      "link_doctype": "Work Order",
+      "link_fieldname": "supplementary_of"
     }
   ],
   "modified": "2025-05-29 02:01:09.000000",
