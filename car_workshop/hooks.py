@@ -94,7 +94,10 @@ doc_events = {
     },
     "Work Order Billing": {
         "validate": "car_workshop.car_workshop.doctype.work_order_billing.work_order_billing.validate",
-        "on_submit": "car_workshop.car_workshop.doctype.work_order_billing.work_order_billing.on_submit",
+        "on_submit": [
+            "car_workshop.car_workshop.doctype.work_order_billing.work_order_billing.on_submit",
+            "car_workshop.incentive_utils.process_work_order_billing",
+        ],
         "on_cancel": "car_workshop.car_workshop.doctype.work_order_billing.work_order_billing.on_cancel"
     }
 }
