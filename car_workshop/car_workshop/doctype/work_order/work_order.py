@@ -199,23 +199,16 @@ def make_material_issue(source_name, target_doc=None):
         target.remarks = _("Material Issue created from Work Order {0}").format(source_name)
         
     def update_item(source_obj, target_obj, source_parent):
-        # Find corresponding Part for this item
-        parts = frappe.get_all("Part", 
-            filters={"item": source_obj.item_code},
-            fields=["name", "description"])
-            
-        if parts:
-            # Set the Part and related fields
-            target_obj.part = parts[0].name
-            target_obj.description = parts[0].description
-            
-            # Get stock information for rate calculation
-            bin_data = frappe.db.get_value("Bin", 
-                {"item_code": source_obj.item_code, "warehouse": source_parent.source_warehouse}, 
-                ["valuation_rate"], as_dict=1) or {"valuation_rate": 0}
-                
-            target_obj.rate = bin_data.valuation_rate
-            target_obj.amount = flt(target_obj.qty) * flt(target_obj.rate)
+        # Set valuation rate and amount based on warehouse stock
+        bin_data = frappe.db.get_value(
+            "Bin",
+            {"item_code": source_obj.item_code, "warehouse": source_parent.source_warehouse},
+            ["valuation_rate"],
+            as_dict=1,
+        ) or {"valuation_rate": 0}
+
+        target_obj.rate = bin_data.valuation_rate
+        target_obj.amount = flt(target_obj.qty) * flt(target_obj.rate)
     
     # Get the source document
     doc = frappe.get_doc("Work Order", source_name)
@@ -232,12 +225,12 @@ def make_material_issue(source_name, target_doc=None):
                 "docstatus": ["=", 1]  # Only allow if Work Order is submitted
             }
         },
-        "Work Order Item": {  # Assuming this is the name of your required_items table
+        "Work Order Part": {
             "doctype": "Workshop Material Issue Item",
             "field_map": {
+                "part": "part",
                 "item_code": "item_code",
-                "required_qty": "qty",
-                "stock_uom": "uom"
+                "quantity": "qty",
             },
             "postprocess": update_item
         }
