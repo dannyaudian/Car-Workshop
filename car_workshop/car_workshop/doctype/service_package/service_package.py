@@ -1,5 +1,6 @@
 import frappe
 from frappe.model.document import Document
+from collections import defaultdict
 
 class ServicePackage(Document):
     def validate(self):
@@ -15,28 +16,68 @@ class ServicePackage(Document):
         """Calculate totals for the service package"""
         total_amount = 0
         total_time = 0
-        
+
+        # Gather unique job types and parts for bulk lookup
+        job_types = list({d.job_type for d in self.details if d.item_type == "Job" and d.job_type})
+        part_names = list({d.part for d in self.details if d.item_type == "Part" and d.part})
+
+        job_rates = {}
+        job_durations = {}
+
+        if job_types:
+            job_data = frappe.get_all(
+                "Job Type",
+                filters={"name": ["in", job_types]},
+                fields=["name", "standard_rate", "time_minutes"],
+            )
+
+            missing_rate = []
+            for jd in job_data:
+                job_rates[jd.name] = jd.standard_rate or 0
+                job_durations[jd.name] = jd.time_minutes or 0
+                if not jd.standard_rate:
+                    missing_rate.append(jd.name)
+
+            if missing_rate:
+                item_data = frappe.get_all(
+                    "Job Type Item",
+                    filters={"parent": ["in", missing_rate]},
+                    fields=["parent", "qty", "rate", "amount"],
+                )
+                totals = defaultdict(float)
+                for item in item_data:
+                    totals[item.parent] += item.amount or (item.qty * item.rate) or 0
+                for jt in missing_rate:
+                    job_rates[jt] = totals.get(jt, 0)
+
+        part_prices = {}
+        if part_names:
+            part_data = frappe.get_all(
+                "Part",
+                filters={"name": ["in", part_names]},
+                fields=["name", "current_price"],
+            )
+            for pd in part_data:
+                part_prices[pd.name] = pd.current_price or 0
+
         for detail in self.details:
             # Ensure each detail has an amount
             if not detail.amount:
                 if detail.item_type == "Job":
-                    # Get rate from JobType - based on the structure in job_type.py
-                    # Since JobType uses a child table for items, we need to get the total rate differently
-                    rate = self.get_job_type_rate(detail.job_type)
+                    rate = job_rates.get(detail.job_type, 0)
                 elif detail.item_type == "Part":
-                    rate = frappe.db.get_value("Part", detail.part, "current_price") or 0
+                    rate = part_prices.get(detail.part, 0)
                 else:
                     rate = 0
-                
+
                 detail.rate = rate
                 detail.amount = (detail.quantity or 1) * rate
-            
+
             total_amount += detail.amount
-            
+
             # Add time if job type has duration
             if detail.item_type == "Job" and detail.job_type:
-                time_minutes = frappe.db.get_value("Job Type", detail.job_type, "time_minutes") or 0
-                total_time += time_minutes * (detail.quantity or 1)
+                total_time += job_durations.get(detail.job_type, 0) * (detail.quantity or 1)
         
         # Update package totals
         self.price = total_amount
