@@ -10,16 +10,19 @@ frappe.ui.form.on('Workshop Purchase Receipt', {
         
         // Update dashboard information if available
         if (frm.doc.total_received_amount) {
+            const totalAmount = frappe.utils.escape_html(format_currency(frm.doc.total_received_amount));
+            const po = frappe.utils.escape_html(frm.doc.purchase_order || '');
+            const poLink = `/app/workshop-purchase-order/${encodeURIComponent(po)}`;
             let dashboard_html = `
                 <div class="row">
                     <div class="col-sm-6">
                         <div class="stat-label">${__('Total Received Amount')}</div>
-                        <div class="stat-value">${format_currency(frm.doc.total_received_amount)}</div>
+                        <div class="stat-value">${totalAmount}</div>
                     </div>
                     <div class="col-sm-6">
                         <div class="stat-label">${__('Purchase Order')}</div>
                         <div class="stat-value">
-                            <a href="/app/workshop-purchase-order/${frm.doc.purchase_order}">${frm.doc.purchase_order}</a>
+                            <a href="${poLink}">${po}</a>
                         </div>
                     </div>
                 </div>
@@ -111,9 +114,11 @@ frappe.ui.form.on('Workshop Purchase Receipt Item', {
         // Validate total received quantity doesn't exceed ordered quantity
         let total_received = flt(row.previously_received_qty) + flt(row.received_qty);
         if (total_received > flt(row.ordered_qty)) {
+            const total = frappe.utils.escape_html(String(total_received));
+            const ordered = frappe.utils.escape_html(String(row.ordered_qty));
             frappe.show_alert({
-                message: __('Total received quantity ({0}) cannot exceed ordered quantity ({1})', 
-                          [total_received, row.ordered_qty]),
+                message: __('Total received quantity ({0}) cannot exceed ordered quantity ({1})',
+                          [total, ordered]),
                 indicator: 'red'
             });
         }

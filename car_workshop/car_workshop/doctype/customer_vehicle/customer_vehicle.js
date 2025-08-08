@@ -12,44 +12,53 @@ frappe.ui.form.on("Customer Vehicle", {
                         if (response.message) {
                             const log = response.message;
                             const formattedDate = frappe.datetime.str_to_user(log.change_date);
-                            
+                            const escape = frappe.utils.escape_html;
+
+                            const changeType = escape(log.change_type || 'Perubahan');
+                            const fieldLabel = escape(frappe.meta.get_label('Customer Vehicle', log.fieldname) || log.fieldname);
+                            const oldValue = escape(log.old_value || '-');
+                            const newValue = escape(log.new_value || '-');
+                            const safeDate = escape(formattedDate);
+                            const updatedBy = escape(log.updated_by || '');
+                            const remarks = log.remarks ? escape(log.remarks) : '';
+
                             let message = `
                                 <div style="max-width: 500px;">
                                     <div class="font-weight-bold mb-2 text-primary">
-                                        ${log.change_type || 'Perubahan'}
+                                        ${changeType}
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-4 font-weight-bold">Field</div>
-                                        <div class="col-8">${frappe.meta.get_label('Customer Vehicle', log.fieldname) || log.fieldname}</div>
+                                        <div class="col-8">${fieldLabel}</div>
                                     </div>`;
-                            
+
                             if (log.old_value || log.new_value) {
                                 message += `
                                     <div class="row mb-2">
                                         <div class="col-4 font-weight-bold">Nilai Lama</div>
-                                        <div class="col-8">${log.old_value || '-'}</div>
+                                        <div class="col-8">${oldValue}</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-4 font-weight-bold">Nilai Baru</div>
-                                        <div class="col-8">${log.new_value || '-'}</div>
+                                        <div class="col-8">${newValue}</div>
                                     </div>`;
                             }
 
                             message += `
                                 <div class="row mb-2">
                                     <div class="col-4 font-weight-bold">Tanggal</div>
-                                    <div class="col-8">${formattedDate}</div>
+                                    <div class="col-8">${safeDate}</div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-4 font-weight-bold">Oleh</div>
-                                    <div class="col-8">${log.updated_by}</div>
+                                    <div class="col-8">${updatedBy}</div>
                                 </div>`;
-                            
+
                             if (log.remarks) {
                                 message += `
                                     <div class="row mb-2">
                                         <div class="col-4 font-weight-bold">Catatan</div>
-                                        <div class="col-8">${log.remarks}</div>
+                                        <div class="col-8">${remarks}</div>
                                     </div>`;
                             }
 

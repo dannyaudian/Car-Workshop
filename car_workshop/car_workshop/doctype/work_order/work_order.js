@@ -344,14 +344,18 @@ function render_po_html($wrapper, related_pos) {
     
     // Add rows for each purchase order
     related_pos.forEach(function(po) {
+        const purchaseOrder = frappe.utils.escape_html(po.purchase_order || '');
+        const source = frappe.utils.escape_html(po.source || '');
+        const vendor = frappe.utils.escape_html(po.vendor || '');
+        const status = frappe.utils.escape_html(po.status || '');
         html += `
             <tr>
-                <td>${po.purchase_order}</td>
-                <td>${po.source || ''}</td>
-                <td>${po.vendor || ''}</td>
-                <td>${po.status || ''}</td>
+                <td>${purchaseOrder}</td>
+                <td>${source}</td>
+                <td>${vendor}</td>
+                <td>${status}</td>
                 <td>
-                    <button class="btn btn-xs btn-default view-po" data-name="${po.purchase_order}">
+                    <button class="btn btn-xs btn-default view-po" data-name="${purchaseOrder}">
                         ${__('View')}
                     </button>
                 </td>

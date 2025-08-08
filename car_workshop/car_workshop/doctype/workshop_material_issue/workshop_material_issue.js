@@ -330,14 +330,17 @@ function check_stock_availability(frm, cdt, cdn) {
                 if (flt(item.qty) > available_qty) {
                     // Add warning indicator
                     var field = frm.fields_dict.items.grid.grid_rows_by_docname[cdn].columns.qty;
-                    
+
                     // Add warning with specific class for styling
                     $(field.field_area).find('.control-value').addClass('insufficient-stock');
-                    
+
                     // Show warning message
+                    const itemCode = frappe.utils.escape_html(item.item_code);
+                    const available = frappe.utils.escape_html(String(available_qty));
+                    const warehouse = frappe.utils.escape_html(frm.doc.set_warehouse || '');
                     frappe.show_alert({
-                        message: __('Warning: Available quantity of {0} is {1} in {2}', 
-                            [item.item_code, available_qty, frm.doc.set_warehouse]),
+                        message: __('Warning: Available quantity of {0} is {1} in {2}',
+                            [itemCode, available, warehouse]),
                         indicator: 'orange'
                     }, 5);
                 } else {

@@ -148,22 +148,26 @@ frappe.ui.form.on('Workshop Purchase Order Item', {
 // Update the dashboard display
 function update_dashboard(frm) {
     if (frm.doc.total_amount) {
+        const totalAmount = frappe.utils.escape_html(format_currency(frm.doc.total_amount));
+        const billableAmount = frm.doc.billable_amount ? frappe.utils.escape_html(format_currency(frm.doc.billable_amount)) : '';
+        const nonBillableAmount = frm.doc.non_billable_amount ? frappe.utils.escape_html(format_currency(frm.doc.non_billable_amount)) : '';
+
         let dashboard_html = `
             <div class="row">
                 <div class="col-sm-4">
                     <div class="stat-label">${__('Total Amount')}</div>
-                    <div class="stat-value">${format_currency(frm.doc.total_amount)}</div>
+                    <div class="stat-value">${totalAmount}</div>
                 </div>
                 ${frm.doc.billable_amount ? `
                 <div class="col-sm-4">
                     <div class="stat-label">${__('Billable Amount')}</div>
-                    <div class="stat-value text-success">${format_currency(frm.doc.billable_amount)}</div>
+                    <div class="stat-value text-success">${billableAmount}</div>
                 </div>
                 ` : ''}
                 ${frm.doc.non_billable_amount ? `
                 <div class="col-sm-4">
                     <div class="stat-label">${__('Non-Billable Amount')}</div>
-                    <div class="stat-value text-muted">${format_currency(frm.doc.non_billable_amount)}</div>
+                    <div class="stat-value text-muted">${nonBillableAmount}</div>
                 </div>
                 ` : ''}
             </div>
@@ -310,7 +314,7 @@ function show_fetch_dialog(frm) {
                 fieldname: 'work_order_display',
                 fieldtype: 'HTML',
                 options: `<div class="alert alert-info">
-                    ${__('Selected Work Order')}: <strong>${frm.doc.work_order}</strong>
+                    ${__('Selected Work Order')}: <strong>${frappe.utils.escape_html(frm.doc.work_order || '')}</strong>
                 </div>`
             },
             {
@@ -625,8 +629,9 @@ function show_add_item_dialog(frm) {
                         dialog.set_value('description', r.part_name);
                         dialog.set_value('rate', r.current_price);
                     } else {
+                        const ref = frappe.utils.escape_html(reference);
                         frappe.show_alert({
-                            message: __(`Part '${reference}' details not found`),
+                            message: __('Part "{0}" details not found', [ref]),
                             indicator: 'orange'
                         });
                     }
@@ -640,8 +645,9 @@ function show_add_item_dialog(frm) {
                         dialog.set_value('description', r.description);
                         dialog.set_value('rate', r.default_price);
                     } else {
+                        const ref = frappe.utils.escape_html(reference);
                         frappe.show_alert({
-                            message: __(`Job Type '${reference}' details not found`),
+                            message: __('Job Type "{0}" details not found', [ref]),
                             indicator: 'orange'
                         });
                     }
@@ -656,8 +662,9 @@ function show_add_item_dialog(frm) {
                         dialog.set_value('rate', r.default_rate || 0);
                     } else {
                         dialog.set_value('description', reference);
+                        const ref = frappe.utils.escape_html(reference);
                         frappe.show_alert({
-                            message: __(`Expense Type '${reference}' details not found`),
+                            message: __('Expense Type "{0}" details not found', [ref]),
                             indicator: 'orange'
                         });
                     }
@@ -676,8 +683,9 @@ function show_add_item_dialog(frm) {
 function mark_as_received(frm) {
     // Prevent duplicate updates - only allow if status is Submitted
     if (frm.doc.status !== "Submitted") {
+        const status = frappe.utils.escape_html(frm.doc.status);
         frappe.show_alert({
-            message: __('This Purchase Order is already marked as ' + frm.doc.status),
+            message: __('This Purchase Order is already marked as {0}', [status]),
             indicator: 'orange'
         });
         return;

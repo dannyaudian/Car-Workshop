@@ -21,7 +21,8 @@ frappe.ui.form.on('Workshop Purchase Invoice', {
         
         // Display payment information if available
         if (frm.doc.payment_entry) {
-            frm.set_intro(__(`Payment Entry: ${frm.doc.payment_entry}`), 'blue');
+            const entry = frappe.utils.escape_html(frm.doc.payment_entry);
+            frm.set_intro(__('Payment Entry: {0}', [entry]), 'blue');
         }
     },
     
@@ -170,20 +171,21 @@ async function make_payment_entry(frm) {
             frm.reload_doc();
             
             // Show success message
+            const entry = frappe.utils.escape_html(payment_entry);
+            const entry_link = `<a href="/app/payment-entry/${encodeURIComponent(entry)}">${entry}</a>`;
             frappe.show_alert({
-                message: __('Payment Entry {0} created successfully', [
-                    `<a href="/app/payment-entry/${payment_entry}">${payment_entry}</a>`
-                ]),
+                message: __('Payment Entry {0} created successfully', [entry_link]),
                 indicator: 'green'
             }, 5);
             
             return payment_entry;
         }
     } catch (error) {
+        const err = frappe.utils.escape_html(error.message || error);
         frappe.msgprint({
             title: __('Error Creating Payment'),
             indicator: 'red',
-            message: __('Could not create Payment Entry: {0}', [error.message || error])
+            message: __('Could not create Payment Entry: {0}', [err])
         });
     } finally {
         frappe.dom.unfreeze();
