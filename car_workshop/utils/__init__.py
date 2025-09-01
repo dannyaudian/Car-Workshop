@@ -32,4 +32,3 @@ def validate_mandatory_fields(doc, method: str | None = None) -> None:
     # Increment document version for change tracking
     current_version = frappe.utils.cint(doc.get("version"))
     doc.version = current_version + 1
-
