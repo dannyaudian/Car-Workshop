@@ -168,7 +168,7 @@ async function fetchWorkOrderDetails(frm) {
     try {
         // Get work order details using the aggregator function
         const data = await frappe.xcall(
-            'car_workshop.car_workshop.doctype.work_order_billing.work_order_billing.get_work_order_billing_source',
+            'car_workshop.api.billing_api.get_work_order_billing_source',
             { 
                 work_order: frm.doc.work_order 
             }
