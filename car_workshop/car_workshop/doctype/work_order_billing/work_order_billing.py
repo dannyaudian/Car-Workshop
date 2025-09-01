@@ -11,7 +11,7 @@ from frappe.utils import flt, getdate, nowdate, add_days, get_datetime
 from erpnext.controllers.accounts_controller import AccountsController
 
 
-class WorkOrderBilling(AccountsController):
+class WorkOrderBilling(Document):
     def validate(self):
         self.validate_work_order()
         self.validate_dates()
