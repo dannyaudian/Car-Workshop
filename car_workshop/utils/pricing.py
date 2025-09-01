@@ -1,34 +1,38 @@
-"""Pricing helpers for Car Workshop"""
+# Copyright (c) 2023, PT. Innovasi Terbaik Bangsa and contributors
+# For license information, please see license.txt
 
-from __future__ import annotations
-
-from typing import Any, Dict
-
+from typing import Dict, Optional, Any, Union
+from datetime import date
 import frappe
-from frappe.utils import flt
-
-from car_workshop.car_workshop.doctype.service_price_list.get_active_service_price import (
-    get_active_service_price,
-)
-
+from frappe.utils import flt, getdate
 
 def resolve_rate(
     reference_type: str,
     reference_name: str,
     price_list: str,
-    posting_date: str,
-) -> Dict[str, Any] | None:
-    """Resolve the rate for a reference using Item Price or Service Price List.
+    posting_date: Optional[Union[str, date]] = None
+) -> Dict[str, Any]:
+    """
+    Resolve the rate for a reference item with the following priority:
+    1. Item Price (for Parts linked to Items)
+    2. Service Price List as a fallback
 
     Args:
-        reference_type: DocType of the reference (e.g. "Part", "Job Type").
-        reference_name: Name of the reference document.
-        price_list: Selling price list to use for lookup.
-        posting_date: Date on which price is applicable.
+        reference_type: Type of reference (Job Type, Part, Service Package)
+        reference_name: Name of the reference
+        price_list: Price list to check
+        posting_date: Date for validity check (defaults to today)
 
     Returns:
-        A dictionary containing rate information or ``None`` if no price is found.
+        Dict: Dictionary with rate and other pricing details
     """
+    from car_workshop.car_workshop.doctype.service_price_list.get_active_service_price import (
+        get_active_service_price,
+    )
+
+    if not posting_date:
+        posting_date = getdate()
+
     if not (reference_type and reference_name and price_list):
         return None
 
@@ -73,3 +77,4 @@ def resolve_rate(
         return data
 
     return None
+

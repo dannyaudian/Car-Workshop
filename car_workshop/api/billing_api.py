@@ -7,6 +7,7 @@ from frappe import _
 from frappe.utils import flt, nowdate
 
 from car_workshop.utils.pricing import resolve_rate
+from car_workshop.mapping.work_order_billing_to_sales_invoice import map_to_sales_invoice
 
 
 @frappe.whitelist()
@@ -108,3 +109,28 @@ def get_work_order_billing_source(work_order: str) -> Dict[str, List[Dict[str, A
         result["external_services"].append(service)
 
     return result
+
+
+@frappe.whitelist()
+def make_sales_invoice(docname: str) -> str:
+    """
+    Create a Sales Invoice from Work Order Billing
+    
+    Args:
+        docname: Work Order Billing document name
+    
+    Returns:
+        str: The created Sales Invoice name
+    """
+    # Check permissions
+    if not frappe.has_permission("Sales Invoice", "create"):
+        raise frappe.PermissionError(_("Not permitted to create Sales Invoice"))
+    
+    # Check if the document exists and is accessible
+    doc = frappe.get_doc("Work Order Billing", docname)
+    doc.check_permission("read")
+    
+    # Map to Sales Invoice
+    sales_invoice_name = map_to_sales_invoice(docname)
+    
+    return sales_invoice_name

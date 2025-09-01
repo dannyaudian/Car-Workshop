@@ -1,15 +1,12 @@
 # Copyright (c) 2023, PT. Innovasi Terbaik Bangsa and contributors
 # For license information, please see license.txt
 
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.model.mapper import get_mapped_doc
 from frappe.utils import flt, getdate, nowdate, add_days, get_datetime
-from erpnext.controllers.accounts_controller import AccountsController
-from car_workshop.utils.pricing import resolve_rate
 
 
 class WorkOrderBilling(Document):
@@ -108,14 +105,14 @@ class WorkOrderBilling(Document):
     
     def validate_dates(self) -> None:
         """Set default dates and validate due date"""
-        if not self.posting_date:
-            self.posting_date = nowdate()
+        if not self.transaction_date:
+            self.transaction_date = nowdate()
             
         if not self.due_date:
-            self.due_date = add_days(self.posting_date, 30)  # Default 30 days due date
+            self.due_date = add_days(self.transaction_date, 30)  # Default 30 days due date
             
-        if getdate(self.due_date) < getdate(self.posting_date):
-            frappe.throw(_("Due Date cannot be before Posting Date"))
+        if getdate(self.due_date) < getdate(self.transaction_date):
+            frappe.throw(_("Due Date cannot be before Transaction Date"))
     
     def calculate_totals(self) -> None:
         """
@@ -160,7 +157,7 @@ class WorkOrderBilling(Document):
         self.grand_total = flt(self.subtotal) + flt(self.tax_amount) - flt(self.discount_amount)
         
         # Calculate rounded total
-        self.rounded_total = round(self.grand_total)
+        self.rounded_total_preview = round(self.grand_total)
         
         # Calculate payment amount total (for preview)
         self.payment_amount = 0
@@ -273,117 +270,3 @@ class WorkOrderBilling(Document):
                 }
             ]
         }
-
-
-@frappe.whitelist()
-@frappe.whitelist()
-def make_sales_invoice(source_name: str, target_doc: Optional[Dict] = None) -> Union[Dict, str]:
-    """
-    Create Sales Invoice from Work Order Billing
-    
-    Args:
-        source_name: Work Order Billing document name
-        target_doc: Target document (optional)
-        
-    Returns:
-        Union[Dict, str]: The created Sales Invoice document or its name
-    """
-    def set_missing_values(source: Document, target: Document) -> None:
-        target.is_pos = 0
-        target.ignore_pricing_rule = 1
-        target.run_method("set_missing_values")
-        
-    def add_item_rows(source: Document, target: Document, source_parent: Document) -> None:
-        """Add all billable items to the Sales Invoice"""
-        # Add job type items
-        for item in source_parent.job_type_items:
-            item_code = frappe.db.get_value("Job Type", item.job_type, "item")
-            if not item_code:
-                continue
-                
-            si_item = target.append("items", {})
-            si_item.item_code = item_code
-            si_item.qty = item.hours
-            si_item.rate = item.rate
-            si_item.amount = item.amount
-            si_item.description = f"Job: {item.job_type_name}"
-            
-        # Add service package items
-        for item in source_parent.service_package_items:
-            item_code = frappe.db.get_value("Service Package", item.service_package, "item")
-            if not item_code:
-                continue
-                
-            si_item = target.append("items", {})
-            si_item.item_code = item_code
-            si_item.qty = item.quantity
-            si_item.rate = item.rate
-            si_item.amount = item.amount
-            si_item.description = f"Service Package: {item.service_package_name}"
-            
-        # Add part items
-        for item in source_parent.part_items:
-            item_code = frappe.db.get_value("Part", item.part, "item")
-            if not item_code:
-                continue
-                
-            si_item = target.append("items", {})
-            si_item.item_code = item_code
-            si_item.qty = item.quantity
-            si_item.rate = item.rate
-            si_item.amount = item.amount
-            si_item.description = f"Part: {item.part_name}"
-            
-        # Add external service items
-        for item in source_parent.external_service_items:
-            default_service_item = frappe.db.get_single_value(
-                "Car Workshop Settings", "default_external_service_item"
-            )
-            if not default_service_item:
-                frappe.throw(_("Please set Default External Service Item in Car Workshop Settings"))
-                
-            si_item = target.append("items", {})
-            si_item.item_code = default_service_item
-            si_item.qty = 1
-            si_item.rate = item.rate
-            si_item.amount = item.amount
-            si_item.description = f"External Service: {item.service_name}"
-            
-        # Add taxes if applicable
-        if source_parent.taxes_and_charges:
-            target.taxes_and_charges = source_parent.taxes_and_charges
-            
-        # Apply discount if applicable
-        if flt(source_parent.discount_amount) > 0:
-            target.apply_discount_on = "Grand Total"
-            target.discount_amount = source_parent.discount_amount
-    
-    doc = get_mapped_doc(
-        "Work Order Billing", 
-        source_name,
-        {
-            "Work Order Billing": {
-                "doctype": "Sales Invoice",
-                "field_map": {
-                    "name": "work_order_billing",
-                    "work_order": "work_order",
-                    "customer_vehicle": "customer_vehicle",
-                    "posting_date": "posting_date",
-                    "due_date": "due_date"
-                },
-                "validation": {
-                    "docstatus": ["=", 1]
-                },
-                "postprocess": add_item_rows
-            }
-        }, 
-        target_doc, 
-        set_missing_values
-    )
-    
-    doc.save()
-    
-    # Update source document with Sales Invoice reference
-    frappe.db.set_value("Work Order Billing", source_name, "sales_invoice", doc.name)
-    
-    return doc.name if isinstance(doc, str) else doc
