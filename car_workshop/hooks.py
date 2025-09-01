@@ -262,3 +262,38 @@ scheduler_events = {
 barcode_handlers = {
     "Part": "car_workshop.car_workshop.doctype.part_stock_opname.part_stock_opname.get_part_from_barcode"
 }
+
+# Data fixtures
+fixtures = [
+    {
+        "doctype": "Custom Field",
+        "filters": [["module", "=", "Car Workshop"]]
+    },
+    {
+        "doctype": "Custom Field",
+        "filters": [
+            ["dt", "=", "Item"],
+            ["fieldname", "in", ["cw_part_section", "cw_part", "cw_part_number", "cw_part_name", "cw_category", "cw_current_price"]]
+        ]
+    },
+    {
+        "doctype": "Client Script",
+        "filters": [["module", "=", "Car Workshop"]]
+    },
+    {
+        "doctype": "Property Setter",
+        "filters": [["module", "=", "Car Workshop"]]
+    },
+    {
+        "doctype": "Role",
+        "filters": [["name", "in", ["Workshop Manager", "Technician", "Car Workshop Manager"]]]
+    },
+    {
+        "doctype": "Workspace",
+        "filters": [["name", "=", "Car Workshop"]]
+    },
+    {
+        "doctype": "Print Format",
+        "filters": [["module", "=", "Car Workshop"]]
+    }
+]
