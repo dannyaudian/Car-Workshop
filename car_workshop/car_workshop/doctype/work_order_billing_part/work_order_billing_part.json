@@ -10,13 +10,12 @@
     "warehouse",
     "quantity",
     "uom",
-    "conversion_factor",
     "column_break_rbukl",
     "rate",
     "cost",
     "amount",
     "from_work_order",
-    "work_order_part"
+    "work_order_row"
   ],
   "fields": [
     {
@@ -59,13 +58,6 @@
       "read_only": 1
     },
     {
-      "default": "1",
-      "fieldname": "conversion_factor",
-      "fieldtype": "Float",
-      "label": "Conversion Factor",
-      "read_only": 1
-    },
-    {
       "fieldname": "column_break_rbukl",
       "fieldtype": "Column Break"
     },
@@ -97,10 +89,9 @@
       "read_only": 1
     },
     {
-      "fieldname": "work_order_part",
-      "fieldtype": "Link",
-      "label": "Work Order Part",
-      "options": "Work Order Part",
+      "fieldname": "work_order_row",
+      "fieldtype": "Data",
+      "label": "Work Order Row Reference",
       "read_only": 1
     }
   ],
@@ -114,6 +105,5 @@
   "permissions": [],
   "sort_field": "modified",
   "sort_order": "DESC",
-  "states": [],
-  "track_changes": 1
+  "states": []
 }

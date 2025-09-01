@@ -12,7 +12,7 @@
     "column_break_hdmwn",
     "amount",
     "from_work_order",
-    "work_order_job_type"
+    "work_order_row"
   ],
   "fields": [
     {
@@ -39,7 +39,6 @@
       "reqd": 1
     },
     {
-      "fetch_from": "job_type.rate",
       "fieldname": "rate",
       "fieldtype": "Currency",
       "in_list_view": 1,
@@ -65,10 +64,9 @@
       "read_only": 1
     },
     {
-      "fieldname": "work_order_job_type",
-      "fieldtype": "Link",
-      "label": "Work Order Job Type",
-      "options": "Work Order Job Type",
+      "fieldname": "work_order_row",
+      "fieldtype": "Data",
+      "label": "Work Order Row Reference",
       "read_only": 1
     }
   ],
@@ -82,6 +80,5 @@
   "permissions": [],
   "sort_field": "modified",
   "sort_order": "DESC",
-  "states": [],
-  "track_changes": 1
+  "states": []
 }

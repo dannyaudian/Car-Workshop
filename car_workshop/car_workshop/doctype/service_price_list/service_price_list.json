@@ -82,8 +82,7 @@
       "fieldtype": "Check",
       "in_list_view": 1,
       "in_standard_filter": 1,
-      "label": "Is Active",
-      "reqd": 1
+      "label": "Is Active"
     }
   ],
   "index_web_pages_for_search": 0,
@@ -92,9 +91,21 @@
   "modified_by": "Administrator",
   "module": "Car Workshop",
   "name": "Service Price List",
-  "naming_rule": "",
+  "naming_rule": "Random",
   "owner": "Administrator",
   "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
     {
       "create": 1,
       "delete": 1,
@@ -106,8 +117,18 @@
       "role": "Car Workshop Manager",
       "share": 1,
       "write": 1
+    },
+    {
+      "read": 1,
+      "report": 1,
+      "role": "Workshop Manager"
+    },
+    {
+      "read": 1,
+      "role": "Cashier"
     }
   ],
+  "search_fields": "reference_type,reference_name,price_list",
   "sort_field": "modified",
   "sort_order": "DESC",
   "states": [],

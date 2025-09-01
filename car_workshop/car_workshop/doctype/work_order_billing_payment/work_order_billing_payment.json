@@ -19,15 +19,17 @@
       "fieldtype": "Select",
       "in_list_view": 1,
       "label": "Payment Method",
-      "options": "Cash\nCredit Card\nDebit Card\nBank Transfer\nCheck\nInsurance\nWarranty",
-      "reqd": 1
+      "options": "Cash\nBank Transfer\nCredit Card\nInsurance\nWarranty\nOthers",
+      "reqd": 1,
+      "description": "For information only. Actual payment will be processed in Sales Invoice."
     },
     {
       "fieldname": "payment_account",
       "fieldtype": "Link",
       "label": "Payment Account",
       "options": "Account",
-      "reqd": 1
+      "in_list_view": 1,
+      "description": "For information only. Actual payment will be processed in Sales Invoice."
     },
     {
       "fieldname": "amount",
@@ -44,7 +46,8 @@
       "fieldname": "reference_number",
       "fieldtype": "Data",
       "in_list_view": 1,
-      "label": "Reference Number"
+      "label": "Reference Number",
+      "description": "Transaction reference number (e.g., check number, card authorization)"
     },
     {
       "fieldname": "reference_date",
@@ -67,6 +70,5 @@
   "permissions": [],
   "sort_field": "modified",
   "sort_order": "DESC",
-  "states": [],
-  "track_changes": 1
+  "states": []
 }

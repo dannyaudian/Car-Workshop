@@ -1,138 +1,168 @@
 {
+ "creation": "2023-09-15 10:00:00.000000",
  "doctype": "Workflow",
+ "modified": "2023-09-15 10:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "Work Order Billing Workflow",
+ "owner": "Administrator",
  "workflow_name": "Work Order Billing Workflow",
  "document_type": "Work Order Billing",
  "is_active": 1,
+ "override_status": 1,
  "state_field": "workflow_state",
  "states": [
   {
    "state": "Draft",
-   "docstatus": 0,
+   "doc_status": 0,
    "allow_edit": "Workshop Manager",
    "update_field": "status",
    "update_value": "Draft",
-   "idx": 1
+   "is_optional_state": 0
+  },
+  {
+   "state": "Pending Approval",
+   "doc_status": 0,
+   "allow_edit": "Accountant",
+   "update_field": "status",
+   "update_value": "Pending Approval",
+   "is_optional_state": 0
   },
   {
    "state": "Pending Payment",
-   "docstatus": 1,
+   "doc_status": 1,
    "allow_edit": "Cashier",
    "update_field": "status",
    "update_value": "Pending Payment",
-   "idx": 2
+   "is_optional_state": 0
   },
   {
    "state": "Partially Paid",
-   "docstatus": 1,
+   "doc_status": 1,
    "allow_edit": "Cashier",
    "update_field": "status",
    "update_value": "Partially Paid",
-   "idx": 3
+   "is_optional_state": 0
   },
   {
    "state": "Fully Paid",
-   "docstatus": 1,
+   "doc_status": 1,
    "allow_edit": "Cashier",
    "update_field": "status",
    "update_value": "Fully Paid",
-   "idx": 4
+   "is_optional_state": 0
   },
- {
-  "state": "Completed",
-  "docstatus": 1,
-  "allow_edit": "Accountant",
-  "update_field": "status",
-  "update_value": "Completed",
-  "idx": 5
- },
- {
-  "state": "Cancelled",
-  "docstatus": 2,
-  "allow_edit": "Accountant",
-  "update_field": "status",
-  "update_value": "Cancelled",
-  "idx": 6
- }
-],
-"transitions": [
- {
-  "state": "Draft",
-  "action": "Submit",
-  "next_state": "Pending Payment",
-  "allowed": "Workshop Manager",
-  "condition": "doc.discount_amount <= doc.get_discount_threshold()",
-  "idx": 1
- },
- {
-  "state": "Draft",
-  "action": "Submit for Approval",
-  "next_state": "Pending Payment",
-  "allowed": "Accountant",
-  "condition": "doc.discount_amount > doc.get_discount_threshold()",
-  "idx": 2
- },
- {
-  "state": "Pending Payment",
-  "action": "Record Partial Payment",
-  "next_state": "Partially Paid",
-  "allowed": "Cashier",
-  "idx": 3
- },
- {
-  "state": "Pending Payment",
-  "action": "Record Full Payment",
-  "next_state": "Fully Paid",
-  "allowed": "Cashier",
-  "idx": 4
- },
- {
-  "state": "Partially Paid",
-  "action": "Record Remaining Payment",
-  "next_state": "Fully Paid",
-  "allowed": "Cashier",
-  "idx": 5
- },
- {
-  "state": "Fully Paid",
-  "action": "Complete",
-  "next_state": "Completed",
-  "allowed": "Accountant",
-  "idx": 6
- },
- {
-  "state": "Pending Payment",
-  "action": "Cancel",
-  "next_state": "Cancelled",
-  "allowed": "Accountant",
-  "idx": 7
- },
- {
-  "state": "Partially Paid",
-  "action": "Cancel",
-  "next_state": "Cancelled",
-  "allowed": "Accountant",
-  "idx": 8
- },
- {
-  "state": "Fully Paid",
-  "action": "Cancel",
-  "next_state": "Cancelled",
-  "allowed": "Accountant",
-  "idx": 9
- },
- {
-  "state": "Completed",
-  "action": "Cancel",
-  "next_state": "Cancelled",
-  "allowed": "Accountant",
-  "idx": 10
- },
- {
-  "state": "Cancelled",
-  "action": "Amend",
-  "next_state": "Draft",
-  "allowed": "Accountant",
-  "idx": 11
- }
-]
+  {
+   "state": "Completed",
+   "doc_status": 1,
+   "allow_edit": "Accountant",
+   "update_field": "status",
+   "update_value": "Completed",
+   "is_optional_state": 0
+  },
+  {
+   "state": "Cancelled",
+   "doc_status": 2,
+   "allow_edit": "Accountant",
+   "update_field": "status",
+   "update_value": "Cancelled",
+   "is_optional_state": 0
+  }
+ ],
+ "transitions": [
+  {
+   "state": "Draft",
+   "action": "Submit",
+   "next_state": "Pending Payment",
+   "allowed": "Workshop Manager",
+   "condition": "doc.discount_amount <= doc.get_discount_threshold() && doc.total_services_amount + doc.total_parts_amount + doc.total_external_services_amount > 0",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Draft",
+   "action": "Submit for Approval",
+   "next_state": "Pending Approval",
+   "allowed": "Workshop Manager",
+   "condition": "doc.discount_amount > doc.get_discount_threshold()",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Pending Approval",
+   "action": "Approve",
+   "next_state": "Pending Payment",
+   "allowed": "Accountant",
+   "condition": "doc.total_services_amount + doc.total_parts_amount + doc.total_external_services_amount > 0",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Pending Approval",
+   "action": "Reject",
+   "next_state": "Draft",
+   "allowed": "Accountant",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Pending Payment",
+   "action": "Record Partial Payment",
+   "next_state": "Partially Paid",
+   "allowed": "Cashier",
+   "condition": "doc.sales_invoice && frappe.db.get_value('Sales Invoice', doc.sales_invoice, 'status') == 'Partly Paid'",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Pending Payment",
+   "action": "Record Full Payment",
+   "next_state": "Fully Paid",
+   "allowed": "Cashier",
+   "condition": "doc.sales_invoice && frappe.db.get_value('Sales Invoice', doc.sales_invoice, 'status') == 'Paid'",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Partially Paid",
+   "action": "Record Remaining Payment",
+   "next_state": "Fully Paid",
+   "allowed": "Cashier",
+   "condition": "doc.sales_invoice && frappe.db.get_value('Sales Invoice', doc.sales_invoice, 'status') == 'Paid'",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Fully Paid",
+   "action": "Complete",
+   "next_state": "Completed",
+   "allowed": "Accountant",
+   "condition": "doc.sales_invoice && frappe.db.get_value('Sales Invoice', doc.sales_invoice, 'status') == 'Paid'",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Pending Payment",
+   "action": "Cancel",
+   "next_state": "Cancelled",
+   "allowed": "Accountant",
+   "condition": "doc.sales_invoice ? frappe.db.get_value('Sales Invoice', doc.sales_invoice, 'status') == 'Cancelled' : true",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Partially Paid",
+   "action": "Cancel",
+   "next_state": "Cancelled",
+   "allowed": "Accountant",
+   "condition": "doc.sales_invoice ? frappe.db.get_value('Sales Invoice', doc.sales_invoice, 'status') == 'Cancelled' : true",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Fully Paid",
+   "action": "Cancel",
+   "next_state": "Cancelled",
+   "allowed": "Accountant",
+   "condition": "doc.sales_invoice ? frappe.db.get_value('Sales Invoice', doc.sales_invoice, 'status') == 'Cancelled' : true",
+   "allow_self_approval": 1
+  },
+  {
+   "state": "Completed",
+   "action": "Cancel",
+   "next_state": "Cancelled",
+   "allowed": "Accountant",
+   "condition": "doc.sales_invoice ? frappe.db.get_value('Sales Invoice', doc.sales_invoice, 'status') == 'Cancelled' : true",
+   "allow_self_approval": 1
+  }
+ ]
 }

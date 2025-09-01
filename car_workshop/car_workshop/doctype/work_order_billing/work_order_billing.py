@@ -1,12 +1,15 @@
 # Copyright (c) 2023, PT. Innovasi Terbaik Bangsa and contributors
 # For license information, please see license.txt
 
+from typing import Dict, List, Optional, Any, Union
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, cint, getdate, nowdate, add_days, get_datetime
-from erpnext.accounts.party import get_party_account
+from frappe.model.mapper import get_mapped_doc
+from frappe.utils import flt, getdate, nowdate, add_days, get_datetime
 from erpnext.controllers.accounts_controller import AccountsController
+
 
 class WorkOrderBilling(AccountsController):
     def validate(self):
@@ -20,42 +23,45 @@ class WorkOrderBilling(AccountsController):
         
     def on_submit(self):
         self.update_work_order_billing_status()
-        self.make_gl_entries()
-        self.create_sales_invoice()
-        self.create_down_payment_entry()
-        self.process_returns_and_cancellations()
         self.record_status_history()
         
     def on_cancel(self):
         self.update_work_order_billing_status(cancel=True)
-        self.make_gl_entries(cancel=True)
         self.cancel_linked_documents()
         self.record_status_history()
-
-    def on_update_after_submit(self):
-        self.make_gl_entries(cancel=True)
-        self.make_gl_entries()
 
     def on_update(self):
         if self.has_value_changed("status"):
             self.record_status_history()
 
-    def record_status_history(self):
+    def record_status_history(self) -> None:
         """Log status changes with user and timestamp"""
         timestamp = get_datetime()
         user = getattr(frappe.session, "user", "Unknown")
         message = _("Status changed to {0} by {1} on {2}").format(self.status, user, timestamp)
         self.add_comment("Info", message)
 
-    def get_discount_threshold(self):
-        """Fetch the discount threshold from settings"""
+    def get_discount_threshold(self) -> float:
+        """
+        Fetch the discount threshold from settings
+        
+        Returns:
+            float: The discount approval threshold amount
+        """
         return flt(frappe.db.get_single_value("Car Workshop Settings", "discount_approval_threshold") or 0)
 
-    def get_discount_approver_roles(self):
+    def get_discount_approver_roles(self) -> List[str]:
+        """
+        Get the roles allowed to approve discounts
+        
+        Returns:
+            List[str]: List of role names
+        """
         roles = frappe.db.get_single_value("Car Workshop Settings", "discount_approver_roles") or "Accountant"
         return [r.strip() for r in roles.replace("\n", ",").split(",") if r.strip()]
 
-    def validate_discount_approval(self):
+    def validate_discount_approval(self) -> None:
+        """Validate if the discount requires approval and if current user can approve"""
         threshold = self.get_discount_threshold()
         if flt(self.discount_amount) <= threshold:
             return
@@ -72,7 +78,11 @@ class WorkOrderBilling(AccountsController):
         if getattr(self, "approval_status", "Pending Approval") != "Approved":
             frappe.throw(_("Discount exceeds allowed threshold and needs approval."))
     
-    def validate_work_order(self):
+    def validate_work_order(self) -> None:
+        """
+        Validate that the Work Order exists, is in completed state,
+        and has not been billed yet.
+        """
         if not self.work_order:
             frappe.throw(_("Work Order is required"))
         
@@ -95,7 +105,8 @@ class WorkOrderBilling(AccountsController):
             frappe.throw(_("Work Order {0} is already billed in {1}").format(
                 self.work_order, existing_billings[0].name))
     
-    def validate_dates(self):
+    def validate_dates(self) -> None:
+        """Set default dates and validate due date"""
         if not self.posting_date:
             self.posting_date = nowdate()
             
@@ -105,13 +116,11 @@ class WorkOrderBilling(AccountsController):
         if getdate(self.due_date) < getdate(self.posting_date):
             frappe.throw(_("Due Date cannot be before Posting Date"))
     
-    def get_down_payment_amount(self):
-        amount = flt(self.down_payment_amount)
-        if self.down_payment_type == "Percentage":
-            return flt(self.grand_total) * amount / 100
-        return amount
-
-    def calculate_totals(self):
+    def calculate_totals(self) -> None:
+        """
+        Calculate and update all total fields for the document.
+        This serves as a preview - final calculations will be done in Sales Invoice.
+        """
         # Calculate job type items total
         self.total_services_amount = 0
         for item in self.job_type_items:
@@ -138,7 +147,7 @@ class WorkOrderBilling(AccountsController):
         # Calculate subtotal
         self.subtotal = flt(self.total_services_amount) + flt(self.total_parts_amount) + flt(self.total_external_services_amount)
         
-        # Calculate tax amount
+        # Calculate tax amount - preview only, final tax calculated in SI
         self.tax_amount = 0
         if self.taxes_and_charges:
             tax_template = frappe.get_doc("Sales Taxes and Charges Template", self.taxes_and_charges)
@@ -152,18 +161,30 @@ class WorkOrderBilling(AccountsController):
         # Calculate rounded total
         self.rounded_total = round(self.grand_total)
         
-        # Calculate payment amount total
+        # Calculate payment amount total (for preview)
         self.payment_amount = 0
         for payment in self.payment_details:
             self.payment_amount += flt(payment.amount)
 
+        # Preview of down payment and balance
         down_payment = self.get_down_payment_amount()
         self.remaining_balance = flt(self.grand_total) - down_payment
-
-        # Calculate balance amount
         self.balance_amount = flt(self.remaining_balance) - flt(self.payment_amount)
     
-    def update_payment_status(self):
+    def get_down_payment_amount(self) -> float:
+        """
+        Calculate down payment amount based on type and value
+        
+        Returns:
+            float: Calculated down payment amount
+        """
+        amount = flt(self.down_payment_amount)
+        if self.down_payment_type == "Percentage":
+            return flt(self.grand_total) * amount / 100
+        return amount
+    
+    def update_payment_status(self) -> None:
+        """Update the payment status based on payment amounts"""
         total_paid = flt(self.payment_amount) + self.get_down_payment_amount()
         if total_paid <= 0:
             self.payment_status = "Unpaid"
@@ -172,7 +193,8 @@ class WorkOrderBilling(AccountsController):
         else:
             self.payment_status = "Paid"
     
-    def set_status(self):
+    def set_status(self) -> None:
+        """Set the document status based on various conditions"""
         if self.docstatus == 0:
             self.status = "Draft"
         elif self.docstatus == 2:
@@ -188,429 +210,56 @@ class WorkOrderBilling(AccountsController):
         else:
             self.status = "Pending Payment"
     
-    def update_work_order_billing_status(self, cancel=False):
+    def update_work_order_billing_status(self, cancel: bool = False) -> None:
+        """
+        Update the billing status on the linked Work Order
+        
+        Args:
+            cancel: Whether this is being called during cancellation
+        """
         if not self.work_order:
             return
             
-        status = "Unbilled"
-        if not cancel:
-            status = "Billed"
-            
+        status = "Unbilled" if cancel else "Billed"
         frappe.db.set_value("Work Order", self.work_order, "billing_status", status)
     
-    def make_gl_entries(self, cancel=False):
-        if cancel:
-            if self.journal_entry:
-                je = frappe.get_doc("Journal Entry", self.journal_entry)
-                if je.docstatus == 1:
-                    je.flags.ignore_permissions = True
-                    je.cancel()
-            return
-
-        gl_entries = []
-
-        revenue_account = frappe.get_cached_value('Company', self.company, 'default_income_account')
-        if not revenue_account:
-            frappe.throw(_("Please set Default Income Account in Company settings"))
-
-        receivable_account = get_party_account(
-            party_type="Customer",
-            party=self.customer,
-            company=self.company,
-        )
-
-        if not receivable_account:
-            frappe.throw(_("Please set Receivable Account for customer {0}").format(self.customer))
-
-        gl_entries.append(
-            self.get_gl_dict({
-                "account": revenue_account,
-                "credit": self.subtotal,
-                "credit_in_account_currency": self.subtotal,
-                "against": self.customer,
-                "cost_center": self.cost_center,
-                "remarks": f"Revenue for Work Order {self.work_order}",
-            })
-        )
-
-        total_parts_cost = 0
-        if self.total_parts_amount > 0:
-            for item in self.part_items:
-                item_code = frappe.db.get_value("Part", item.part, "item")
-                valuation_rate = frappe.db.get_value("Item", item_code, "valuation_rate") or 0
-                total_parts_cost += flt(valuation_rate) * flt(item.quantity)
-
-            inventory_account = frappe.get_cached_value('Company', self.company, 'default_inventory_account')
-            cogs_account = frappe.get_cached_value('Company', self.company, 'default_expense_account')
-
-            if not inventory_account:
-                frappe.throw(_("Please set Default Inventory Account in Company settings"))
-
-            if not cogs_account:
-                frappe.throw(_("Please set Default Expense Account in Company settings"))
-
-            gl_entries.append(
-                self.get_gl_dict({
-                    "account": inventory_account,
-                    "credit": total_parts_cost,
-                    "credit_in_account_currency": total_parts_cost,
-                    "against": cogs_account,
-                    "cost_center": self.cost_center,
-                    "remarks": f"Inventory reduction for Work Order {self.work_order}",
-                })
-            )
-
-            gl_entries.append(
-                self.get_gl_dict({
-                    "account": cogs_account,
-                    "debit": total_parts_cost,
-                    "debit_in_account_currency": total_parts_cost,
-                    "against": inventory_account,
-                    "cost_center": self.cost_center,
-                    "remarks": f"COGS for Work Order {self.work_order}",
-                })
-            )
-
-        if flt(self.tax_amount) > 0:
-            tax_account = None
-            if self.taxes_and_charges:
-                tax_template = frappe.get_doc("Sales Taxes and Charges Template", self.taxes_and_charges)
-                if tax_template.taxes:
-                    tax_account = tax_template.taxes[0].account_head
-
-            if not tax_account:
-                tax_account = frappe.get_cached_value('Company', self.company, 'default_tax_account')
-
-            if not tax_account:
-                frappe.throw(_("Please set a Tax Account in the Taxes and Charges Template or Company settings"))
-
-            gl_entries.append(
-                self.get_gl_dict({
-                    "account": tax_account,
-                    "credit": self.tax_amount,
-                    "credit_in_account_currency": self.tax_amount,
-                    "against": self.customer,
-                    "cost_center": self.cost_center,
-                    "remarks": f"Tax for Work Order {self.work_order}",
-                })
-            )
-
-        if flt(self.discount_amount) > 0:
-            discount_account = frappe.get_cached_value('Company', self.company, 'discount_allowed_account')
-
-            if not discount_account:
-                frappe.throw(_("Please set Discount Allowed Account in Company settings"))
-
-            gl_entries.append(
-                self.get_gl_dict({
-                    "account": discount_account,
-                    "debit": self.discount_amount,
-                    "debit_in_account_currency": self.discount_amount,
-                    "against": self.customer,
-                    "cost_center": self.cost_center,
-                    "remarks": f"Discount for Work Order {self.work_order}",
-                })
-            )
-
-        gl_entries.append(
-            self.get_gl_dict({
-                "account": receivable_account,
-                "party_type": "Customer",
-                "party": self.customer,
-                "debit": self.grand_total,
-                "debit_in_account_currency": self.grand_total,
-                "against": revenue_account,
-                "cost_center": self.cost_center,
-                "remarks": f"Receivable for Work Order {self.work_order}",
-            })
-        )
-
-        if self.payment_amount > 0:
-            for payment in self.payment_details:
-                if payment.amount <= 0:
-                    continue
-
-                gl_entries.append(
-                    self.get_gl_dict({
-                        "account": payment.payment_account,
-                        "debit": payment.amount,
-                        "debit_in_account_currency": payment.amount,
-                        "against": receivable_account,
-                        "cost_center": self.cost_center,
-                        "remarks": f"Payment for Work Order {self.work_order}",
-                    })
-                )
-
-                gl_entries.append(
-                    self.get_gl_dict({
-                        "account": receivable_account,
-                        "party_type": "Customer",
-                        "party": self.customer,
-                        "credit": payment.amount,
-                        "credit_in_account_currency": payment.amount,
-                        "against": payment.payment_account,
-                        "cost_center": self.cost_center,
-                        "remarks": f"Payment against receivable for Work Order {self.work_order}",
-                    })
-                )
-
-        total_debit = sum(flt(d.get("debit")) for d in gl_entries)
-        total_credit = sum(flt(d.get("credit")) for d in gl_entries)
-        if round(total_debit, 2) != round(total_credit, 2):
-            frappe.throw(_("GL Entries are not balanced"))
-
-        je = frappe.new_doc("Journal Entry")
-        je.posting_date = self.posting_date
-        je.company = self.company
-        je.voucher_type = "Journal Entry"
-        je.user_remark = f"Auto entry for Work Order Billing {self.name}"
-
-        for d in gl_entries:
-            je.append(
-                "accounts",
-                {
-                    "account": d["account"],
-                    "party_type": d.get("party_type"),
-                    "party": d.get("party"),
-                    "debit_in_account_currency": d.get("debit", 0),
-                    "credit_in_account_currency": d.get("credit", 0),
-                    "cost_center": d.get("cost_center"),
-                    "against_account": d.get("against"),
-                },
-            )
-
-        je.flags.ignore_permissions = True
-        je.insert()
-        je.submit()
-        self.db_set("journal_entry", je.name)
-    
-    def create_sales_invoice(self):
-        """Create a Sales Invoice from this billing document"""
-        if self.sales_invoice:
-            return
-
-        if not self.company:
-            frappe.throw(_("Company is required to create a Sales Invoice"))
-
-        def append_items(sinv):
-            for item in self.job_type_items:
-                sinv_item = sinv.append("items", {})
-                sinv_item.item_code = frappe.db.get_value("Job Type", item.job_type, "item")
-                sinv_item.qty = item.hours
-                sinv_item.rate = item.rate
-                sinv_item.amount = item.amount
-                sinv_item.description = f"Job: {item.job_type_name}"
-
-            for item in self.service_package_items:
-                sinv_item = sinv.append("items", {})
-                sinv_item.item_code = frappe.db.get_value("Service Package", item.service_package, "item")
-                sinv_item.qty = item.quantity
-                sinv_item.rate = item.rate
-                sinv_item.amount = item.amount
-                sinv_item.description = f"Service Package: {item.service_package_name}"
-
-            for item in self.part_items:
-                sinv_item = sinv.append("items", {})
-                sinv_item.item_code = frappe.db.get_value("Part", item.part, "item")
-                sinv_item.qty = item.quantity
-                sinv_item.rate = item.rate
-                sinv_item.amount = item.amount
-                sinv_item.description = f"Part: {item.part_name}"
-
-            for item in self.external_service_items:
-                sinv_item = sinv.append("items", {})
-                default_service_item = frappe.db.get_single_value("Car Workshop Settings", "default_external_service_item")
-                if not default_service_item:
-                    frappe.throw(_("Please set Default External Service Item in Car Workshop Settings"))
-                sinv_item.item_code = default_service_item
-                sinv_item.qty = 1
-                sinv_item.rate = item.rate
-                sinv_item.amount = item.amount
-                sinv_item.description = f"External Service: {item.service_name}"
-
-            if self.taxes_and_charges:
-                tax_template = frappe.get_doc("Sales Taxes and Charges Template", self.taxes_and_charges)
-                for tax in tax_template.taxes:
-                    sinv.append("taxes", {
-                        "charge_type": tax.charge_type,
-                        "account_head": tax.account_head,
-                        "description": tax.description,
-                        "rate": tax.rate
-                    })
-
-            if flt(self.discount_amount) > 0:
-                sinv.apply_discount_on = "Grand Total"
-                sinv.discount_amount = self.discount_amount
-
-        pref = frappe.db.get_value("Customer", self.customer, "billing_preference") or "Separate"
-
-        if pref == "Consolidate":
-            sinv_name = frappe.db.get_value(
-                "Sales Invoice",
-                {"customer": self.customer, "docstatus": 0, "consolidated_invoice": 1},
-                "name",
-            )
-            sinv = frappe.get_doc("Sales Invoice", sinv_name) if sinv_name else frappe.new_doc("Sales Invoice")
-            if not sinv_name:
-                sinv.customer = self.customer
-                sinv.posting_date = self.posting_date
-                sinv.due_date = self.due_date
-                sinv.company = self.company
-                sinv.cost_center = self.cost_center
-                sinv.consolidated_invoice = 1
-            append_items(sinv)
-            sinv.flags.ignore_permissions = True
-            sinv.save()
-            self.db_set('sales_invoice', sinv.name)
-        else:
-            sinv = frappe.new_doc("Sales Invoice")
-            sinv.customer = self.customer
-            sinv.posting_date = self.posting_date
-            sinv.due_date = self.due_date
-            sinv.company = self.company
-            sinv.cost_center = self.cost_center
-            sinv.work_order_billing = self.name
-            sinv.work_order = self.work_order
-            sinv.customer_vehicle = self.customer_vehicle
-            append_items(sinv)
-            sinv.flags.ignore_permissions = True
-            sinv.flags.ignore_mandatory = True
-            sinv.insert()
-            sinv.submit()
-            self.db_set('sales_invoice', sinv.name)
-            if self.payment_amount > 0:
-                self.create_payment_entry(sinv.name)
-    
-    def create_payment_entry(self, sales_invoice):
-        """Create a Payment Entry for the received payment"""
-        from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-        
-        if not self.payment_amount or self.payment_amount <= 0:
-            return
-            
-        # For each payment method
-        for payment_detail in self.payment_details:
-            if payment_detail.amount <= 0:
-                continue
-                
-            pe = get_payment_entry("Sales Invoice", sales_invoice, 
-                                   party_amount=payment_detail.amount, 
-                                   bank_account=payment_detail.payment_account)
-            
-            pe.reference_no = payment_detail.reference_number or self.name
-            pe.reference_date = payment_detail.reference_date or self.posting_date
-            pe.remarks = f"Payment for Work Order Billing {self.name}"
-            pe.mode_of_payment = payment_detail.payment_method
-            
-            pe.flags.ignore_permissions = True
-            pe.save()
-            pe.submit()
-            
-            # Update payment_entry field for the first payment
-            if not self.payment_entry:
-                self.db_set('payment_entry', pe.name)
-    
-    def create_down_payment_entry(self):
-        """Create advance Payment Entry for down payment"""
-        advance_amount = self.get_down_payment_amount()
-        if advance_amount <= 0:
-            return
-        if not self.payment_details:
-            frappe.throw(_("Payment details are required for down payment"))
-        payment_detail = self.payment_details[0]
-        advance_account = frappe.get_cached_value('Company', self.company, 'default_customer_advance_account')
-        if not advance_account:
-            frappe.throw(_("Please set Default Customer Advance Account in Company settings"))
-        pe = frappe.new_doc("Payment Entry")
-        pe.payment_type = "Receive"
-        pe.party_type = "Customer"
-        pe.party = self.customer
-        pe.company = self.company
-        pe.posting_date = self.posting_date
-        pe.mode_of_payment = payment_detail.payment_method
-        pe.paid_from = advance_account
-        pe.paid_to = payment_detail.payment_account
-        pe.received_amount = advance_amount
-        pe.paid_amount = advance_amount
-        pe.is_advance = "Yes"
-        pe.reference_no = self.name
-        pe.reference_date = self.posting_date
-        pe.remarks = f"Down payment for Work Order Billing {self.name}"
-        if self.sales_invoice:
-            pe.append("references", {
-                "reference_doctype": "Sales Invoice",
-                "reference_name": self.sales_invoice,
-                "allocated_amount": advance_amount
-            })
-        pe.flags.ignore_permissions = True
-        pe.insert()
-        pe.submit()
-        if not self.payment_entry:
-            self.db_set('payment_entry', pe.name)
-
-    def cancel_linked_documents(self):
-        """Cancel linked Sales Invoice and Payment Entry"""
+    def cancel_linked_documents(self) -> None:
+        """Cancel linked Sales Invoice"""
         # Cancel Sales Invoice
         if self.sales_invoice:
             sinv = frappe.get_doc("Sales Invoice", self.sales_invoice)
             if sinv.docstatus == 1:
                 sinv.flags.ignore_permissions = True
                 sinv.cancel()
-                
-        # Cancel Payment Entry
-        if self.payment_entry:
-            pe = frappe.get_doc("Payment Entry", self.payment_entry)
-            if pe.docstatus == 1:
-                pe.flags.ignore_permissions = True
-                pe.cancel()
 
-    def process_returns_and_cancellations(self):
-        """Handle returns and cancellations after billing."""
-        for item in getattr(self, 'return_items', []) or []:
-            self.adjust_stock(item)
-            self.issue_credit_note(item)
-            self.process_refund(item)
-            self.reverse_additional_salary(item)
-        for item in getattr(self, 'cancellation_items', []) or []:
-            self.issue_debit_note(item)
-            self.process_refund(item)
-            self.reverse_additional_salary(item)
-
-    def adjust_stock(self, item):
-        """Placeholder to adjust stock for returned parts."""
-        item.stock_adjusted = True
-
-    def issue_credit_note(self, item):
-        item.credit_note_issued = True
-
-    def issue_debit_note(self, item):
-        item.debit_note_issued = True
-
-    def process_refund(self, item):
-        item.refund_processed = True
-
-    def reverse_additional_salary(self, item):
-        item.additional_salary_reversed = True
-
-    def update_approval_fields(self):
-        """Populate audit fields when approved."""
+    def update_approval_fields(self) -> None:
+        """Populate audit fields when approved"""
         if getattr(self, 'approval_status', None) == "Approved" and not getattr(self, 'approved_by', None):
             self.approved_by = frappe.session.user
             self.approved_on = get_datetime()
 
-    def approve(self, approver=None):
-        """Convenience method to approve the billing document."""
+    def approve(self, approver: Optional[str] = None) -> None:
+        """
+        Convenience method to approve the billing document
+        
+        Args:
+            approver: User who is approving the document
+        """
         self.approval_status = "Approved"
         self.approved_by = approver or frappe.session.user
         self.approved_on = get_datetime()
     
-    def get_dashboard_data(self):
-        """Get dashboard data for this document"""
+    def get_dashboard_data(self) -> Dict[str, Any]:
+        """
+        Get dashboard data for this document
+        
+        Returns:
+            Dict: Dashboard configuration for linked documents
+        """
         return {
             'fieldname': 'work_order_billing',
             'non_standard_fieldnames': {
                 'Sales Invoice': 'work_order_billing',
-                'Payment Entry': 'reference_name'
             },
             'transactions': [
                 {
@@ -618,34 +267,278 @@ class WorkOrderBilling(AccountsController):
                     'items': ['Work Order']
                 },
                 {
-                    'label': _('Payments'),
-                    'items': ['Sales Invoice', 'Payment Entry', 'Journal Entry']
+                    'label': _('Billing'),
+                    'items': ['Sales Invoice']
                 }
             ]
         }
 
-@frappe.whitelist()
-def make_sales_invoice(source_name, target_doc=None):
-    """Create Sales Invoice from Work Order Billing"""
-    from frappe.model.mapper import get_mapped_doc
+
+def get_item_price(item_code: str, price_list: str, 
+                   uom: Optional[str] = None, 
+                   batch_no: Optional[str] = None) -> float:
+    """
+    Get the price of an item from Item Price or fallback to Service Price List
     
-    def set_missing_values(source, target):
+    Args:
+        item_code: Item code to look up
+        price_list: Price list to check
+        uom: Unit of Measure
+        batch_no: Batch number
+        
+    Returns:
+        float: Price of the item
+    """
+    # First try standard Item Price
+    filters = {
+        'item_code': item_code,
+        'price_list': price_list
+    }
+    if uom:
+        filters['uom'] = uom
+    if batch_no:
+        filters['batch_no'] = batch_no
+    
+    item_prices = frappe.get_all(
+        "Item Price",
+        filters=filters,
+        fields=["price_list_rate"],
+        order_by="valid_from desc, batch_no desc, uom desc",
+        limit=1
+    )
+    
+    if item_prices:
+        return flt(item_prices[0].price_list_rate)
+    
+    # Fallback to Service Price List if it exists
+    if frappe.db.exists("DocType", "Service Price List"):
+        service_prices = frappe.get_all(
+            "Service Price List",
+            filters={
+                'item': item_code,
+                'price_list': price_list
+            },
+            fields=["rate"],
+            limit=1
+        )
+        if service_prices:
+            return flt(service_prices[0].rate)
+    
+    # If no price found, return item standard rate or zero
+    standard_rate = frappe.db.get_value("Item", item_code, "standard_rate") or 0
+    return flt(standard_rate)
+
+
+@frappe.whitelist()
+def get_work_order_billing_source(work_order: str) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Get all billable items from a Work Order
+    
+    Args:
+        work_order: Work Order document name
+        
+    Returns:
+        Dict: Dictionary containing job_types, service_packages, parts, and external_services
+    """
+    if not work_order:
+        frappe.throw(_("Work Order is required"))
+    
+    # Check permissions
+    work_order_doc = frappe.get_doc("Work Order", work_order)
+    work_order_doc.check_permission("read")
+    
+    if work_order_doc.status not in ["Completed", "Closed"]:
+        frappe.throw(_("Work Order must be 'Completed' or 'Closed' before billing"))
+    
+    if work_order_doc.billing_status == "Billed":
+        frappe.throw(_("Work Order is already billed"))
+    
+    # Get default price list
+    default_price_list = frappe.db.get_value("Selling Settings", None, "selling_price_list") or "Standard Selling"
+    
+    result = {
+        "job_types": [],
+        "service_packages": [],
+        "parts": [],
+        "external_services": []
+    }
+    
+    # Get job types
+    job_types = frappe.get_all(
+        "Work Order Job Type",
+        filters={"parent": work_order},
+        fields=["job_type", "job_type_name", "hours", "rate", "amount"]
+    )
+    
+    for job in job_types:
+        item_code = frappe.db.get_value("Job Type", job.job_type, "item")
+        if not item_code:
+            continue
+            
+        if not job.rate:
+            job.rate = get_item_price(item_code, default_price_list)
+        
+        job.amount = flt(job.hours) * flt(job.rate)
+        result["job_types"].append(job)
+    
+    # Get service packages
+    service_packages = frappe.get_all(
+        "Work Order Service Package",
+        filters={"parent": work_order},
+        fields=["service_package", "service_package_name", "quantity", "rate", "amount"]
+    )
+    
+    for package in service_packages:
+        item_code = frappe.db.get_value("Service Package", package.service_package, "item")
+        if not item_code:
+            continue
+            
+        if not package.rate:
+            package.rate = get_item_price(item_code, default_price_list)
+        
+        package.amount = flt(package.quantity) * flt(package.rate)
+        result["service_packages"].append(package)
+    
+    # Get parts
+    parts = frappe.get_all(
+        "Work Order Part",
+        filters={"parent": work_order},
+        fields=["part", "part_name", "quantity", "rate", "amount"]
+    )
+    
+    for part in parts:
+        item_code = frappe.db.get_value("Part", part.part, "item")
+        if not item_code:
+            continue
+            
+        if not part.rate:
+            part.rate = get_item_price(item_code, default_price_list)
+        
+        part.amount = flt(part.quantity) * flt(part.rate)
+        result["parts"].append(part)
+    
+    # Get external services
+    external_services = frappe.get_all(
+        "Work Order External Service",
+        filters={"parent": work_order},
+        fields=["service_name", "provider", "rate", "amount"]
+    )
+    
+    for service in external_services:
+        service.amount = flt(service.rate)
+        result["external_services"].append(service)
+    
+    return result
+
+
+@frappe.whitelist()
+def make_sales_invoice(source_name: str, target_doc: Optional[Dict] = None) -> Union[Dict, str]:
+    """
+    Create Sales Invoice from Work Order Billing
+    
+    Args:
+        source_name: Work Order Billing document name
+        target_doc: Target document (optional)
+        
+    Returns:
+        Union[Dict, str]: The created Sales Invoice document or its name
+    """
+    def set_missing_values(source: Document, target: Document) -> None:
         target.is_pos = 0
         target.ignore_pricing_rule = 1
         target.run_method("set_missing_values")
         
-    doclist = get_mapped_doc("Work Order Billing", source_name, {
-        "Work Order Billing": {
-            "doctype": "Sales Invoice",
-            "field_map": {
-                "name": "work_order_billing",
-                "work_order": "work_order",
-                "customer_vehicle": "customer_vehicle"
-            },
-            "validation": {
-                "docstatus": ["=", 1]
-            }
-        }
-    }, target_doc, set_missing_values)
+    def add_item_rows(source: Document, target: Document, source_parent: Document) -> None:
+        """Add all billable items to the Sales Invoice"""
+        # Add job type items
+        for item in source_parent.job_type_items:
+            item_code = frappe.db.get_value("Job Type", item.job_type, "item")
+            if not item_code:
+                continue
+                
+            si_item = target.append("items", {})
+            si_item.item_code = item_code
+            si_item.qty = item.hours
+            si_item.rate = item.rate
+            si_item.amount = item.amount
+            si_item.description = f"Job: {item.job_type_name}"
+            
+        # Add service package items
+        for item in source_parent.service_package_items:
+            item_code = frappe.db.get_value("Service Package", item.service_package, "item")
+            if not item_code:
+                continue
+                
+            si_item = target.append("items", {})
+            si_item.item_code = item_code
+            si_item.qty = item.quantity
+            si_item.rate = item.rate
+            si_item.amount = item.amount
+            si_item.description = f"Service Package: {item.service_package_name}"
+            
+        # Add part items
+        for item in source_parent.part_items:
+            item_code = frappe.db.get_value("Part", item.part, "item")
+            if not item_code:
+                continue
+                
+            si_item = target.append("items", {})
+            si_item.item_code = item_code
+            si_item.qty = item.quantity
+            si_item.rate = item.rate
+            si_item.amount = item.amount
+            si_item.description = f"Part: {item.part_name}"
+            
+        # Add external service items
+        for item in source_parent.external_service_items:
+            default_service_item = frappe.db.get_single_value(
+                "Car Workshop Settings", "default_external_service_item"
+            )
+            if not default_service_item:
+                frappe.throw(_("Please set Default External Service Item in Car Workshop Settings"))
+                
+            si_item = target.append("items", {})
+            si_item.item_code = default_service_item
+            si_item.qty = 1
+            si_item.rate = item.rate
+            si_item.amount = item.amount
+            si_item.description = f"External Service: {item.service_name}"
+            
+        # Add taxes if applicable
+        if source_parent.taxes_and_charges:
+            target.taxes_and_charges = source_parent.taxes_and_charges
+            
+        # Apply discount if applicable
+        if flt(source_parent.discount_amount) > 0:
+            target.apply_discount_on = "Grand Total"
+            target.discount_amount = source_parent.discount_amount
     
-    return doclist
+    doc = get_mapped_doc(
+        "Work Order Billing", 
+        source_name,
+        {
+            "Work Order Billing": {
+                "doctype": "Sales Invoice",
+                "field_map": {
+                    "name": "work_order_billing",
+                    "work_order": "work_order",
+                    "customer_vehicle": "customer_vehicle",
+                    "posting_date": "posting_date",
+                    "due_date": "due_date"
+                },
+                "validation": {
+                    "docstatus": ["=", 1]
+                },
+                "postprocess": add_item_rows
+            }
+        }, 
+        target_doc, 
+        set_missing_values
+    )
+    
+    doc.save()
+    
+    # Update source document with Sales Invoice reference
+    frappe.db.set_value("Work Order Billing", source_name, "sales_invoice", doc.name)
+    
+    return doc.name if isinstance(doc, str) else doc

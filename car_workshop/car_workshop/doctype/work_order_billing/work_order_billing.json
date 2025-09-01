@@ -16,9 +16,11 @@
   "vehicle_make",
   "vehicle_model",
   "column_break_tzmql",
-  "posting_date",
+  "transaction_date",
   "due_date",
   "status",
+  "workflow_state",
+  "billing_status",
   "approval_status",
   "approved_by",
   "approved_on",
@@ -40,13 +42,14 @@
   "total_services_amount",
   "total_parts_amount",
   "total_external_services_amount",
+  "total_returns_amount",
   "column_break_totals",
   "subtotal",
   "taxes_and_charges",
   "tax_amount",
   "discount_amount",
   "grand_total",
-  "rounded_total",
+  "rounded_total_preview",
   "down_payment_type",
   "down_payment_amount",
   "remaining_balance",
@@ -58,8 +61,6 @@
   "payment_status",
   "section_break_references",
   "sales_invoice",
-  "journal_entry",
-  "payment_entry",
   "section_break_notes",
   "additional_notes",
   "terms_and_conditions",
@@ -78,7 +79,8 @@
    "fieldtype": "Link",
    "label": "Work Order",
    "options": "Work Order",
-   "reqd": 1
+   "reqd": 1,
+   "in_standard_filter": 1
   },
   {
    "fetch_from": "work_order.customer",
@@ -86,14 +88,18 @@
    "fieldtype": "Link",
    "label": "Customer",
    "options": "Customer",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fetch_from": "customer.customer_name",
    "fieldname": "customer_name",
    "fieldtype": "Data",
    "label": "Customer Name",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "work_order.customer_vehicle",
@@ -108,7 +114,8 @@
    "fieldname": "vehicle_registration_number",
    "fieldtype": "Data",
    "label": "Vehicle Registration Number",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "customer_vehicle.make",
@@ -130,9 +137,9 @@
   },
   {
    "default": "Today",
-   "fieldname": "posting_date",
+   "fieldname": "transaction_date",
    "fieldtype": "Date",
-   "label": "Posting Date",
+   "label": "Transaction Date",
    "reqd": 1
   },
   {
@@ -145,7 +152,25 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
- "options": "Draft\nPending Payment\nPartially Paid\nFully Paid\nCompleted\nOverdue\nCancelled",
+   "options": "Draft\nPending Approval\nApproved\nPending Payment\nPartially Paid\nFully Paid\nCompleted\nOverdue\nCancelled",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "label": "Workflow State",
+   "options": "Workflow State",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "default": "Unbilled",
+   "fieldname": "billing_status",
+   "fieldtype": "Select",
+   "label": "Billing Status",
+   "options": "Unbilled\nPending\nBilled",
    "read_only": 1
   },
   {
@@ -153,7 +178,8 @@
    "fieldname": "approval_status",
    "fieldtype": "Select",
    "label": "Approval Status",
-   "options": "Pending Approval\nApproved\nRejected"
+   "options": "Pending Approval\nApproved\nRejected",
+   "in_standard_filter": 1
   },
   {
    "fieldname": "approved_by",
@@ -173,7 +199,8 @@
    "fieldname": "billing_type",
    "fieldtype": "Select",
    "label": "Billing Type",
-   "options": "Standard\nInsurance\nWarranty\nInternal"
+   "options": "Standard\nInsurance\nWarranty\nInternal",
+   "in_standard_filter": 1
   },
   {
    "fieldname": "company",
@@ -252,7 +279,7 @@
   {
    "fieldname": "section_break_totals",
    "fieldtype": "Section Break",
-   "label": "Totals"
+   "label": "Totals (Preview)"
   },
   {
    "default": "0",
@@ -276,6 +303,13 @@
    "read_only": 1
   },
   {
+   "default": "0",
+   "fieldname": "total_returns_amount",
+   "fieldtype": "Currency",
+   "label": "Total Returns Amount",
+   "read_only": 1
+  },
+  {
    "fieldname": "column_break_totals",
    "fieldtype": "Column Break"
   },
@@ -289,14 +323,15 @@
   {
    "fieldname": "taxes_and_charges",
    "fieldtype": "Link",
-   "label": "Taxes and Charges",
-   "options": "Sales Taxes and Charges Template"
+   "label": "Taxes and Charges Template",
+   "options": "Sales Taxes and Charges Template",
+   "description": "For preview only. Final tax calculation will be done in Sales Invoice."
   },
   {
    "default": "0",
    "fieldname": "tax_amount",
    "fieldtype": "Currency",
-   "label": "Tax Amount",
+   "label": "Tax Amount (Preview)",
    "read_only": 1
   },
   {
@@ -309,15 +344,17 @@
    "default": "0",
    "fieldname": "grand_total",
    "fieldtype": "Currency",
-   "label": "Grand Total",
-   "read_only": 1
+   "label": "Grand Total (Preview)",
+   "read_only": 1,
+   "in_list_view": 1
   },
   {
    "default": "0",
-   "fieldname": "rounded_total",
+   "fieldname": "rounded_total_preview",
    "fieldtype": "Currency",
-   "label": "Rounded Total",
-   "read_only": 1
+   "label": "Rounded Total (Preview)",
+   "read_only": 1,
+   "description": "This is an estimate. Final rounding will be calculated in Sales Invoice."
   },
   {
    "fieldname": "down_payment_type",
@@ -334,38 +371,40 @@
   {
    "fieldname": "remaining_balance",
    "fieldtype": "Currency",
-   "label": "Remaining Balance",
+   "label": "Remaining Balance (Preview)",
    "read_only": 1
   },
   {
    "fieldname": "section_break_payment",
    "fieldtype": "Section Break",
-   "label": "Payment"
+   "label": "Payment Information"
   },
   {
    "fieldname": "payment_method",
    "fieldtype": "Select",
    "label": "Payment Method",
-   "options": "Cash\nCredit Card\nDebit Card\nBank Transfer\nCheck\nInsurance\nWarranty\nMultiple"
+   "options": "Cash\nCredit Card\nDebit Card\nBank Transfer\nCheck\nInsurance\nWarranty\nMultiple",
+   "description": "For information only. Actual payment will be processed in Sales Invoice."
   },
   {
    "fieldname": "payment_details",
    "fieldtype": "Table",
    "label": "Payment Details",
-   "options": "Work Order Billing Payment"
+   "options": "Work Order Billing Payment",
+   "description": "For information only. Actual payment will be processed in Sales Invoice."
   },
   {
    "default": "0",
    "fieldname": "payment_amount",
    "fieldtype": "Currency",
-   "label": "Payment Amount",
+   "label": "Payment Amount (Preview)",
    "read_only": 1
   },
   {
    "default": "0",
    "fieldname": "balance_amount",
    "fieldtype": "Currency",
-   "label": "Balance Amount",
+   "label": "Balance Amount (Preview)",
    "read_only": 1
   },
   {
@@ -386,20 +425,6 @@
    "fieldtype": "Link",
    "label": "Sales Invoice",
    "options": "Sales Invoice",
-   "read_only": 1
-  },
-  {
-   "fieldname": "journal_entry",
-   "fieldtype": "Link",
-   "label": "Journal Entry",
-   "options": "Journal Entry",
-   "read_only": 1
-  },
-  {
-   "fieldname": "payment_entry",
-   "fieldtype": "Link",
-   "label": "Payment Entry",
-   "options": "Payment Entry",
    "read_only": 1
   },
   {
@@ -483,13 +508,40 @@
    "write": 1
   },
   {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Cashier",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accountant",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
    "read": 1,
    "report": 1,
    "role": "Technician"
   }
  ],
+ "search_fields": "customer_name,vehicle_registration_number,work_order",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
+ "title_field": "customer_name",
  "track_changes": 1
 }
