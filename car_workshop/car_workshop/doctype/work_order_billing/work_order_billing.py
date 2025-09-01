@@ -9,6 +9,7 @@ from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import flt, getdate, nowdate, add_days, get_datetime
 from erpnext.controllers.accounts_controller import AccountsController
+from car_workshop.utils.pricing import resolve_rate
 
 
 class WorkOrderBilling(AccountsController):
@@ -274,61 +275,6 @@ class WorkOrderBilling(AccountsController):
         }
 
 
-def get_item_price(item_code: str, price_list: str, 
-                   uom: Optional[str] = None, 
-                   batch_no: Optional[str] = None) -> float:
-    """
-    Get the price of an item from Item Price or fallback to Service Price List
-    
-    Args:
-        item_code: Item code to look up
-        price_list: Price list to check
-        uom: Unit of Measure
-        batch_no: Batch number
-        
-    Returns:
-        float: Price of the item
-    """
-    # First try standard Item Price
-    filters = {
-        'item_code': item_code,
-        'price_list': price_list
-    }
-    if uom:
-        filters['uom'] = uom
-    if batch_no:
-        filters['batch_no'] = batch_no
-    
-    item_prices = frappe.get_all(
-        "Item Price",
-        filters=filters,
-        fields=["price_list_rate"],
-        order_by="valid_from desc, batch_no desc, uom desc",
-        limit=1
-    )
-    
-    if item_prices:
-        return flt(item_prices[0].price_list_rate)
-    
-    # Fallback to Service Price List if it exists
-    if frappe.db.exists("DocType", "Service Price List"):
-        service_prices = frappe.get_all(
-            "Service Price List",
-            filters={
-                'item': item_code,
-                'price_list': price_list
-            },
-            fields=["rate"],
-            limit=1
-        )
-        if service_prices:
-            return flt(service_prices[0].rate)
-    
-    # If no price found, return item standard rate or zero
-    standard_rate = frappe.db.get_value("Item", item_code, "standard_rate") or 0
-    return flt(standard_rate)
-
-
 @frappe.whitelist()
 def get_work_order_billing_source(work_order: str) -> Dict[str, List[Dict[str, Any]]]:
     """
@@ -352,9 +298,10 @@ def get_work_order_billing_source(work_order: str) -> Dict[str, List[Dict[str, A
     
     if work_order_doc.billing_status == "Billed":
         frappe.throw(_("Work Order is already billed"))
-    
+
     # Get default price list
     default_price_list = frappe.db.get_value("Selling Settings", None, "selling_price_list") or "Standard Selling"
+    posting_date = getattr(work_order_doc, "posting_date", nowdate())
     
     result = {
         "job_types": [],
@@ -374,10 +321,12 @@ def get_work_order_billing_source(work_order: str) -> Dict[str, List[Dict[str, A
         item_code = frappe.db.get_value("Job Type", job.job_type, "item")
         if not item_code:
             continue
-            
+
         if not job.rate:
-            job.rate = get_item_price(item_code, default_price_list)
-        
+            price_data = resolve_rate("Job Type", job.job_type, default_price_list, posting_date)
+            if price_data:
+                job.rate = price_data.get("rate")
+
         job.amount = flt(job.hours) * flt(job.rate)
         result["job_types"].append(job)
     
@@ -392,10 +341,12 @@ def get_work_order_billing_source(work_order: str) -> Dict[str, List[Dict[str, A
         item_code = frappe.db.get_value("Service Package", package.service_package, "item")
         if not item_code:
             continue
-            
+
         if not package.rate:
-            package.rate = get_item_price(item_code, default_price_list)
-        
+            price_data = resolve_rate("Service Package", package.service_package, default_price_list, posting_date)
+            if price_data:
+                package.rate = price_data.get("rate")
+
         package.amount = flt(package.quantity) * flt(package.rate)
         result["service_packages"].append(package)
     
@@ -410,10 +361,12 @@ def get_work_order_billing_source(work_order: str) -> Dict[str, List[Dict[str, A
         item_code = frappe.db.get_value("Part", part.part, "item")
         if not item_code:
             continue
-            
+
         if not part.rate:
-            part.rate = get_item_price(item_code, default_price_list)
-        
+            price_data = resolve_rate("Part", part.part, default_price_list, posting_date)
+            if price_data:
+                part.rate = price_data.get("rate")
+
         part.amount = flt(part.quantity) * flt(part.rate)
         result["parts"].append(part)
     
